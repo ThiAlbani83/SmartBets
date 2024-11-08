@@ -1,0 +1,2 @@
+-- AddForeignKey
+ALTER TABLE `Product` ADD CONSTRAINT `Product_id_fkey` FOREIGN KEY (`id`) REFERENCES `Supplier`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

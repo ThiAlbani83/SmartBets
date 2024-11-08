@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.menuBar {
+  &::-webkit-scrollbar {
+    width: 0px;
+    height: 4px;
+    background-color: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 99px;
+    background-color: #4c3a6d;
+  }
+
+  &::-webkit-scrollbar-button {
+    height: 16px;
+  }
+}
+
+.homePage {
+  overflow-y: scroll;  /* Habilita o scroll vertical */
+  scrollbar-width: none;  /* Firefox: oculta a barra de rolagem */
+}
+
+/* Chrome, Edge e Safari */
+.homePage::-webkit-scrollbar {
+  width: 0;  /* Oculta a barra de rolagem */
+}
