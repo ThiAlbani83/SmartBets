@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
+import nodemailer from "nodemailer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,7 @@ export const createOrder = async (req, res) => {
     fornecedores,
     responsavel,
     enviarPara,
+    enviarParaResponsavel,
     motivoCompra,
   } = req.body;
   const files = req.files;
@@ -26,6 +28,7 @@ export const createOrder = async (req, res) => {
         fornecedores: JSON.stringify(fornecedores),
         responsavel,
         enviarPara,
+        enviarParaResponsavel,
         motivoCompra,
         status: "Pendente",
       },
@@ -85,14 +88,15 @@ export const getOrders = async (req, res) => {
 
 export const updateOrder = async (req, res) => {
   const { id } = req.params;
-  const { status, enviarPara } = req.body; // Ensure these are strings
+  const { status, enviarPara, enviarParaResponsavel } = req.body; // Ensure these are strings
   try {
     const updatedOrder = await prisma.order.update({
       where: { id: parseInt(id) },
-      data: { 
-        status,       // Directly assign status
-        enviarPara    // Directly assign enviarPara
-      }
+      data: {
+        status, // Directly assign status
+        enviarPara, // Directly assign enviarPara
+        enviarParaResponsavel,
+      },
     });
     res.json(updatedOrder);
   } catch (error) {
@@ -159,5 +163,40 @@ export const getCompletedOrders = async (req, res) => {
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const sendOrderNotification = async (req, res) => {
+  const { recipientEmail, orderId } = req.body;
+  console.log("Recipient Email in Backend:", recipientEmail);
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: "tropicalize.br@gmail.com", // Use environment variables for security
+      pass: "wkrd mfzl vdky mlim",
+    },
+  });
+
+  const mailOptions = {
+    from: '"Tropicalize" <tropicalize.br@gmail.com>',
+    to: recipientEmail,
+    subject: "New Order Notification",
+    html: `
+      <h3>Hello,</h3>
+      <p>You have a new order to follow on the system.</p>
+      <p>Order ID: ${orderId}</p>
+      <p>Check it out in the system for more details or click in the link below.</p>
+      <a href="http://localhost:5173/compras/detalhe-pedido/${orderId}">Link direto para o pedido!</a>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: "Notification email sent successfully!" });
+  } catch (error) {
+    console.error("Error sending email:", error); // Log the error for debugging
+    res.status(500).json({ message: "Error sending email", error });
   }
 };

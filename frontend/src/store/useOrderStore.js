@@ -5,29 +5,49 @@ const API_URL = "http://localhost:5000/api";
 axios.defaults.withCredentials = true;
 
 export const useOrderStore = create((set) => ({
-  completedOrders: [], // Initialize as empty array
+  completedOrders: [],
   orders: [],
   error: null,
   isLoading: false,
 
-  createOrder: async (orderData) => {
+  createOrder: async (orderData, enviarParaResponsavel) => {
     try {
+      console.log("Sending order data:", orderData);
+
       const response = await axios.post(`${API_URL}/orders/create`, orderData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        validateStatus: function (status) {
+          return status >= 200 && status < 500;
+        },
       });
+
+      if (response.status === 400) {
+        console.log("Server validation error:", response.data);
+        throw new Error(response.data.message);
+      }
+
+      const order = response.data;
+
+      // Send email notification
+      await sendEmailNotification(enviarParaResponsavel, order.id);
+
       set((state) => ({
         ...state,
-        orders: [...state.orders, response.data],
+        orders: [...state.orders, order],
         isLoading: false,
       }));
+
+      return order;
     } catch (error) {
+      console.log("Full error details:", error);
       set((state) => ({
         ...state,
         error: error.response?.data?.message || "Erro ao criar pedido",
         isLoading: false,
       }));
+      throw error;
     }
   },
 
@@ -86,12 +106,21 @@ export const useOrderStore = create((set) => ({
     }
   },
 
-  updateOrder: async (id, { status, enviarPara }) => {
+  updateOrder: async (
+    id,
+    { status, enviarPara, enviarParaResponsavel, responsavelEmail }
+  ) => {
     try {
       const response = await axios.put(`${API_URL}/orders/update/${id}`, {
         status,
         enviarPara,
+        enviarParaResponsavel,
       });
+
+      if (responsavelEmail) {
+        sendEmailNotification(responsavelEmail, id);
+      }
+
       set((state) => ({
         ...state,
         currentOrder: response.data,
@@ -145,3 +174,28 @@ export const useOrderStore = create((set) => ({
     }
   },
 }));
+
+// Function to send email notification
+const sendEmailNotification = async (recipientEmail, orderId) => {
+  try {
+    // Log the recipient email for debugging
+    console.log("Sending email to:", recipientEmail);
+
+    const response = await fetch(`${API_URL}/orders/send-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recipientEmail,
+        orderId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to send email");
+    }
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+};

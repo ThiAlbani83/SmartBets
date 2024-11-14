@@ -5,20 +5,19 @@ import { useAuthStore } from "./store/useAuthStore";
 import { useEffect, useState } from "react";
 import RedirectAuthenticatedUser from "./components/RedirectAuthenticatedUser";
 import HomePage from "./pages/HomePage";
+import InvitedUserRegistration from "./pages/InvitedUserRegistration";
 
 function App() {
   const { checkAuth } = useAuthStore();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     console.log("Verificando autenticação...");
-    if(checkAuth()){
-      setIsAuthenticated(true);
-      console.log("Usuário autenticado!");
-    } else {
-      setIsAuthenticated(false);
-      console.log("Usuário não autenticado!");
-    } // Verifica a autenticação ao carregar o app
+    checkAuth();
+    if (localStorage.getItem("user")) {
+      console.log("Usuário autenticado");
+    }else{
+      console.log("Usuário não autenticado");
+    }
 
   }, [checkAuth]);
 
@@ -41,6 +40,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/register/:token" element={<InvitedUserRegistration />} />
       </Routes>
     </div>
   );

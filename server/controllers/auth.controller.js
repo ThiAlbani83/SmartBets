@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import prisma from "../prismaClient.js";
+import nodemailer from "nodemailer";
+
+console.log("Auth controller loaded");
 
 export const registerUser = async (req, res) => {
   const { email, password, name, role } = req.body;
@@ -23,6 +26,28 @@ export const registerUser = async (req, res) => {
   }
 };
 
+export const toggleUserStatus = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+    });
+    if (!user) {
+      return res.status(404).json({ message: "Usuário não encontrado" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: { active: !user.active },
+    });
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Erro ao atualizar status do usuário", error });
+  }
+};
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -80,44 +105,86 @@ export const checkAuth = (req, res) => {
   });
 };
 
-
 export const inviteUser = async (req, res) => {
-  const { email, role } = req.body;
-  // Gera um token com o e-mail e a função
-  const token = jwt.sign({ email, role }, process.env.JWT_SECRET, {
+  const { email, role, name } = req.body;
+  const token = jwt.sign({ email, role, name }, process.env.JWT_SECRET, {
     expiresIn: "24h",
   });
-  // Link de registro que será enviado por e-mail
-  const inviteLink = `http://localhost:5173/signup/${token}`;
+  const inviteLink = `http://localhost:5173/register/${token}`;
 
-  // Configuração do Nodemailer para o servidor SMTP
   let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com", // Ou Gmail: 'smtp.gmail.com'
-    port: 587, // Porta para TLS
-    secure: false, // true para 465, false para outras portas
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
     auth: {
-      user: "tropicalize.br@gmail.com", // Seu email
-      pass: "wkrd mfzl vdky mlim", // Sua senha de e-mail
+      user: "tropicalize.br@gmail.com",
+      pass: "wkrd mfzl vdky mlim",
     },
   });
-  // Opções do e-mail (de quem, para quem, assunto, corpo do e-mail)
+
   let mailOptions = {
-    from: '"Tropicalize" <tropicalize.br@gmail.com>', // Endereço de envio
-    to: email, // Endereço do destinatário
-    subject: "Convite para Registro", // Assunto do e-mail
+    from: '"Tropicalize" <tropicalize.br@gmail.com>',
+    to: email,
+    subject: "Convite para Registro",
     html: `
-      <h3>Olá,</h3>
+      <h3>Olá ${name},</h3>
       <p>Você foi convidado a se registrar no nosso sistema. Clique no link abaixo para continuar:</p>
       <a href="${inviteLink}">Registrar-se</a>
     `,
   };
 
   try {
-    // Enviar o e-mail
     await transporter.sendMail(mailOptions);
     res.json({ message: "Convite enviado com sucesso!" });
   } catch (error) {
-    console.error("Erro ao enviar o e-mail:", error);
     res.status(500).json({ message: "Erro ao enviar convite" });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar usuários" });
+  }
+};
+
+export const registerInvitedUser = async (req, res) => {
+  const { token, password } = req.body;
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { email, role, name } = decoded;
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "User already exists" 
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        role,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      user: newUser,
+    });
+  } catch (err) {
+    console.error('Server error:', err); // Add this to see server-side error
+    return res.status(400).json({ success: false, message: err.message });
   }
 };

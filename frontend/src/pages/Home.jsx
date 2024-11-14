@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+
 
 const Home = () => {
-  const [data, setData] = useState([]);
 
   return (
     <div className="flex flex-col gap-3 font-semibold text-gray-600 font-inter">

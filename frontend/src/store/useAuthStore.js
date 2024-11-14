@@ -52,6 +52,8 @@ export const useAuthStore = create((set) => ({
         isLoading: false,
         error: null,
       });
+      localStorage.removeItem("user");
+      localStorage.removeItem("isAuthenticated");
     } catch (error) {
       set({ error: "Error signing out", isLoading: false });
     }
@@ -98,6 +100,55 @@ export const useAuthStore = create((set) => ({
           error: null,
         });
       }
+    }
+  },
+
+  // Get users
+  getAllUsers: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await axios.get(`${API_URL}/getAllUsers`, {
+        withCredentials: true,
+      });
+      set({ users: res.data, isLoading: false });
+      return res.data;
+    } catch (error) {
+      set({ error: "Error fetching users", isLoading: false });
+      throw error;
+    }
+  },
+
+  toggleUserStatus: async (userId) => {
+    if (!userId) {
+      throw new Error("ID do usuário não fornecido");
+    }
+
+    try {
+      const res = await axios.patch(`${API_URL}/toggle-status/${userId}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error in toggleUserStatus:", error);
+      throw new Error("Erro ao atualizar status do usuário");
+    }
+  },
+
+  // Add these new methods to the store
+  inviteUser: async (userData) => {
+    try {
+      const res = await axios.post(`${API_URL}/invite`, userData);
+      return res.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  registerInvitedUser: async (userData) => {
+    try {
+      const res = await axios.post(`${API_URL}/register-invited`, userData);
+      return res.data;
+    } catch (error) {
+      console.error('Registration error:', error.response?.data); // Add this to see server response
+      throw error;
     }
   },
 

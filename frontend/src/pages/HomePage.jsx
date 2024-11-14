@@ -24,6 +24,8 @@ import OrderDetail from "./buyorder/OrderDetail";
 import OrderHistory from "./buyorder/OrderHistory";
 import EditSupplier from "./buyorder/EditSupplier";
 import Navbar from "../components/Navbar";
+import AdminPanel from "./authenticate/AdminPanel";
+import ProtectedAdminRoute from "../components/ProtectedAdminRoute";
 
 const HomePage = () => {
   return (
@@ -37,7 +39,7 @@ const HomePage = () => {
       <Sidebar />
 
       {/* Main Content com rotas internas */}
-      <div className="w-full h-screen p-3 my-auto">
+      <div className="relative w-full h-screen p-3 my-auto">
         <div className="homePage flex-1 w-full h-[100%] bg-gray-300 rounded-lg overflow-y-scroll scroll-m-0 shadow-lg">
           <Navbar />
           <div className="p-10">
@@ -72,6 +74,14 @@ const HomePage = () => {
                 element={<OrderDetail />}
               />
               <Route path="compras/historico" element={<OrderHistory />} />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminPanel />
+                  </ProtectedAdminRoute>
+                }
+              />
               {/* Adicione mais rotas conforme necessário */}
             </Routes>
           </div>

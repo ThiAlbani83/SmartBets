@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOrderStore } from "../../store/useOrderStore";
-import { set } from "date-fns";
+import { useAuthStore } from "../../store/useAuthStore"; // Adjust the path as needed
 
 const OrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { users, getAllUsers } = useAuthStore();
+  const [enviarPara, setEnviarPara] = useState("");
   const { currentOrder, getOrderById, updateOrder } = useOrderStore();
   const [status, setStatus] = useState("");
-  const [enviarPara, setEnviarPara] = useState("");
+  const [enviarParaResponsavel, setEnviarParaResponsavel] = useState("");
+  const [departmentUsers, setDepartmentUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -16,24 +19,45 @@ const OrderDetail = () => {
   }, [id]);
 
   useEffect(() => {
-    if (currentOrder) {
+    getAllUsers();
+  }, [getAllUsers]);
+
+  useEffect(() => {
+    if (currentOrder && users) {
       setStatus(currentOrder.status);
       setEnviarPara(currentOrder.enviarPara);
+      setEnviarParaResponsavel(currentOrder.enviarParaResponsavel);
+
+      // Filter users based on the department
+      const filteredUsers = users.filter(
+        (user) =>
+          user.role.toLowerCase() === currentOrder.enviarPara.toLowerCase()
+      );
+      setDepartmentUsers(filteredUsers);
     }
-  }, [currentOrder]);
+  }, [currentOrder, users]);
 
   const handleStatusChange = (e) => {
     setStatus(e.target.value);
   };
 
   const handleEnviarParaChange = (e) => {
-    setEnviarPara(e.target.value);
-  };
+    const selectedDepartment = e.target.value;
+    setEnviarPara(selectedDepartment);
 
+    // Optionally, filter users based on the selected department
+    const filteredUsers = users.filter(
+      (user) => user.role.toLowerCase() === selectedDepartment.toLowerCase()
+    );
+    setDepartmentUsers(filteredUsers);
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await updateOrder(id, { status, enviarPara });
+      const userEmail = departmentUsers.find(user => user.name === enviarParaResponsavel)?.email;
+      console.log(userEmail)
+      await updateOrder(id, { status, enviarPara, enviarParaResponsavel, responsavelEmail: userEmail });
       setLoading(true);
       setTimeout(() => {
         alert("Pedido atualizado com sucesso!");
@@ -87,34 +111,49 @@ const OrderDetail = () => {
                   </span>
                 </p>
               </div>
-              <div className="flex flex-wrap">
-                <p className="flex items-center gap-2 p-1 border-b text-primaryLight w-fit border-b-gray-300 focus:outline-none">
-                  Responsável:
-                  <span className="font-semibold text-primary">
-                    {currentOrder.responsavel}
+              <div className="flex flex-wrap gap-10">
+                <div className="flex flex-wrap items-center gap-2 px-4 py-2 w-fit">
+                  <span className="p-1 border-b text-primaryLight w-fit border-b-gray-300 focus:outline-none">
+                    Encaminhar para:
                   </span>
-                </p>
+                  <select
+                    value={enviarPara}
+                    onChange={handleEnviarParaChange}
+                    className="flex items-center justify-between p-2 bg-gray-100 rounded-md w-fit"
+                  >
+                    <option value="">Não encaminhar</option>
+                    <option value="admin">Administração</option>
+                    <option value="diretor">Diretoria</option>
+                    <option value="board">Board</option>
+                    <option value="sac">SAC</option>
+                    <option value="Administrativo">Administrativo</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-4 w-fit">
+                  <label className="text-primaryLight">Responsável:</label>
+                  <select
+                    value={enviarParaResponsavel}
+                    onChange={(e) => setEnviarParaResponsavel(e.target.value)}
+                    className="flex items-center justify-between p-2 bg-gray-100 rounded-md w-fit"
+                  >
+                    <option value="" disabled>
+                      Selecionar responsável...
+                    </option>
+                    {departmentUsers.map((user) => (
+                      <option key={user.id} value={user.name}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 px-4 py-2 w-fit">
-                <span className="p-1 border-b text-primaryLight w-fit border-b-gray-300 focus:outline-none">
-                  Enviar Para:
-                </span>
-                <select
-                  value={enviarPara}
-                  onChange={handleEnviarParaChange}
-                  className="flex items-center justify-between p-2 font-semibold bg-gray-100 rounded-md text-primary w-fit"
-                >
-                  <option value="Financeiro">Financeiro</option>
-                  <option value="CEO">CEO</option>
-                  <option value="Diretoria">Diretoria</option>
-                  <option value="Administrativo">Administrativo</option>
-                </select>
-              </div>
               <div className="flex flex-wrap gap-10">
                 <p className="p-1 border-b text-primaryLight w-fit border-b-gray-300 focus:outline-none">
                   Motivo da Compra:
-                  <span className="font-semibold text-primary">{currentOrder.motivoCompra}</span>
+                  <span className="font-semibold text-primary">
+                    {currentOrder.motivoCompra}
+                  </span>
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 w-fit">

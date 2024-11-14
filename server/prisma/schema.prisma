@@ -17,6 +17,7 @@ model User {
   lastLogin   DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  active      Boolean  @default(true)
 }
 
 model Supplier {
@@ -56,15 +57,16 @@ model ProductSupplier {
 }
 
 model Order {
-  id         Int      @id @default(autoincrement())
-  produto    String
-  quantidade Int
-  fornecedores String
-  responsavel String
-  enviarPara  String
-  motivoCompra String
-  status  String @default("Pendente")
-  orcamentos  OrderOrcamento[]
+  id                    Int              @id @default(autoincrement())
+  produto              String
+  quantidade           Int
+  fornecedores         String
+  responsavel          String
+  enviarPara           String
+  enviarParaResponsavel String
+  motivoCompra         String
+  status              String           @default("Pendente")
+  orcamentos          OrderOrcamento[]
 }
 
 model OrderOrcamento {

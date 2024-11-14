@@ -6,17 +6,20 @@ import { useSupplierStore } from "../../store/useSupplierStore";
 import { useAuthStore } from "../../store/useAuthStore";
 
 const NewOrder = () => {
+  const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const { createOrder } = useOrderStore();
   const { products, getProducts } = useProductStore();
   const { suppliers, getSuppliers } = useSupplierStore();
-  const { user } = useAuthStore();
+  const { user, getAllUsers } = useAuthStore();
+  const [departmentUsers, setDepartmentUsers] = useState([]);
   const [formData, setFormData] = useState({
     produto: "",
     quantidade: 1,
     fornecedores: [],
     responsavel: user.name,
-    enviarPara: "Selecione um departamento...",
+    enviarPara: "Departamento...",
+    enviarParaResponsavel: "Destinatario...",
     orcamentos: [],
   });
 
@@ -27,9 +30,36 @@ const NewOrder = () => {
     getSuppliers();
   }, []);
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const usersData = await getAllUsers();
+        setUsers(usersData);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
+  }, [getAllUsers]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleDepartmentChange = (e) => {
+    const selectedDepartment = e.target.value;
+    handleChange(e);
+
+    // Add console.log to check values
+    console.log("Selected Department:", selectedDepartment);
+    console.log("All Users:", users);
+
+    const filteredUsers = users.filter(
+      (user) => user.role.toLowerCase() === selectedDepartment.toLowerCase()
+    );
+    setDepartmentUsers(filteredUsers);
   };
 
   const handleAddFornecedor = (fornecedor) => {
@@ -44,10 +74,8 @@ const NewOrder = () => {
       });
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("FormData before submit:", formData); // Debugging line
 
     try {
       const formData2 = new FormData();
@@ -56,6 +84,7 @@ const NewOrder = () => {
       formData2.append("fornecedores", JSON.stringify(formData.fornecedores));
       formData2.append("responsavel", formData.responsavel);
       formData2.append("enviarPara", formData.enviarPara);
+      formData2.append("enviarParaResponsavel", formData.enviarParaResponsavel);
       formData2.append("motivoCompra", formData.motivoCompra);
 
       if (formData.orcamentos) {
@@ -64,7 +93,18 @@ const NewOrder = () => {
         });
       }
 
-      await createOrder(formData2);
+      // Find the user object for the selected enviarParaResponsavel
+      const selectedUser = users.find(
+        (user) => user.name === formData.enviarParaResponsavel
+      );
+
+      console.log("Selected User Object:", selectedUser);
+
+      // Create the order and send email notification
+      await createOrder(formData2, selectedUser.email);
+      console.log();
+
+      // Navigate to the active orders page
       navigate("/compras/pedidos-ativos");
     } catch (error) {
       console.error("Error creating order:", error);
@@ -179,9 +219,7 @@ const NewOrder = () => {
             {/* Responsável */}
             <div className="flex flex-wrap items-center gap-6">
               <div className="flex items-center gap-4 w-fit">
-                <label className="text-primaryLight">
-                  Responsável
-                </label>
+                <label className="text-primaryLight">Responsável</label>
                 <input
                   type="text"
                   name="responsavel"
@@ -191,27 +229,46 @@ const NewOrder = () => {
                 />
               </div>
               <div className="flex items-center gap-4 w-fit">
-                <label className="text-primaryLight">
-                  Enviar Para:
-                </label>
+                <label className="text-primaryLight">Enviar Para:</label>
                 <select
                   id="enviarPara"
                   name="enviarPara"
                   value={formData.enviarPara}
+                  onChange={handleDepartmentChange}
+                  className="flex items-center justify-between p-2 bg-gray-100 rounded-md w-fit"
+                >
+                  <option value="Departamento..." disabled>
+                    Departamento...
+                  </option>
+                  <option value="Admin">Admin</option>
+                  <option value="mktB5">Marketing B5 </option>
+                  <option value="mktPin">Marketing Pinbet</option>
+                  <option value="Board">Board</option>
+                  <option value="SAC">SAC</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-4 w-fit">
+                <label className="text-primaryLight">Responsável:</label>
+                <select
+                  id="enviarParaResponsavel"
+                  name="enviarParaResponsavel"
+                  value={formData.enviarParaResponsavel}
                   onChange={handleChange}
                   className="flex items-center justify-between p-2 bg-gray-100 rounded-md w-fit"
                 >
-                  <option value="Armazém Central">Financeiro</option>
-                  <option value="Departamento 1">Diretoria</option>
-                  <option value="Departamento 2">Administrativo</option>
-                  <option value="Departamento 3">CEO</option>
+                  <option value="Destinatario..." disabled>
+                    Responsável...
+                  </option>
+                  {departmentUsers.map((user) => (
+                    <option key={user.id} value={user.name}>
+                      {user.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-primaryLight">
-                Motivo da Compra
-              </label>
+              <label className="text-primaryLight">Motivo da Compra</label>
               <textarea
                 id="motivoCompra"
                 name="motivoCompra"

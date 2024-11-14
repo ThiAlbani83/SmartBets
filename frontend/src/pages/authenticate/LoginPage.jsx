@@ -8,7 +8,7 @@ import Input from "../../components/Input";
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, clearError, error } = useAuthStore();
+  const { login, clearError, error, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -19,12 +19,20 @@ const LoginPage = () => {
     try {
       const userResponse = await login(email, password);
       console.log("Usuário após login:", userResponse);
-      navigate("/"); // Redireciona para a página inicial após o login
+      if (!userResponse.active) {
+        alert("Usuário Inativo. Contate a administração.");
+        localStorage.removeItem("user");
+        logout();
+      } else {
+        alert("Login bem-sucedido!");
+        navigate("/");
+      }
+      // Redireciona para a página inicial após o login
     } catch (err) {
       setIsLoading(false);
-        setTimeout(() => {
-          clearError();
-        }, 3000);
+      setTimeout(() => {
+        clearError();
+      }, 3000);
     }
   };
 
