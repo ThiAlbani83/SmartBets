@@ -5,6 +5,7 @@ import {
   menuSac,
   menuMarketingBetfive,
   menuMarketingPinbet,
+  menuSigap,
 } from "../utils/menuData";
 import MenuIcon from "./MenuIcons";
 import { useAuthStore } from "../store/useAuthStore";
@@ -15,7 +16,7 @@ const Menu = () => {
   const [activeSubSubIndices, setActiveSubSubIndices] = useState({});
   const { user } = useAuthStore();
 
-  // Determine which menu to display based on the user role
+  // determina qual menu será exibido de acordo com o tipo de usuário
   const getMenuItems = () => {
     switch (user.role) {
       case "sac":
@@ -26,19 +27,21 @@ const Menu = () => {
         return menuMarketingBetfive;
       case "mktPin":
         return menuMarketingPinbet;
+      case "SIGAP":
+        return menuSigap;
       default:
         return fullMenu;
       }
   };
 
-  // Toggle the active state of the menu item and its submenu
+  // Alterna o estado ativo do item do menu e seu submenu
   const toggleMenu = (index) => {
     setActiveIndex(index === activeIndex ? null : index);
     setActiveSubIndices({});
     setActiveSubSubIndices({});
   };
 
-  // Toggle the active state of the submenu item and its subsubmenu
+  // Alterna o estado ativo do item do submenu item e seu subsubmenu
   const toggleSubmenu = (menuIndex, subIndex) => {
     setActiveSubIndices((prevState) => ({
       ...prevState,
@@ -47,7 +50,7 @@ const Menu = () => {
     setActiveSubSubIndices({});
   };
 
-  /// Toggle the active state of the subsubmenu item
+  /// Alterna o estado ativo do item do subsubmenu
   const toggleSubSubmenu = (menuIndex, subIndex, subSubIndex) => {
     setActiveSubSubIndices((prevState) => ({
       ...prevState,
@@ -58,7 +61,7 @@ const Menu = () => {
     }));
   };
 
-  // Get the menu items based on the user role
+  // Seleciona os itens do menu de acordo com o tipo de usuário
   const menuItems = getMenuItems();
 
   return (

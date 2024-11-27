@@ -104,6 +104,33 @@ export const menuMarketingPinbet = [
   },
 ];
 
+export const menuSigap = [
+  {
+    title: "SIGAP",
+    icon: "sigap", // Choose an appropriate icon for this parent menu
+    subItems: [
+      {
+        title: "Menu 1",
+        icon: "postagens",
+        subItems: [
+          { name: "Submenu 1", link: "/" },
+          { name: "Submenu 2", link: "/" },
+          { name: "Submenu 3", link: "/" },
+        ],
+      },
+      {
+        title: "Menu 2",
+        icon: "postagens",
+        subItems: [
+          { name: "Submenu 1", link: "/" },
+          { name: "Submenu 2", link: "/" },
+          { name: "Submenu 3", link: "/" },
+        ],
+      }
+    ],
+  },
+];
+
 export const fullMenu = [
   ...menu, // Itens do menu original
   { divider: true },
@@ -112,4 +139,6 @@ export const fullMenu = [
   ...menuMarketingBetfive,
   { divider: true },
   ...menuMarketingPinbet,
+  { divider: true },
+  ...menuSigap,
 ];

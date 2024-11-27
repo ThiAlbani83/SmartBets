@@ -18,7 +18,6 @@ const LoginPage = () => {
 
     try {
       const userResponse = await login(email, password);
-      console.log("Usuário após login:", userResponse);
       if (!userResponse.active) {
         alert("Usuário Inativo. Contate a administração.");
         localStorage.removeItem("user");

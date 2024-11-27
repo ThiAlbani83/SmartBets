@@ -1,19 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import LogoTropicalize from "../assets/logo-tropicalize.png";
-import { useAuthStore } from "../store/useAuthStore";
 import Menu from "./Menu";
 
 const Sidebar = () => {
-  const [adminMenu, setAdminMenu] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
-  
 
-  const handleAdminButton = () => {
-    setAdminMenu(!adminMenu);
-  };
-
-  
   return (
     <div
       style={{ userSelect: "none" }}

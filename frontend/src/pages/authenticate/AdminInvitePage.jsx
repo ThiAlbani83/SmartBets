@@ -57,6 +57,7 @@ const AdminInvitePage = () => {
           <option value="director">Diretor</option>
           <option value="marketing">Marketing</option>
           <option value="sac">SAC</option>
+          <option value="sac">SIGAP</option>
         </select>
         <button className="px-3 py-1 text-white rounded-md w-fit bg-primaryLight">
           Enviar Convite

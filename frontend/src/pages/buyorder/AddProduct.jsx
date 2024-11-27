@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { useProductStore } from "../../store/useProductStore"; // Importe a store
+import React, { useEffect, useState, useRef } from "react";
+import { useProductStore } from "../../store/useProductStore";
 import axios from "axios";
+import AddSupplierModal from "./AddSupplierModal";
 
 const AddProduct = () => {
   const [showFornecedoresDropdown, setShowFornecedoresDropdown] =
-    useState(false); // Controla a exibição do dropdown
+    useState(false);
   const [fornecedoresDisponiveis, setFornecedoresDisponiveis] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const modalRef = useRef(null); // Create a ref for the modal
 
   const [formData, setFormData] = useState({
     nomeProduto: "",
@@ -15,32 +19,51 @@ const AddProduct = () => {
     fornecedores: [],
   });
 
-  const { addProduct, isLoading, error } = useProductStore(); // Obtenha a função de adicionar produto da store
+  const { addProduct, isLoading, error } = useProductStore();
 
-  // Função para buscar fornecedores
   const fetchFornecedores = async () => {
     try {
       const response = await axios.get(
         "http://localhost:5000/api/suppliers/search"
-      ); // Chama a nova rota
-      setFornecedoresDisponiveis(response.data); // Armazena os fornecedores no estado
+      );
+      setFornecedoresDisponiveis(response.data);
     } catch (error) {
       console.error("Erro ao buscar fornecedores:", error);
       alert("Erro ao buscar fornecedores: " + error.message);
     }
   };
 
+  const handleModalOpen = () => {
+    setModalOpen(!modalOpen);
+  };
+
   useEffect(() => {
-    fetchFornecedores(); // Busca fornecedores quando o componente é montado
+    fetchFornecedores();
   }, []);
 
-  // Função para lidar com mudanças nos inputs
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setModalOpen(false);
+      }
+    };
+
+    if (modalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [modalOpen]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Função para adicionar fornecedor (limitado a 3)
   const handleAddFornecedor = (fornecedor) => {
     if (
       formData.fornecedores.length < 3 &&
@@ -50,7 +73,7 @@ const AddProduct = () => {
         ...formData,
         fornecedores: [...formData.fornecedores, fornecedor],
       });
-      setShowFornecedoresDropdown(false); // Esconde o dropdown após selecionar
+      setShowFornecedoresDropdown(false);
     } else {
       alert(
         "Você já selecionou esse fornecedor ou atingiu o limite de 3 fornecedores."
@@ -58,14 +81,12 @@ const AddProduct = () => {
     }
   };
 
-  // Função para remover fornecedor
   const removeFornecedor = (index) => {
     const updatedFornecedores = [...formData.fornecedores];
     updatedFornecedores.splice(index, 1);
     setFormData({ ...formData, fornecedores: updatedFornecedores });
   };
 
-  // Função para enviar o formulário
   const handleSubmit = async () => {
     const productData = {
       nomeProduto: formData.nomeProduto,
@@ -75,14 +96,12 @@ const AddProduct = () => {
       descricao: formData.descricao,
     };
 
-    console.log("Enviando produto:", productData); // Verifica os dados no console
+    console.log("Enviando produto:", productData);
 
     try {
-      // Chama a função addProduct da store
       await addProduct(productData);
       console.log(formData);
       alert("Produto cadastrado com sucesso!");
-      // Limpa o formulário após o envio
       setFormData({
         nomeProduto: "",
         fabricante: "",
@@ -98,8 +117,7 @@ const AddProduct = () => {
 
   return (
     <div className="max-w-6xl p-4 mx-auto font-inter">
-      <div className="flex flex-col gap-12 p-6 bg-white border border-gray-600 rounded-lg shadow-md">
-        {/* Seção Detalhes Produto */}
+      <div className="relative flex flex-col gap-12 p-6 bg-white border border-gray-600 rounded-lg shadow-md">
         <section>
           <h2 className="mb-12 text-2xl font-semibold font-inter text-primary">
             Detalhes do Produto
@@ -157,21 +175,35 @@ const AddProduct = () => {
 
             {formData.fornecedores.length < 3 && (
               <div className="mt-2">
-                <button
-                  onClick={() =>
-                    setShowFornecedoresDropdown(!showFornecedoresDropdown)
-                  }
-                  className="px-4 py-2 text-white rounded-md bg-primaryLight"
-                >
-                  Adicionar Fornecedor
-                </button>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() =>
+                      setShowFornecedoresDropdown(!showFornecedoresDropdown)
+                    }
+                    className="px-4 py-2 text-white rounded-md bg-primaryLight"
+                  >
+                    Adicionar Fornecedor
+                  </button>
+                  <button
+                    onClick={handleModalOpen}
+                    className="px-4 py-2 text-white rounded-md bg-primaryLight"
+                  >
+                    Cadastrar Fornecedor
+                  </button>
+                </div>
+
+                {modalOpen && (
+                  <div ref={modalRef}>
+                    <AddSupplierModal />
+                  </div>
+                )}
                 {showFornecedoresDropdown && (
                   <div className="p-2 mt-2 bg-white border border-gray-300 rounded-md shadow-lg">
                     <ul>
                       {fornecedoresDisponiveis.map((fornecedor) => (
                         <li
-                          key={fornecedor.id} // Utilize o ID como chave
-                          onClick={() => handleAddFornecedor(fornecedor.nome)} // Use o nome do fornecedor
+                          key={fornecedor.id}
+                          onClick={() => handleAddFornecedor(fornecedor.nome)}
                           className="p-2 cursor-pointer hover:bg-gray-100"
                         >
                           {fornecedor.nome}{" "}
@@ -196,14 +228,13 @@ const AddProduct = () => {
             className="w-full p-2 border rounded-md border-b-gray-300 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </section>
-        {/* Botão de envio */}
         <div className="mt-6 text-left">
           <button
             onClick={handleSubmit}
             className={`px-4 py-2 text-white rounded-md bg-primary ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
-            disabled={isLoading} // Desabilita o botão enquanto carrega
+            disabled={isLoading}
           >
             {isLoading ? "Enviando..." : "Enviar"}
           </button>

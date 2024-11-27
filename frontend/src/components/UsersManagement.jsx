@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
+import ConfirmationModal from "./ConfirmationModal";
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);
   const { getAllUsers, toggleUserStatus } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -28,20 +31,27 @@ const UsersManagement = () => {
     setSortConfig({ key, direction });
   };
 
-  const handleToggleStatus = async (userId) => {
+  const handleToggleStatus = async () => {
+    if (!selectedUser) return;
+
     try {
-      console.log("User ID being passed:", userId);
-      const updatedUser = await toggleUserStatus(userId);
-      
-      // Update only the specific user's status
+      const updatedUser = await toggleUserStatus(selectedUser.id);
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
-          user.id === userId ? { ...user, active: !user.active } : user
+          user.id === selectedUser.id ? { ...user, active: !user.active } : user
         )
       );
     } catch (error) {
       console.error("Erro ao atualizar status do usuário:", error);
+    } finally {
+      setIsModalOpen(false);
+      setSelectedUser(null);
     }
+  };
+
+  const openConfirmationModal = (user) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
   };
 
   const filteredUsers = users.filter((user) =>
@@ -87,10 +97,10 @@ const UsersManagement = () => {
                   <td className="px-6 py-4 border-b">{user.role}</td>
                   <td className="px-6 py-4 border-b">
                     <span
-                      className={`px-2 py-1 rounded ${
+                      className={`py-1 rounded ${
                         user.active
-                          ? "bg-green-200 text-green-800"
-                          : "bg-red-200 text-red-800"
+                          ? "bg-green-200 px-8 text-green-800"
+                          : "bg-red-200 px-6 text-red-800"
                       }`}
                     >
                       {user.active ? "Ativo" : "Inativo"}
@@ -98,11 +108,8 @@ const UsersManagement = () => {
                   </td>
                   <td className="px-6 py-4 border-b">
                     <button
-                      onClick={() => {
-                        console.log("Current user object:", user); // This will show the specific user being clicked
-                        handleToggleStatus(user.id);
-                      }}
-                      className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+                      onClick={() => openConfirmationModal(user)}
+                      className="px-4 py-2 text-white rounded w-36 bg-primary hover:bg-primaryLight"
                     >
                       {user.active ? "Tornar Inativo" : "Tornar Ativo"}
                     </button>
@@ -113,6 +120,12 @@ const UsersManagement = () => {
           </table>
         </div>
       </div>
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleToggleStatus}
+        message={`Você tem certeza que deseja ${selectedUser?.active ? "inativar" : "ativar"} o usuário ${selectedUser?.name}?`}
+      />
     </div>
   );
 };

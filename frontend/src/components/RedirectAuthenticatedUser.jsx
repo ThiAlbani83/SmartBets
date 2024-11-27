@@ -11,7 +11,6 @@ const RedirectAuthenticatedUser = ({ children }) => {
   if (isAuthenticated) {
     return (
     <div>
-      {console.log(isAuthenticated)}
       <Navigate to="/" replace />
     </div>
     

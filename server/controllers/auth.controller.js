@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import prisma from "../prismaClient.js";
 import nodemailer from "nodemailer";
+import { v4 as uuidv4 } from "uuid";
 
 console.log("Auth controller loaded");
 
@@ -11,13 +12,14 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({
       data: {
+        id: uuidv4(),
         email,
         password: hashedPassword,
         name,
         role,
       },
     });
-    return res.status(201).json({
+    return res.status(201).json({ 
       success: true,
       user: newUser,
     });
