@@ -7,7 +7,7 @@ const ProtectedSigapRoute = ({ children }) => {
 
   if (user.role !== 'admin' || user.role !== 'SIGAP') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen hover:bg-gray-100">
         <h1 className="mb-4 text-3xl font-bold">Não Autorizado!</h1>
         <p className="mb-4">Você será redirecionado em {countdown} segundos...</p>
         {useEffect(() => {
