@@ -46,8 +46,8 @@ const AddSuppliers = () => {
           cidade: localidade,
           estado: uf,
         });
-        if(response.data.erro) {
-          alert("CEP não encontrado. Por favor, insira um CEP válido.")
+        if (response.data.erro) {
+          alert("CEP não encontrado. Por favor, insira um CEP válido.");
         }
       } catch (error) {
         console.error("Error fetching address data:", error);
@@ -56,7 +56,6 @@ const AddSuppliers = () => {
       alert("Por favor, insira um CEP válido de 8 dígitos.");
     }
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,6 +87,7 @@ const AddSuppliers = () => {
               <input
                 type="text"
                 name="nome"
+                required
                 value={formData.nome}
                 onChange={handleChange}
                 className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
@@ -98,8 +98,30 @@ const AddSuppliers = () => {
               <input
                 type="text"
                 name="cnpj"
+                placeholder="xx.xxx.xxx/xxxx-xx"
+                pattern="\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}"
                 value={formData.cnpj}
-                onChange={handleChange}
+                maxLength={18}
+                required
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, "");
+                  if (value.length <= 14) {
+                    value = value.replace(
+                      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+                      "$1.$2.$3/$4-$5"
+                    );
+                  }
+                  if (value.length >= 14) {
+                    value = value.replace(
+                      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+                      "$1.$2.$3/$4-$5"
+                    );
+                  }
+                  setFormData((prev) => ({
+                    ...prev,
+                    cnpj: value,
+                  }));
+                }}
                 className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
               />
             </div>
@@ -109,6 +131,7 @@ const AddSuppliers = () => {
                 type="email"
                 name="email"
                 value={formData.email}
+                required
                 onChange={handleChange}
                 className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
               />
@@ -118,8 +141,23 @@ const AddSuppliers = () => {
               <input
                 type="tel"
                 name="telefone"
+                placeholder="(xx) xxxxx-xxxx"
+                required
+                maxLength={15}
                 value={formData.telefone}
-                onChange={handleChange}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, "");
+                  if (value.length >= 2) {
+                    value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                  }
+                  if (value.length >= 10) {
+                    value = `${value.substring(0, 10)}-${value.substring(10)}`;
+                  }
+                  setFormData((prev) => ({
+                    ...prev,
+                    telefone: value,
+                  }));
+                }}
                 className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
               />
             </div>
@@ -145,7 +183,7 @@ const AddSuppliers = () => {
             </div>
           </section>
           <h2 className="text-2xl font-semibold font-inter text-primary">
-          Endereço
+            Endereço
           </h2>
           <section className="grid gap-4 md:grid-cols-3">
             <div className="flex flex-col col-span-2 gap-1 md:col-span-1">
@@ -154,6 +192,7 @@ const AddSuppliers = () => {
                 <input
                   type="text"
                   name="cep"
+                  required
                   value={formData.cep}
                   onChange={handleChange}
                   className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"

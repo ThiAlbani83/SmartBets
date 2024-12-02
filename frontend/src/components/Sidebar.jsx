@@ -8,7 +8,7 @@ const Sidebar = () => {
   return (
     <div
       style={{ userSelect: "none" }}
-      className="flex flex-col max-w-[350px] w-[300px] h-full gap-10 py-10 overflow-hidden shadow-lg sidebar bg-background"
+      className="flex flex-col max-w-[350px] w-[300px] h-full gap-10 py-10 overflow-hidden shadow-lg sidebar bg-background "
     >
       <div className="px-3">
         <img
