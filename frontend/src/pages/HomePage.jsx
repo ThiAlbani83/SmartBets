@@ -15,7 +15,6 @@ import ActiveOrders from "./buyorder/ActiveOrders";
 import OrderDetail from "./buyorder/OrderDetail";
 import OrderHistory from "./buyorder/OrderHistory";
 import EditSupplier from "./buyorder/EditSupplier";
-import Navbar from "../components/Navbar";
 import AdminPanel from "./authenticate/AdminPanel";
 import ProtectedAdminRoute from "../components/ProtectedAdminRoute";
 import NavbarV2 from "../components/NavbarV2";

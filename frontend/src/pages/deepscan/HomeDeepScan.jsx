@@ -1,5 +1,3 @@
-
-
 const HomeDeepScan = () => {
   return (
     <div className="w-full h-full flex relative font-roboto">
