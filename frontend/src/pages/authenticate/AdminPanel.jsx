@@ -17,7 +17,7 @@ const AdminPanel = () => {
 
   return (
     <div className="flex flex-col w-full h-full gap-10">
-      <AdminAccordion title={"Convidar Usuário"} component={<AdminInvitePage />} height={"h-[230px]"} />
+      <AdminAccordion title={"Convidar Usuário"} component={<AdminInvitePage />} height={"h-[350px]"} />
       <AdminAccordion title={"Gerenciar Usuários"} component={<UsersManagement />} height={"h-[500px]"} />
     </div>
   );

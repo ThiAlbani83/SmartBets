@@ -1,144 +1,76 @@
-export const menuSac = [
-  {
-    title: "Fluxos de Atendimento",
-    icon: "sac", // You can choose an appropriate icon for this parent menu
-    subItems: [
-      {
-        title: "BetFive",
-        icon: "betfive",
-        subItems: [
-          { name: "Saque", link: "/b5/saques" },
-          { name: "Depositos", link: "/b5/depositos" },
-          { name: "Bônus", link: "/b5/bonus" },
-        ],
-      },
-      {
-        title: "JetBet365",
-        icon: "jetbet",
-        subItems: [
-          { name: "Saque", link: "/jet/saques" },
-          { name: "Depositos", link: "/jet/depositos" },
-          { name: "Bônus", link: "/jet/bonus" },
-        ],
-      },
-      {
-        title: "PinBet",
-        icon: "pinbet",
-        subItems: [
-          { name: "Saque", link: "/pin/saques" },
-          { name: "Depositos", link: "/pin/depositos" },
-          { name: "Bônus", link: "/pin/bonus" },
-        ],
-      },
-    ],
-  },
+import home from "../assets/home.png";
+import submeter from "../assets/submeter.png";
+import department from "../assets/department.png";
+import products from "../assets/product.png";
+import admin from "../assets/admin.png";
+import tasks from "../assets/tasks.png";
+import contacts from "../assets/contacts.png";
+import dashboard from "../assets/dashboard.png"; 
+import verification from "../assets/verification.png";
+import liveness from "../assets/liveness.png";
+import antifraud from "../assets/antifraud.png";
+import insights from "../assets/insights.png";
+import supplier from "../assets/supplier.png";
+import newProduct from "../assets/new.png";
+import pending from "../assets/pending.png";
+import history from "../assets/history.png";
+import faq from "../assets/faq.png";
+import flow from "../assets/flow.png";
+
+export const menuItemsAdmin = [
+  { name: "Home", icon: home, path: "/" },
+  { name: "KPI's", icon: submeter, path: "/kpi" },
+  { name: "Departamentos", icon: department, path: "/departments" },
+  { name: "Produtos", icon: products, path: "/produto/pesquisa" },
+  { name: "Contatos", icon: contacts, path: "/contacts" },
+  { name: "Tarefas", icon: tasks, path: "/tasks" },
+  { name: "Sair", icon: admin },
 ];
 
-export const menu = [
-  {
-    title: "Gestão de Produtos",
-    icon: "produtos", // Choose an appropriate icon for this parent menu
-    subItems: [
-      {
-        title: "Fornecedores",
-        icon: "fornecedores",
-        subItems: [
-          { name: "Novo", link: "/fornecedores/cadastro", icon: 'adicionar' },
-          { name: "Buscar", link: "/fornecedores/pesquisa", icon: 'pesquisar' },
-        ],
-      },
-      {
-        title: "Produtos",
-        icon: "items",
-        subItems: [
-          { name: "Novo", link: "/produto/cadastro", icon: 'adicionar' },
-          { name: "Buscar", link: "/produto/pesquisa", icon: 'pesquisar' },
-        ],
-      },
-      {
-        title: "Pedidos de Compra",
-        icon: "compras",
-        subItems: [
-          { name: "Novo", link: "/compras/novo-pedido", icon: 'adicionar' },
-          { name: "Pendentes", link: "/compras/pedidos-ativos", icon: 'pendentes' },
-          { name: "Histórico", link: "/compras/historico", icon: 'historico' },
-        ],
-      },
-    ],
-  },
+export const menuItemsAdministrativo = [
+  { name: "Dashboard", icon: home, path: "/administrativo/dashboard" },
+  { name: "Produtos", icon: products, path: "/produto/pesquisa" },
+  { name: "Fornecedores", icon: supplier, path: "/fornecedores/pesquisa" },
+  { name: "Novo Pedido", icon: newProduct, path: "/compras/novo-pedido" },
+  { name: "Pendentes", icon: pending, path: "/compras/pedidos-ativos" },
+  { name: "Histórico", icon: history, path: "/compras/historico" },
 ];
 
-export const menuMarketingBetfive = [
-  {
-    title: "Marketing BetFive",
-    icon: "betfive", // Choose an appropriate icon for this parent menu
-    subItems: [
-      {
-        title: "Postagens",
-        icon: "postagens",
-        subItems: [
-          { name: "Instagram", link: "/" },
-          { name: "X", link: "/" },
-          { name: "Linkedin", link: "/" },
-        ],
-      },
-    ],
-  },
-];
 
-export const menuMarketingPinbet = [
-  {
-    title: "Marketing Pinbet",
-    icon: "pinbet", // Choose an appropriate icon for this parent menu
-    subItems: [
-      {
-        title: "Postagens",
-        icon: "postagens",
-        subItems: [
-          { name: "Instagram", link: "/" },
-          { name: "X", link: "/" },
-          { name: "Linkedin", link: "/" },
-        ],
-      },
-    ],
-  },
-];
+export const menuItemsSigap = [
+    { name: "Dashboard", icon: dashboard, path: "/sigap/dashboard" },
+    { name: "Submeter", icon: submeter, path: "/sigap/submeter-arquivos" },
+    { name: "Auditar", icon: tasks, path: "/sigap/auditar-arquivos" },
+    { name: "Relatórios", icon: department, path: "/sigap/relatorios" },
+    { name: "Admin", icon: admin },
+  ];
 
-export const menuSigap = [
-  {
-    title: "SIGAP",
-    icon: "sigap", // Choose an appropriate icon for this parent menu
-    subItems: [
-      {
-        title: "Menu 1",
-        icon: "postagens",
-        subItems: [
-          { name: "Submenu 1", link: "/" },
-          { name: "Submenu 2", link: "/" },
-          { name: "Submenu 3", link: "/" },
-        ],
-      },
-      {
-        title: "Menu 2",
-        icon: "postagens",
-        subItems: [
-          { name: "Submenu 1", link: "/" },
-          { name: "Submenu 2", link: "/" },
-          { name: "Submenu 3", link: "/" },
-        ],
-      }
-    ],
-  },
-];
+export const menuItemsSac = [
+    { name: "Dashboard", icon: home, path: "/sac/dashboard" },
+    { name: "F.A.Q", icon: faq, path: "/sac/perguntas-frequentes" },
+    { name: "Smart Flow", icon: flow, path: "/sac/smart-flow" },
+    { name: "Tickets", icon: tasks, path: "/sac/tickets" },
+    { name: "Relatórios", icon: admin, path: "/sac/relatorios" },
+  ];
 
-export const fullMenu = [
-  ...menu, // Itens do menu original
-  { divider: true },
-  ...menuSac, // Itens do menu SAC
-  { divider: true },
-  ...menuMarketingBetfive,
-  { divider: true },
-  ...menuMarketingPinbet,
-  { divider: true },
-  ...menuSigap,
-];
+export const menuItemsKYC = [
+    { name: "Dashboard", icon: home, path: "/kyc/dashboard" },
+    { name: "Verificações", icon: verification, path: "/kyc/verificacoes" },
+    { name: "Liveness", icon: liveness, path: "/kyc/liveness" },
+    { name: "Antifraude", icon: antifraud, path: "/kyc/antifraude" },
+    { name: "Insights", icon: insights, path: "/kyc/insights" },
+  ];
+
+
+export const menuItemsResponsible = [
+    { name: "Dashboard", icon: home, path: "/jogo-responsavel/dashboard" },
+    { name: "Menu 1", icon: verification, path: "/sigap/submeter-arquivos" },
+    { name: "Menu 2", icon: liveness, path: "/sigap/auditar-arquivos" },
+    { name: "Menu 3", icon: antifraud, path: "/sigap/relatorios" },
+    { name: "Menu 4", icon: insights },
+  ];
+  
+export const menuItemsDeepScan = [
+    { name: "Dashboard", icon: home, path: "/deepscan/dashboard"},
+    { name: "Varrer", icon: insights, path: "/deepscan/verificacoes"},
+  ];

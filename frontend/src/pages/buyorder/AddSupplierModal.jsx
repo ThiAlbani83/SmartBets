@@ -46,8 +46,8 @@ const AddSupplierModal = () => {
           cidade: localidade,
           estado: uf,
         });
-        if(response.data.erro) {
-          alert("CEP não encontrado. Por favor, insira um CEP válido.")
+        if (response.data.erro) {
+          alert("CEP não encontrado. Por favor, insira um CEP válido.");
         }
       } catch (error) {
         console.error("Error fetching address data:", error);
@@ -56,7 +56,6 @@ const AddSupplierModal = () => {
       alert("Por favor, insira um CEP válido de 8 dígitos.");
     }
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,8 +98,30 @@ const AddSupplierModal = () => {
               <input
                 type="text"
                 name="cnpj"
+                placeholder="xx.xxx.xxx/xxxx-xx"
+                pattern="\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}"
                 value={formData.cnpj}
-                onChange={handleChange}
+                maxLength={18}
+                required
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, "");
+                  if (value.length <= 14) {
+                    value = value.replace(
+                      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+                      "$1.$2.$3/$4-$5"
+                    );
+                  }
+                  if (value.length >= 14) {
+                    value = value.replace(
+                      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+                      "$1.$2.$3/$4-$5"
+                    );
+                  }
+                  setFormData((prev) => ({
+                    ...prev,
+                    cnpj: value,
+                  }));
+                }}
                 className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
               />
             </div>
@@ -146,7 +167,7 @@ const AddSupplierModal = () => {
             </div>
           </section>
           <h2 className="text-2xl font-semibold font-inter text-primary">
-          Endereço
+            Endereço
           </h2>
           <section className="grid gap-4 md:grid-cols-3">
             <div className="flex flex-col col-span-2 gap-1 md:col-span-1">

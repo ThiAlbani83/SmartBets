@@ -127,7 +127,7 @@ export const useAuthStore = create((set) => ({
       const res = await axios.patch(`${API_URL}/toggle-status/${userId}`);
       return res.data;
     } catch (error) {
-      console.error("Error in toggleUserStatus:", error);
+      console.error("Error in toggleUserStatus:", error + "userID: " + userId);
       throw new Error("Erro ao atualizar status do usuário");
     }
   },
@@ -144,11 +144,20 @@ export const useAuthStore = create((set) => ({
 
   registerInvitedUser: async (userData) => {
     try {
-      const res = await axios.post(`${API_URL}/register-invited`, userData);
-      return res.data;
+      const response = await axios.post(
+        `${API_URL}/register-invited`,
+        userData,
+        { withCredentials: true }
+      );
+      
+      if (response.data.success) {
+        return response.data;
+      } else {
+        throw new Error(response.data.message);
+      }
     } catch (error) {
-      console.error('Registration error:', error.response?.data); // Add this to see server response
-      throw error;
+      const errorMessage = error.response?.data?.message || 'Erro no registro';
+      throw new Error(errorMessage);
     }
   },
 

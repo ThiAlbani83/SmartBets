@@ -12,7 +12,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="sticky top-0 flex items-center justify-end gap-6 px-10 py-4 bg-background">
+    <div className="sticky top-0 flex z-50 items-center justify-end gap-6 px-10 py-4 bg-background">
       <div className="flex items-center gap-2 font-medium text-white font-inter">
         <span>Olá,</span>
         <span>{user.name}</span>

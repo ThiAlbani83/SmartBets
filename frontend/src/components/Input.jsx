@@ -1,17 +1,27 @@
 import React from "react";
 
-const Input = ({ icon: Icon, ...props }) => {
+const Input = ({
+  type = "text",
+  placeholder = "",
+  value,
+  onChange,
+  className = "",
+  disabled = false,
+  required = false,
+  ...props
+}) => {
   return (
-    <div className="relative mb-6 ">
-      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-        <Icon className="text-primary size-5 " />
-      </div>
-      <input
-        {...props}
-        className="w-full py-2 pl-10 pr-3 text-white placeholder-gray-400 transition duration-200 bg-gray-800 bg-opacity-50 border border-gray-700 rounded-lg focus:ring-2"
-      />
-    </div>
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      required={required}
+      className={`w-full p-2 bg-transparent border-b placeholder:text-gray-600 border-b-[#ECECEC] focus:outline-none focus:border-b-2 ${className}`}
+      {...props}
+    />
   );
 };
 
-export default Input;
+export default Input

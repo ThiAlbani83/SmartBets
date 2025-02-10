@@ -19,7 +19,7 @@ export const registerUser = async (req, res) => {
         role,
       },
     });
-    return res.status(201).json({ 
+    return res.status(201).json({
       success: true,
       user: newUser,
     });
@@ -32,14 +32,14 @@ export const toggleUserStatus = async (req, res) => {
   const { userId } = req.params;
   try {
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(userId) },
+      where: { id: userId },
     });
     if (!user) {
       return res.status(404).json({ message: "Usuário não encontrado" });
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: parseInt(userId) },
+      where: { id: userId },
       data: { active: !user.active },
     });
 
@@ -50,10 +50,27 @@ export const toggleUserStatus = async (req, res) => {
       .json({ message: "Erro ao atualizar status do usuário", error });
   }
 };
+
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        modules: {
+          select: {
+            module: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
     if (!user) {
       return res
         .status(404)
@@ -72,17 +89,28 @@ export const loginUser = async (req, res) => {
       expiresIn: "1h",
     });
 
+    // Clean user object before sending
+    const userResponse = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      active: user.active,
+      modules: user.modules.map((m) => m.module),
+    };
+
     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 3600000, // 1 hour
+      maxAge: 3600000,
     });
 
-    res.status(200).json({ success: true, user });
+    console.log("Login successful:", userResponse);
+    res.status(200).json({ success: true, user: userResponse });
   } catch (error) {
-    res.status(500).json({ message: "Erro do servidor", error });
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Erro do servidor", error: error.message });
   }
 };
-
 export const logoutUser = async (req, res) => {
   res.clearCookie("token");
   res.status(200).json({ success: true, message: "Logout feito com sucesso" });
@@ -108,10 +136,14 @@ export const checkAuth = (req, res) => {
 };
 
 export const inviteUser = async (req, res) => {
-  const { email, role, name } = req.body;
-  const token = jwt.sign({ email, role, name }, process.env.JWT_SECRET, {
-    expiresIn: "24h",
-  });
+  const { email, role, name, modules } = req.body;
+  const token = jwt.sign(
+    { email, role, name, modules },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "24h",
+    }
+  );
   const inviteLink = `http://localhost:5173/register/${token}`;
 
   let transporter = nodemailer.createTransport({
@@ -154,39 +186,77 @@ export const getAllUsers = async (req, res) => {
 
 export const registerInvitedUser = async (req, res) => {
   const { token, password } = req.body;
-  
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { email, role, name } = decoded;
-
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (existingUser) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "User already exists" 
-      });
-    }
+    const { email, role, name, modules } = decoded;
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        role,
-      },
+
+    // Create user with module relationships in a single transaction
+    const newUser = await prisma.$transaction(async (prisma) => {
+      // Create the user first
+      const user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          role,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+
+      // Create UserModule relationships if modules exist
+      if (modules && modules.length > 0) {
+        await prisma.userModule.createMany({
+          data: modules.map((moduleId) => ({
+            userId: user.id,
+            moduleId: moduleId,
+            assignedAt: new Date(),
+          })),
+        });
+      }
+      return user;
     });
 
     return res.status(201).json({
       success: true,
-      user: newUser,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+      },
     });
   } catch (err) {
-    console.error('Server error:', err); // Add this to see server-side error
-    return res.status(400).json({ success: false, message: err.message });
+    console.error("Registration error:", err);
+    return res.status(400).json({
+      success: false,
+      message: "Error registering user: " + err.message,
+    });
+  }
+};
+
+export const getUserModules = async (req, res) => {
+  const userId = req.userId; // Assume this is set by a middleware
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        modules: { where: { active: true }, include: { module: true } },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const activeModules = user.modules.map((userModule) => userModule.module);
+
+    res.status(200).json(activeModules);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user modules", error });
   }
 };

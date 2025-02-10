@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  # Serviço do backend
+  backend:
+    build: .
+    container_name: tropicalize-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/tropicalize-app
+      - /tropicalize-app/node_modules
+    environment:
+      - DATABASE_URL=mysql://u129626684_user_sys_bets:HKqN2Bh-@auth-db1719.hstgr.io:3306/u129626684_db_system_bets
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # Serviço do banco de dados MySQL
+  db:
+    image: mysql:8.0
+    container_name: tropicalize-db
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: HKqN2Bh-
+      MYSQL_DATABASE: u129626684_db_system_bets
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+
+frontend:
+  build: ./frontend
+  container_name: tropicalize-frontend
+  ports:
+    - "5173:5173"
+  volumes:
+    - ./frontend:/app
+    - /app/node_modules
+  environment:
+    - VITE_API_URL=http://backend:3000
+  depends_on:
+    - backend
+  restart: unless-stopped
+
+# Volume para persistência dos dados do MySQL
+volumes:
+  mysql-data:

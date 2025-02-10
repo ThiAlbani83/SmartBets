@@ -8,6 +8,7 @@ import {
   getAllUsers,
   toggleUserStatus,
   registerInvitedUser,
+  getUserModules
 } from "../controllers/auth.controller.js";
 import { verificarToken } from "../middleware/verificarToken.js";
 
@@ -22,4 +23,6 @@ router.patch("/toggle-status/:userId", toggleUserStatus);
 router.post("/register/:token", registerInvitedUser);
 router.post("/register-invited", registerInvitedUser);
 router.post('/invite', inviteUser);
+// Add this route
+router.get("/user-modules", verificarToken, getUserModules);
 export default router;

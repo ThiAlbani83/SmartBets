@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import ConfirmationModal from "./ConfirmationModal";
+import Button from "./Button";
+import Input from "./Input";
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);
@@ -19,7 +21,6 @@ const UsersManagement = () => {
         console.error("Error fetching users:", error);
       }
     };
-
     fetchUsers();
   }, [getAllUsers]);
 
@@ -36,13 +37,14 @@ const UsersManagement = () => {
 
     try {
       const updatedUser = await toggleUserStatus(selectedUser.id);
-      setUsers((prevUsers) =>
-        prevUsers.map((user) =>
+      setUsers(prevUsers =>
+        prevUsers.map(user => 
           user.id === selectedUser.id ? { ...user, active: !user.active } : user
         )
       );
     } catch (error) {
-      console.error("Erro ao atualizar status do usuário:", error);
+      console.error("Erro ao atualizar status do usuário:", error.message);
+      // Add user feedback here (e.g., toast notification)
     } finally {
       setIsModalOpen(false);
       setSelectedUser(null);
@@ -72,7 +74,7 @@ const UsersManagement = () => {
     <div className="container p-4 mx-auto">
       <div className="overflow-x-auto">
         <div className="overflow-y-auto max-h-96">
-          <input
+          <Input
             type="text"
             placeholder="Buscar por nome do usuário..."
             value={searchTerm}
@@ -107,12 +109,12 @@ const UsersManagement = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 border-b">
-                    <button
+                    <Button
                       onClick={() => openConfirmationModal(user)}
                       className="px-4 py-2 text-white rounded w-36 bg-primary hover:bg-primaryLight"
                     >
                       {user.active ? "Tornar Inativo" : "Tornar Ativo"}
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}

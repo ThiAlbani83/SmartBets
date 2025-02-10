@@ -4,18 +4,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#111427',
-        primary: '#4c3a6d',
-        primaryLight: '#6d5c8b',
-        secondary: '#606d8b',
-        bgMenu: '#d6d6d6'
+        background: "#FAFBFC",
+        primary: "#3B70A2",
+        primaryLight: "#5BB9D3",
+        primaryDark: "#101A5A",
+        secondary: "#171717",
+        bgMenu: "#d6d6d6",
+        mainText: "#303030",
+        linesAndBorders: "#B9B9B9",
       },
       fontFamily: {
-        'inter': ['Inter', 'sans-serif']
+        inter: ["Inter", "sans-serif"],
+        roboto: ["Roboto", "sans-serif"],
+        rem: ["REM", "sans-serif"],
       },
-      backgroundColor: {
-        primarybg: '#111427',
-      },
+    },
+    screens: {
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
     },
   },
   plugins: [],

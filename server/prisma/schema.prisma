@@ -1,79 +1,111 @@
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Module {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  users       UserModule[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model UserModule {
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  module      Module    @relation(fields: [moduleId], references: [id])
+  moduleId    String
+  assignedAt  DateTime  @default(now())
+
+  @@id([userId, moduleId])
 }
 
 model User {
-  id          String  @id @default(uuid())
-  email       String   @unique
+  id          String       @id @default(uuid())
+  email       String       @unique
   password    String
   name        String
   role        String
   lastLogin   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  active      Boolean  @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  active      Boolean      @default(true)
+  modules     UserModule[]
 }
 
 model Supplier {
-  id          Int      @id @default(autoincrement())
-  nome        String
-  cnpj        String   @unique
-  email       String   @unique
-  telefone    String
-  website     String
-  categoria   String
-  rua         String
-  bairro      String
-  cidade      String
-  estado      String
-  pais        String
-  cep         String
-  descricao   String
-  products    ProductSupplier[]
+  id        Int               @id @default(autoincrement())
+  nome      String
+  cnpj      String            @unique
+  email     String            @unique
+  telefone  String
+  website   String
+  categoria String
+  rua       String
+  bairro    String
+  cidade    String
+  estado    String
+  pais      String
+  cep       String
+  descricao String
+  products  ProductSupplier[]
 }
 
 model Product {
-  id               Int      @id @default(autoincrement())
+  id               Int               @id @default(autoincrement())
   nomeProduto      String
   fabricante       String
   categoriaProduto String
   descricao        String
+  createdAt        DateTime          @default(now())
   suppliers        ProductSupplier[]
 }
 
 model ProductSupplier {
-  supplier    Supplier @relation(fields: [supplierId], references: [id])
-  supplierId  Int
-  product     Product  @relation(fields: [productId], references: [id])
-  productId   Int
+  supplierId Int
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id])
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
 
   @@id([supplierId, productId])
+  @@index([productId], map: "ProductSupplier_productId_fkey")
 }
 
 model Order {
   id                    Int              @id @default(autoincrement())
-  produto              String
-  quantidade           Int
-  fornecedores         String
-  responsavel          String
-  enviarPara           String
+  produto               String
+  quantidade            Int
+  fornecedores          String
+  responsavel           String
+  enviarPara            String
   enviarParaResponsavel String
-  motivoCompra         String
-  status              String           @default("Pendente")
-  orcamentos          OrderOrcamento[]
+  motivoCompra          String
+  status                String           @default("Pendente")
+  orcamentos            OrderOrcamento[]
 }
 
 model OrderOrcamento {
-  id        Int    @id @default(autoincrement())
-  orderId   Int
-  fileName  String
-  order     Order  @relation(fields: [orderId], references: [id])
+  id       Int    @id @default(autoincrement())
+  orderId  Int
+  fileName String
+  order    Order  @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
+}
+
+model SigapFiles {
+  id          Int      @id @default(autoincrement())
+  nomeArquivo String
+  data        DateTime
+  empresa     String
+  tipoArquivo String
+  auditado    Boolean  @default(false)
+  linkXML     String
 }

@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=REM:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,11 +22,50 @@
 }
 
 .homePage {
-  overflow-y: scroll;  /* Habilita o scroll vertical */
-  scrollbar-width: none;  /* Firefox: oculta a barra de rolagem */
+  overflow-y: scroll; /* Habilita o scroll vertical */
+  scrollbar-width: none; /* Firefox: oculta a barra de rolagem */
 }
 
 /* Chrome, Edge e Safari */
 .homePage::-webkit-scrollbar {
-  width: 0;  /* Oculta a barra de rolagem */
+  width: 0; /* Oculta a barra de rolagem */
+}
+
+.react-datepicker {
+  border: 1px solid #e5e7eb;
+  font-family: 'Roboto', sans-serif;
+}
+
+.react-datepicker__header {
+  background-color: #5BB9D3;
+}
+
+.react-datepicker__day--selected {
+  background-color: #5BB9D3 !important;
+  color: white !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: #5BB9D3 !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #5BB9D3 !important;
+  color: white !important;
+}
+
+.react-datepicker__current-month {
+  color: white;
+}
+
+.react-datepicker__day-name {
+  color: white;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: white;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #2563eb;
 }

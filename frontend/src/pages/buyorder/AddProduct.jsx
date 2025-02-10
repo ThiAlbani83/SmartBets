@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useProductStore } from "../../store/useProductStore";
 import axios from "axios";
-import AddSupplierModal from "./AddSupplierModal";
 
 const AddProduct = () => {
   const [showFornecedoresDropdown, setShowFornecedoresDropdown] =
@@ -118,44 +117,42 @@ const AddProduct = () => {
   return (
     <div className="max-w-6xl p-4 mx-auto font-inter">
       <div className="relative flex flex-col gap-12 p-6 bg-white border border-gray-600 rounded-lg shadow-md">
-        <section>
-          <h2 className="mb-12 text-2xl font-semibold font-inter text-primary">
-            Detalhes do Produto
-          </h2>
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-            <div>
-              <label className="text-primaryLight">Nome Produto</label>
-              <input
-                type="text"
-                name="nomeProduto"
-                value={formData.nomeProduto}
-                onChange={handleChange}
-                className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
-              />
-            </div>
-            <div>
-              <label className="text-primaryLight">Fabricante</label>
-              <input
-                type="text"
-                name="fabricante"
-                value={formData.fabricante}
-                onChange={handleChange}
-                className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
-              />
-            </div>
-            <div>
-              <label className="text-primaryLight">Categoria Produto</label>
-              <input
-                type="text"
-                name="categoriaProduto"
-                value={formData.categoriaProduto}
-                onChange={handleChange}
-                className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
-              />
-            </div>
+        <h2 className="text-2xl font-semibold font-inter text-primary">
+          Detalhes do Produto
+        </h2>
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
+          <div>
+            <label className="text-primaryLight">Nome Produto</label>
+            <input
+              type="text"
+              name="nomeProduto"
+              value={formData.nomeProduto}
+              onChange={handleChange}
+              className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
+            />
           </div>
-        </section>
-        <section>
+          <div>
+            <label className="text-primaryLight">Fabricante</label>
+            <input
+              type="text"
+              name="fabricante"
+              value={formData.fabricante}
+              onChange={handleChange}
+              className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
+            />
+          </div>
+          <div>
+            <label className="text-primaryLight">Categoria Produto</label>
+            <input
+              type="text"
+              name="categoriaProduto"
+              value={formData.categoriaProduto}
+              onChange={handleChange}
+              className="w-full p-1 border-b border-b-gray-300 focus:outline-none focus:border-primary focus:border-b-2 focus:bg-gray-50"
+            />
+          </div>
+        </div>
+        {/* <section>
           <label className="text-primaryLight">Fornecedores (até 3)</label>
           <div className="mt-2 space-y-2">
             {formData.fornecedores.map((fornecedor, index) => (
@@ -184,19 +181,7 @@ const AddProduct = () => {
                   >
                     Adicionar Fornecedor
                   </button>
-                  <button
-                    onClick={handleModalOpen}
-                    className="px-4 py-2 text-white rounded-md bg-primaryLight"
-                  >
-                    Cadastrar Fornecedor
-                  </button>
                 </div>
-
-                {modalOpen && (
-                  <div ref={modalRef}>
-                    <AddSupplierModal />
-                  </div>
-                )}
                 {showFornecedoresDropdown && (
                   <div className="p-2 mt-2 bg-white border border-gray-300 rounded-md shadow-lg">
                     <ul>
@@ -215,7 +200,7 @@ const AddProduct = () => {
               </div>
             )}
           </div>
-        </section>
+        </section> */}
         <section className="flex flex-col gap-12">
           <h2 className="text-2xl font-semibold text-primary font-inter">
             Informações adicionais
