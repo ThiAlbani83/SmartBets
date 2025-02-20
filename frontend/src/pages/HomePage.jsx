@@ -39,6 +39,7 @@ import Tickets from "./sac/Tickets";
 import Reports from "./sac/Reports";
 import SearchDeepScan from "./deepscan/SearchDeepScan";
 import HomeDeepScan from "./deepscan/HomeDeepScan";
+import ConfigDeepScan from "./deepscan/ConfigDeepScan";
 
 const HomePage = () => {
   const { user } = useAuthStore();
@@ -144,6 +145,7 @@ const HomePage = () => {
               {/* ROTA PARA PAINEL DO DEEPSCAN */}
               <Route path="/deepscan/dashboard" element={<HomeDeepScan />} />
               <Route path="/deepscan/verificacoes" element={<SearchDeepScan />} />
+              <Route path="/deepscan/config" element={<ConfigDeepScan />} />
               {/* FIM DA ROTA PARA PAINEL DE ADMIN */}
             </Routes>
           </div>

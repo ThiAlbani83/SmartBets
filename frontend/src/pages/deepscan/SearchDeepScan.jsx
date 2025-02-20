@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import deleteIcon from "../../assets/delete.png";
 import { FaCirclePlus } from "react-icons/fa6";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Button from "../../components/Button";
+import ProgressBar from "../../components/ProgressBar";
+import { deepScanResults } from "../../utils/fakeData";
+import WordCloud from "react-wordcloud";
+import PizzaGraphs from "../../components/deepscan/PizzaGraphs";
 
 const SearchDeepScan = () => {
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
+  const [progress, setProgress] = useState(0);
   const [profileInputFields, setProfileInputFields] = useState([
     { id: 1, name: "" },
   ]);
@@ -21,6 +26,80 @@ const SearchDeepScan = () => {
     x: false,
     linkedin: false,
   });
+
+  const data = {
+    labels: ["Positivo", "Negativo", "Neutro"],
+    datasets: [
+      {
+        label: "# incidências",
+        data: [getRandomNumber(), getRandomNumber(), getRandomNumber()],
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.2)",
+          "rgba(54, 162, 235, 0.2)",
+          "rgba(255, 206, 86, 0.2)",
+        ],
+        borderColor: [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const data2 = {
+    labels: ["Positivo", "Negativo", "Neutro"],
+    datasets: [
+      {
+        label: "# incidências",
+        data: [getRandomNumber(), getRandomNumber(), getRandomNumber()],
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.2)",
+          "rgba(54, 162, 235, 0.2)",
+          "rgba(255, 206, 86, 0.2)",
+        ],
+        borderColor: [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  function getRandomNumber() {
+    return Math.floor(Math.random() * 100) + 1;
+  }
+
+  const words = [
+    { text: "Aposta", value: getRandomNumber() },
+    { text: "Ganho", value: getRandomNumber() },
+    { text: "Garantido", value: getRandomNumber() },
+    { text: "Renda", value: getRandomNumber() },
+    { text: "Extra", value: getRandomNumber() },
+    { text: "Renda Extra", value: getRandomNumber() },
+    { text: "Giros", value: getRandomNumber() },
+    { text: "Grátis", value: getRandomNumber() },
+    { text: "Bônus", value: getRandomNumber() },
+  ];
+
+  const options = {
+    fontSizes: [30, 100], // Minimum and maximum font sizes
+    colors: ["#000000", "#3B70A2", "#5BB9D3", "#101A5A", "#171717", "#303030"], // Array of colors
+    fontStyle: "normal", // Font style
+    rotations: 3, // Number of rotations
+    rotationAngles: [0, 90], // Array of rotation angles
+    enableTooltip: true, // Enable tooltip on hover
+    deterministic: false, // Enable deterministic layout
+    fontFamily: "Roboto", // Font family
+    padding: 1, // Padding between words
+    maxSpeed: "fast", // Speed of the animation
+    spiral: "archimedean", // Type of spiral
+    fontWeight: "bold", // Font weight
+    spiralFromCenter: true, // Start spiral from center
+  };
 
   const handleAddProfileInput = () => {
     setProfileInputFields([
@@ -76,6 +155,31 @@ const SearchDeepScan = () => {
     return true;
   };
 
+  // Example function to simulate progress
+  const simulateProgress = () => {
+    setProgress(0);
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 3;
+      });
+    }, 100);
+  };
+
+  // Function to format the date range
+  const formatDateRange = () => {
+    if (startDate && endDate) {
+      const options = { day: "2-digit", month: "2-digit", year: "numeric" };
+      const start = startDate.toLocaleDateString("pt-BR", options);
+      const end = endDate.toLocaleDateString("pt-BR", options);
+      return `${start} - ${end}`;
+    }
+    return "Nenhum período selecionado";
+  };
+
   return (
     <div className="w-full h-full flex relative font-roboto gap-10">
       <div className="flex flex-col gap-10 border-r border-r-linesAndBorders">
@@ -115,7 +219,7 @@ const SearchDeepScan = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-1 flex-col gap-4">
+          <div className="flex flex-col gap-4">
             <div className="w-full">
               <h1 className="text-base text-mainText font-medium underline">
                 Palavras chave
@@ -218,27 +322,14 @@ const SearchDeepScan = () => {
           </div>
         </div>
         <div className="w-[95%] h-[1px] bg-linesAndBorders" />
-
+        {/* Time set Section */}
         <div className="flex flex-col gap-4">
           <div>
             <h1 className="text-base text-mainText font-medium underline">
-              Raspagem Automática
+              Varredura Automática
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <select
-              name="raspagem_select"
-              id="raspagem"
-              className="w-full max-w-[200px] px-2 py-1 focus:outline-none border rounded-lg text-mainText"
-            >
-              <option value="" className="">
-                Selecione uma opção
-              </option>
-              <option value="">Hoje</option>
-              <option value="">Últimos 3 dias</option>
-              <option value="">Últimos 7 dias</option>
-            </select>
-            <span>ou</span>
             <div>
               <DatePicker
                 selectsRange={true}
@@ -254,13 +345,72 @@ const SearchDeepScan = () => {
               />
             </div>
           </div>
-          <div>
-            <Button className="bg-primaryLight px-6">Buscar</Button>
+          <div className="flex items-center gap-4">
+            <Button
+              disabled={startDate === null && endDate === null}
+              onClick={simulateProgress}
+              className="bg-primaryLight px-6 disabled:text-white disabled:opacity-60"
+            >
+              Buscar
+            </Button>
+            {progress !== 0 && (
+              <div className="flex items-center gap-2">
+                <ProgressBar progress={progress} />
+                <span>{progress} %</span>
+              </div>
+            )}
           </div>
         </div>
+        {progress === 100 && (
+          <div className="flex flex-col gap-4">
+            <h3>
+              Resultados da varredura: <span>{formatDateRange()}</span>
+            </h3>
+            <div className="overflow-y-auto h-[150px] overflow-hidden flex flex-col gap-1">
+              {deepScanResults.map((result, index) => (
+                <div key={index} className="">
+                  <a
+                    href={result.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-800 underline text-sm"
+                  >
+                    {result.name} - {result.link}
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col gap-4">
+        <div>
+          <h3 className="underline text-mainText font-medium">
+            Núvem de Palavras
+          </h3>
+        </div>
+        {progress === 100 && (
+          <div className="flex w-full max-w-[500px] h-[250px] border border-linesAndBorders rounded-lg shadow-sm p-4">
+            <WordCloud words={words} options={options} />
+          </div>
+        )}
+        <div className="mt-10">
+          <h3 className="underline text-mainText font-medium">
+            Análise de Sentimento
+          </h3>
+        </div>
+        {progress === 100 && (
+          <div className="flex items-center gap-10">
+            <div>
+              <PizzaGraphs bet_name={"jetbet_oficial"} data={data} />
+            </div>
+            <div>
+              <PizzaGraphs bet_name={"bet4"} data={data2} />
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-1">Right Side</div>
       <div className="absolute -top-28 -left-10 px-5 py-2 z-50 border border-linesAndBorders rounded-xl shadow-sm">
         <h2 className="text-mainText font-bold">Varredura - DeepScan360</h2>
       </div>

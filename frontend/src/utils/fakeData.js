@@ -160,3 +160,47 @@ export const verificationData = [
     Integracao: "Bet4",
   },
 ];
+
+
+export const deepScanResults = [
+  {
+    name: "Link 1:",
+    link: "https://linkparapostagem1/nomedoperfil"
+  },
+  {
+    name: "Link 2:",
+    link: "https://linkparapostagem2/nomedoperfil"
+  },
+  {
+    name: "Link 3:",
+    link: "https://linkparapostagem3/nomedoperfil"
+  },
+  {
+    name: "Link 4:",
+    link: "https://linkparapostagem4/nomedoperfil"
+  },
+  {
+    name: "Link 5:",
+    link: "https://linkparapostagem5/nomedoperfil"
+  },
+  {
+    name: "Link 6:",
+    link: "https://linkparapostagem6/nomedoperfil"
+  },
+  {
+    name: "Link 7:",
+    link: "https://linkparapostagem7/nomedoperfil"
+  },
+  {
+    name: "Link 8:",
+    link: "https://linkparapostagem8/nomedoperfil"
+  },
+  {
+    name: "Link 9:",
+    link: "https://linkparapostagem9/nomedoperfil"
+  },
+  {
+    name: "Link 10:",
+    link: "https://linkparapostagem10/nomedoperfil"
+  },
+]

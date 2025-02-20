@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import MenuV2 from "./MenuV2";
-import MenuSigap from "../pages/sigap/MenuSigap";
 import { useAuthStore } from "../store/useAuthStore.js";
 import logotplz from "../assets/logo-tropicalize.png";
 
