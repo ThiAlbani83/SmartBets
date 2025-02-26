@@ -44,19 +44,19 @@ const SigapUploadFile = () => {
         const reader = new FileReader();
         reader.onload = async (e) => {
           const xmlContent = e.target.result;
-          
+
           // Convert XML to JSON using DOMParser
           const parser = new DOMParser();
           const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
-          
+
           // Convert XML document to JSON
           const jsonData = xmlToJson(xmlDoc);
-          
+
           // Display in console
           console.log("XML converted to JSON:", jsonData);
         };
         reader.readAsText(file);
-        
+
         console.log("File uploaded successfully");
         console.log("Selected Category:", selectedCategory);
       }
@@ -65,43 +65,43 @@ const SigapUploadFile = () => {
     } finally {
       setIsUploading(false);
     }
-};
+  };
 
-// Helper function to convert XML to JSON
-function xmlToJson(xml) {
+  // Helper function to convert XML to JSON
+  function xmlToJson(xml) {
     const obj = {};
-    
+
     if (xml.nodeType === 1) {
-        if (xml.attributes.length > 0) {
-            obj["@attributes"] = {};
-            for (let j = 0; j < xml.attributes.length; j++) {
-                const attribute = xml.attributes.item(j);
-                obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
-            }
+      if (xml.attributes.length > 0) {
+        obj["@attributes"] = {};
+        for (let j = 0; j < xml.attributes.length; j++) {
+          const attribute = xml.attributes.item(j);
+          obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
         }
+      }
     } else if (xml.nodeType === 3) {
-        return xml.nodeValue;
+      return xml.nodeValue;
     }
-    
+
     if (xml.hasChildNodes()) {
-        for (let i = 0; i < xml.childNodes.length; i++) {
-            const item = xml.childNodes.item(i);
-            const nodeName = item.nodeName;
-            
-            if (typeof obj[nodeName] === "undefined") {
-                obj[nodeName] = xmlToJson(item);
-            } else {
-                if (typeof obj[nodeName].push === "undefined") {
-                    const old = obj[nodeName];
-                    obj[nodeName] = [];
-                    obj[nodeName].push(old);
-                }
-                obj[nodeName].push(xmlToJson(item));
-            }
+      for (let i = 0; i < xml.childNodes.length; i++) {
+        const item = xml.childNodes.item(i);
+        const nodeName = item.nodeName;
+
+        if (typeof obj[nodeName] === "undefined") {
+          obj[nodeName] = xmlToJson(item);
+        } else {
+          if (typeof obj[nodeName].push === "undefined") {
+            const old = obj[nodeName];
+            obj[nodeName] = [];
+            obj[nodeName].push(old);
+          }
+          obj[nodeName].push(xmlToJson(item));
         }
+      }
     }
     return obj;
-}
+  }
   const handleCompanyChange = (e) => {
     setSelectedCompany(e.target.value);
   };

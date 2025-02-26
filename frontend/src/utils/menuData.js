@@ -5,7 +5,7 @@ import products from "../assets/product.png";
 import admin from "../assets/admin.png";
 import tasks from "../assets/tasks.png";
 import contacts from "../assets/contacts.png";
-import dashboard from "../assets/dashboard.png"; 
+import dashboard from "../assets/dashboard.png";
 import verification from "../assets/verification.png";
 import liveness from "../assets/liveness.png";
 import antifraud from "../assets/antifraud.png";
@@ -36,42 +36,40 @@ export const menuItemsAdministrativo = [
   { name: "Histórico", icon: history, path: "/compras/historico" },
 ];
 
-
 export const menuItemsSigap = [
-    { name: "Dashboard", icon: dashboard, path: "/sigap/dashboard" },
-    { name: "Submeter", icon: submeter, path: "/sigap/submeter-arquivos" },
-    { name: "Auditar", icon: tasks, path: "/sigap/auditar-arquivos" },
-    { name: "Relatórios", icon: department, path: "/sigap/relatorios" },
-    { name: "Admin", icon: admin },
-  ];
+  { name: "Dashboard", icon: dashboard, path: "/sigap/dashboard" },
+  { name: "Submeter", icon: submeter, path: "/sigap/submeter-arquivos" },
+  { name: "Auditar", icon: tasks, path: "/sigap/auditar-arquivos" },
+  { name: "Relatórios", icon: department, path: "/sigap/relatorios" },
+  { name: "Admin", icon: admin },
+];
 
 export const menuItemsSac = [
-    { name: "Dashboard", icon: home, path: "/sac/dashboard" },
-    { name: "F.A.Q", icon: faq, path: "/sac/perguntas-frequentes" },
-    { name: "Smart Flow", icon: flow, path: "/sac/smart-flow" },
-    { name: "Tickets", icon: tasks, path: "/sac/tickets" },
-    { name: "Relatórios", icon: admin, path: "/sac/relatorios" },
-  ];
+  { name: "Dashboard", icon: home, path: "/sac/dashboard" },
+  { name: "F.A.Q", icon: faq, path: "/sac/perguntas-frequentes" },
+  { name: "Smart Flow", icon: flow, path: "/sac/smart-flow" },
+  { name: "Tickets", icon: tasks, path: "/sac/tickets" },
+  { name: "Relatórios", icon: admin, path: "/sac/relatorios" },
+];
 
 export const menuItemsKYC = [
-    { name: "Dashboard", icon: home, path: "/kyc/dashboard" },
-    { name: "Verificações", icon: verification, path: "/kyc/verificacoes" },
-    { name: "Liveness", icon: liveness, path: "/kyc/liveness" },
-    { name: "Antifraude", icon: antifraud, path: "/kyc/antifraude" },
-    { name: "Insights", icon: insights, path: "/kyc/insights" },
-  ];
-
+  { name: "Dashboard", icon: home, path: "/kyc/dashboard" },
+  { name: "Verificações", icon: verification, path: "/kyc/verificacoes" },
+  { name: "Liveness", icon: liveness, path: "/kyc/liveness" },
+  { name: "Antifraude", icon: antifraud, path: "/kyc/antifraude" },
+  { name: "Insights", icon: insights, path: "/kyc/insights" },
+];
 
 export const menuItemsResponsible = [
-    { name: "Dashboard", icon: home, path: "/jogo-responsavel/dashboard" },
-    { name: "Menu 1", icon: verification, path: "/sigap/submeter-arquivos" },
-    { name: "Menu 2", icon: liveness, path: "/sigap/auditar-arquivos" },
-    { name: "Menu 3", icon: antifraud, path: "/sigap/relatorios" },
-    { name: "Menu 4", icon: insights },
-  ];
-  
+  { name: "Dashboard", icon: home, path: "/jogo-responsavel/dashboard" },
+  { name: "Menu 1", icon: verification, path: "/sigap/submeter-arquivos" },
+  { name: "Menu 2", icon: liveness, path: "/sigap/auditar-arquivos" },
+  { name: "Menu 3", icon: antifraud, path: "/sigap/relatorios" },
+  { name: "Menu 4", icon: insights },
+];
+
 export const menuItemsDeepScan = [
-    { name: "Dashboard", icon: home, path: "/deepscan/dashboard"},
-    { name: "Varrer", icon: insights, path: "/deepscan/verificacoes"},
-    { name: "Configuração", icon: insights, path: "/deepscan/config"},
-  ];
+  { name: "Dashboard", icon: home, path: "/deepscan/dashboard" },
+  { name: "Raspagens", icon: insights, path: "/deepscan/verificacoes" },
+  { name: "Configurações", icon: insights, path: "/deepscan/config" },
+];

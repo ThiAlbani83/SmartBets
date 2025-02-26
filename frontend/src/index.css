@@ -33,24 +33,24 @@
 
 .react-datepicker {
   border: 1px solid #e5e7eb;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 .react-datepicker__header {
-  background-color: #5BB9D3;
+  background-color: #5bb9d3;
 }
 
 .react-datepicker__day--selected {
-  background-color: #5BB9D3 !important;
+  background-color: #5bb9d3 !important;
   color: white !important;
 }
 
 .react-datepicker__day:hover {
-  background-color: #5BB9D3 !important;
+  background-color: #5bb9d3 !important;
 }
 
 .react-datepicker__day--keyboard-selected {
-  background-color: #5BB9D3 !important;
+  background-color: #5bb9d3 !important;
   color: white !important;
 }
 
@@ -68,4 +68,30 @@
 
 .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
   border-color: #2563eb;
+}
+
+/* Custom scrollbar styling for the entire application */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px; /* For horizontal scrollbars */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #5bb9d3;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Firefox support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #5bb9d3 #f1f1f1;
 }

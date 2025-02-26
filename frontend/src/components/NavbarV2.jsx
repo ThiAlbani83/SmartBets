@@ -39,14 +39,16 @@ const NavbarV2 = () => {
   }, []);
 
   return (
-    <div
-      className="sticky top-0 flex z-50 items-start justify-end gap-12 px-10 pt-9 bg-[#FAFBFC] font-roboto"
-    >
+    <div className="sticky top-0 flex z-40 items-start justify-end gap-12 px-10 pt-9 bg-[#FAFBFC] font-roboto">
       <div className="flex items-center gap-10">
         <img src={messages} alt="messages" />
         <img src={notification} alt="notification" />
       </div>
-      <div onClick={handleOpenDropDown} className="flex items-start gap-4 relative cursor-pointer" ref={dropdownRef}>
+      <div
+        onClick={handleOpenDropDown}
+        className="flex items-start gap-4 relative cursor-pointer"
+        ref={dropdownRef}
+      >
         <div className="flex flex-col">
           <p className="text-black font-bold text-base">{user.name}</p>
           <p className="text-[#737791] font-light text-sm text-right">

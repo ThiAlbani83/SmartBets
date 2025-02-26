@@ -56,9 +56,9 @@ const HomePage = () => {
 
       {/* Main Content com rotas internas */}
       <div className="relative w-full h-screen my-auto bg-[#FAFBFC]">
-        <div className="homePage flex-1 w-full h-[100%] rounded-lg overflow-y-scroll scroll-m-0">
+        <div className="homePage flex-1 w-full h-full rounded-lg overflow-y-auto">
           <NavbarV2 />
-          <div className="p-10 w-full max-w-[98%] mx-auto h-[85%] rounded-b-xl mt-2 rounded-xl shadow-lg">
+          <div className="p-10 w-full max-w-[98%] mx-auto h-[85%] overflow-hidden rounded-b-xl mt-2 rounded-xl shadow-lg">
             <Routes>
               {/* ROTA PARA HOME PAGE BASEADA NA FUNÇÃO DO USUÁRIO */}
               <Route path="/" element={<Home />} />

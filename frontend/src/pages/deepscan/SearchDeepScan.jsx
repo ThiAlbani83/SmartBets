@@ -1,419 +1,508 @@
-import React, { useEffect, useState } from "react";
-import deleteIcon from "../../assets/delete.png";
-import { FaCirclePlus } from "react-icons/fa6";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import Button from "../../components/Button";
-import ProgressBar from "../../components/ProgressBar";
-import { deepScanResults } from "../../utils/fakeData";
-import WordCloud from "react-wordcloud";
+import { useState } from "react";
+import WordCloudWrapper from "../../components/deepscan/WordCloudWrapper";
 import PizzaGraphs from "../../components/deepscan/PizzaGraphs";
+import { Bar, Scatter, Bubble } from "react-chartjs-2"; // Add Bubble to imports
+import {
+  Chart as ChartJS,
+  LinearScale,
+  PointElement,
+  BubbleController,
+} from "chart.js";
 
+// Register the bubble chart components
+ChartJS.register(LinearScale, PointElement, BubbleController);
 const SearchDeepScan = () => {
-  const [dateRange, setDateRange] = useState([null, null]);
-  const [startDate, endDate] = dateRange;
-  const [progress, setProgress] = useState(0);
-  const [profileInputFields, setProfileInputFields] = useState([
-    { id: 1, name: "" },
-  ]);
-  const [keyWordsInputFields, setKeyWordsInputFields] = useState([
-    { id: 1, name: "" },
-  ]);
-  const [checkboxes, setCheckboxes] = useState({
-    todas: false,
-    instagram: false,
-    facebook: false,
-    x: false,
-    linkedin: false,
-  });
+  const [selectedDate, setSelectedDate] = useState("");
+  const [showResults, setShowResults] = useState(false);
 
-  const data = {
-    labels: ["Positivo", "Negativo", "Neutro"],
-    datasets: [
-      {
-        label: "# incidências",
-        data: [getRandomNumber(), getRandomNumber(), getRandomNumber()],
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.2)",
-          "rgba(54, 162, 235, 0.2)",
-          "rgba(255, 206, 86, 0.2)",
-        ],
-        borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(255, 206, 86, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const data2 = {
-    labels: ["Positivo", "Negativo", "Neutro"],
-    datasets: [
-      {
-        label: "# incidências",
-        data: [getRandomNumber(), getRandomNumber(), getRandomNumber()],
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.2)",
-          "rgba(54, 162, 235, 0.2)",
-          "rgba(255, 206, 86, 0.2)",
-        ],
-        borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(255, 206, 86, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  function getRandomNumber() {
-    return Math.floor(Math.random() * 100) + 1;
-  }
-
-  const words = [
-    { text: "Aposta", value: getRandomNumber() },
-    { text: "Ganho", value: getRandomNumber() },
-    { text: "Garantido", value: getRandomNumber() },
-    { text: "Renda", value: getRandomNumber() },
-    { text: "Extra", value: getRandomNumber() },
-    { text: "Renda Extra", value: getRandomNumber() },
-    { text: "Giros", value: getRandomNumber() },
-    { text: "Grátis", value: getRandomNumber() },
-    { text: "Bônus", value: getRandomNumber() },
+  //fake data for the word cloud
+  const wordCloudData = [
+    { text: "Apostas", value: 64 },
+    { text: "Dinheiro", value: 42 },
+    { text: "Ganhos", value: 35 },
+    { text: "Lucro", value: 28 },
+    { text: "Investimento", value: 25 },
+    { text: "Cassino", value: 22 },
+    { text: "Bonus", value: 20 },
+    { text: "Promoção", value: 18 },
   ];
 
-  const options = {
-    fontSizes: [30, 100], // Minimum and maximum font sizes
-    colors: ["#000000", "#3B70A2", "#5BB9D3", "#101A5A", "#171717", "#303030"], // Array of colors
-    fontStyle: "normal", // Font style
-    rotations: 3, // Number of rotations
-    rotationAngles: [0, 90], // Array of rotation angles
-    enableTooltip: true, // Enable tooltip on hover
-    deterministic: false, // Enable deterministic layout
-    fontFamily: "Roboto", // Font family
-    padding: 1, // Padding between words
-    maxSpeed: "fast", // Speed of the animation
-    spiral: "archimedean", // Type of spiral
-    fontWeight: "bold", // Font weight
-    spiralFromCenter: true, // Start spiral from center
+  //fake data for the pie chart
+  const sentimentData = {
+    labels: ["Positivo", "Negativo", "Neutro"],
+    datasets: [
+      {
+        data: [300, 50, 100],
+        backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56"],
+      },
+    ],
   };
 
-  const handleAddProfileInput = () => {
-    setProfileInputFields([
-      ...profileInputFields,
-      { id: profileInputFields.length + 1 },
-    ]);
+  // Novo dado para o gráfico de distribuição de palavras por rede social
+  const wordDistributionData = {
+    labels: ["Facebook", "Instagram", "Twitter", "LinkedIn"],
+    datasets: [
+      {
+        label: "Apostas",
+        data: [25, 18, 12, 9],
+        backgroundColor: "#36A2EB",
+      },
+      {
+        label: "Dinheiro",
+        data: [15, 12, 10, 5],
+        backgroundColor: "#FF6384",
+      },
+      {
+        label: "Ganhos",
+        data: [10, 15, 8, 2],
+        backgroundColor: "#FFCE56",
+      },
+      {
+        label: "Lucro",
+        data: [8, 7, 10, 3],
+        backgroundColor: "#4BC0C0",
+      },
+    ],
   };
 
-  const handleDeleteProfileInput = (id) => {
-    setProfileInputFields(
-      profileInputFields.filter((field) => field.id !== id)
-    );
+  // Options for the scatter chart
+  const scatterChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "bottom",
+      },
+      title: {
+        display: true,
+        text: "Perfis com Incidência de Palavras Proibidas",
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.raw.label}: ${context.raw.y} palavras proibidas`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Qtd de Palavras",
+        },
+      },
+      x: {
+        ticks: {
+          // This will replace the x-axis numeric values with profile names
+          callback: function (value) {
+            const profiles = profileScatterData.datasets[0].data;
+            return profiles.find((item) => item.x === value)?.label || "";
+          },
+        },
+        title: {
+          display: true,
+          text: "Perfis",
+        },
+      },
+    },
+  };
+  // Data for the scatter plot (for a single day)
+  const profileScatterData = {
+    datasets: [
+      {
+        label: "Perfis Problemáticos",
+        data: [
+          { x: 1, y: 30, label: "/jetbet_oficial" },
+          { x: 2, y: 21, label: "@jetbet_facebook" },
+          { x: 3, y: 18, label: "jetbet_linkedin" },
+          { x: 4, y: 17, label: "/jetbet_instagram" },
+          { x: 5, y: 14, label: "/jetbet_x" },
+          { x: 6, y: 12, label: "/jetbet_" },
+          { x: 7, y: 10, label: "@jetbet_discord" },
+        ],
+        backgroundColor: [
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
+          "#4BC0C0",
+          "#9966FF",
+          "#FF9F40",
+          "#C9CBCF",
+        ],
+        pointRadius: 8,
+        pointHoverRadius: 12,
+      },
+    ],
   };
 
-  const handleAddKeyWordsInput = () => {
-    setKeyWordsInputFields([
-      ...keyWordsInputFields,
-      { id: keyWordsInputFields.length + 1 },
-    ]);
+  // Transforme os dados do Scatter para um formato adequado para gráfico de barras
+  const profileBarData = {
+    labels: profileScatterData.datasets[0].data.map((item) => item.label),
+    datasets: [
+      {
+        label: "Palavras Proibidas",
+        data: profileScatterData.datasets[0].data.map((item) => item.y),
+        backgroundColor: [
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
+          "#4BC0C0",
+          "#9966FF",
+          "#FF9F40",
+          "#C9CBCF",
+        ],
+        borderWidth: 1,
+      },
+    ],
   };
 
-  const handleDeleteKeyWordsInput = (id) => {
-    setKeyWordsInputFields(
-      keyWordsInputFields.filter((field) => field.id !== id)
-    );
+  // Opções para o gráfico de barras
+  const barProfileOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "bottom",
+      },
+      title: {
+        display: true,
+        text: "Perfis com Incidência de Palavras Proibidas",
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.raw} palavras proibidas`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Qtd de Palavras",
+        },
+      },
+      x: {
+        title: {
+          display: true,
+          text: "Perfis",
+        },
+      },
+    },
+  };
+  //fake data for found posts
+  const nonCompliantPosts = [
+    {
+      platform: "Facebook",
+      url: "https://www.facebook.com/example",
+      issue: "Promessa de ganhos garantidos",
+    },
+    {
+      platform: "Instagram",
+      url: "https://instagram.com/post2",
+      issue: "Conteúdo inadequado",
+    },
+    {
+      platform: "Twitter",
+      url: "https://twitter.com/post3",
+      issue: "Promessa de ganhos garantidos",
+    },
+    {
+      platform: "LinkedIn",
+      url: "https://www.linkedin.com/in/example",
+      issue: "Conteúdo inadequado",
+    },
+    {
+      platform: "Facebook",
+      url: "https://www.facebook.com/example",
+      issue: "Promessa de ganhos garantidos",
+    },
+    {
+      platform: "Instagram",
+      url: "https://instagram.com/post2",
+      issue: "Conteúdo inadequado",
+    },
+    {
+      platform: "Twitter",
+      url: "https://twitter.com/post3",
+      issue: "Promessa de ganhos garantidos",
+    },
+    {
+      platform: "LinkedIn",
+      url: "https://www.linkedin.com/in/example",
+      issue: "Conteúdo inadequado",
+    },
+    {
+      platform: "LinkedIn",
+      url: "https://www.linkedin.com/in/example",
+      issue: "Conteúdo inadequado",
+    },
+    {
+      platform: "Facebook",
+      url: "https://www.facebook.com/example",
+      issue: "Promessa de ganhos garantidos",
+    },
+    {
+      platform: "Instagram",
+      url: "https://instagram.com/post2",
+      issue: "Conteúdo inadequado",
+    },
+    {
+      platform: "Twitter",
+      url: "https://twitter.com/post3",
+      issue: "Promessa de ganhos garantidos",
+    },
+    {
+      platform: "LinkedIn",
+      url: "https://www.linkedin.com/in/example",
+      issue: "Conteúdo inadequado",
+    },
+  ];
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    setShowResults(true);
   };
 
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-
-    if (name === "todas") {
-      setCheckboxes({
-        todas: checked,
-        instagram: checked,
-        facebook: checked,
-        x: checked,
-        linkedin: checked,
-      });
-    } else {
-      setCheckboxes({
-        ...checkboxes,
-        [name]: checked,
-      });
-    }
+  // Stakeholder sentiment and impact data
+  const stakeholderData = {
+    datasets: [
+      {
+        label: "Stakeholders",
+        data: [
+          { x: 8, y: 7, r: 15, label: "Investidores" },
+          { x: 6, y: 9, r: 12, label: "Clientes VIP" },
+          { x: 9, y: 4, r: 18, label: "Reguladores" },
+          { x: 4, y: 8, r: 10, label: "Parceiros" },
+          { x: 7, y: 6, r: 14, label: "Funcionários" },
+          { x: 3, y: 3, r: 8, label: "Fornecedores" },
+        ],
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.6)",
+          "rgba(54, 162, 235, 0.6)",
+          "rgba(255, 206, 86, 0.6)",
+          "rgba(75, 192, 192, 0.6)",
+          "rgba(153, 102, 255, 0.6)",
+          "rgba(255, 159, 64, 0.6)",
+        ],
+        borderColor: [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+          "rgba(75, 192, 192, 1)",
+          "rgba(153, 102, 255, 1)",
+          "rgba(255, 159, 64, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
   };
 
-  const validateDateRange = (date) => {
-    if (startDate) {
-      const diffTime = Math.abs(date - startDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 7;
-    }
-    return true;
+  // Media sentiment and impact data
+  const mediaData = {
+    datasets: [
+      {
+        label: "Canais de Mídia",
+        data: [
+          { x: 9, y: 6, r: 18, label: "Instagram" },
+          { x: 8, y: 4, r: 14, label: "globo.com" },
+          { x: 5, y: 7, r: 12, label: "UOL" },
+          { x: 3, y: 6, r: 6, label: "Blogs" },
+        ],
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.6)",
+          "rgba(54, 162, 235, 0.6)",
+          "rgba(255, 206, 86, 0.6)",
+          "rgba(75, 192, 192, 0.6)",
+          "rgba(153, 102, 255, 0.6)",
+          "rgba(255, 159, 64, 0.6)",
+          "rgba(201, 203, 207, 0.6)",
+        ],
+        borderColor: [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+          "rgba(75, 192, 192, 1)",
+          "rgba(153, 102, 255, 1)",
+          "rgba(255, 159, 64, 1)",
+          "rgba(201, 203, 207, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
   };
 
-  // Example function to simulate progress
-  const simulateProgress = () => {
-    setProgress(0);
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 3;
-      });
-    }, 100);
-  };
-
-  // Function to format the date range
-  const formatDateRange = () => {
-    if (startDate && endDate) {
-      const options = { day: "2-digit", month: "2-digit", year: "numeric" };
-      const start = startDate.toLocaleDateString("pt-BR", options);
-      const end = endDate.toLocaleDateString("pt-BR", options);
-      return `${start} - ${end}`;
-    }
-    return "Nenhum período selecionado";
+  // Options for the bubble charts
+  const bubbleChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: "bottom",
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.raw.label}: Impacto ${context.raw.x}, Sentimento ${context.raw.y}`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 10,
+        title: {
+          display: true,
+          text: "Sentimento (Negativo → Positivo)",
+        },
+      },
+      x: {
+        beginAtZero: true,
+        max: 10,
+        title: {
+          display: true,
+          text: "Impacto (Baixo → Alto)",
+        },
+      },
+    },
   };
 
   return (
-    <div className="w-full h-full flex relative font-roboto gap-10">
-      <div className="flex flex-col gap-10 border-r border-r-linesAndBorders">
-        <div className="flex gap-20 pr-10">
-          <div className="flex flex-col gap-4">
-            <div className="w-full">
-              <h1 className="text-base text-mainText font-medium underline">
-                Perfis a serem verificados
-              </h1>
-            </div>
-            {/* Inputs Section */}
-            <div className="flex flex-col gap-4 ml">
-              {profileInputFields.map((field) => (
-                <div key={field.id} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    name=""
-                    id={`perfil-${field.id}`}
-                    placeholder="Nome do perfil"
-                    className="border-b border-b-linesAndBorders bg-transparent select-none focus:outline-none"
-                  />
-                  <img
-                    src={deleteIcon}
-                    alt="delete"
-                    onClick={() => handleDeleteProfileInput(field.id)}
-                    className="cursor-pointer"
-                  />
-                </div>
-              ))}
-              <div>
-                <FaCirclePlus
-                  className={`text-xl text-primaryLight cursor-pointer active:scale-95 duration-300 ${
-                    profileInputFields.length > 2 ? "hidden" : ""
-                  }`}
-                  onClick={handleAddProfileInput}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="w-full">
-              <h1 className="text-base text-mainText font-medium underline">
-                Palavras chave
-              </h1>
-            </div>
-            {/* Inputs Section */}
-            <div className="inputs flex flex-col gap-4">
-              {keyWordsInputFields.map((field) => (
-                <div key={field.id} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    name=""
-                    id={`perfil-${field.id}`}
-                    placeholder="Palavra chave"
-                    className="border-b border-b-linesAndBorders bg-transparent select-none focus:outline-none"
-                  />
-                  <img
-                    src={deleteIcon}
-                    alt="delete"
-                    onClick={() => handleDeleteKeyWordsInput(field.id)}
-                    className="cursor-pointer"
-                  />
-                </div>
-              ))}
-              <div>
-                <FaCirclePlus
-                  className={`text-xl text-primaryLight cursor-pointer active:scale-95 duration-300 ${
-                    keyWordsInputFields.length > 4 ? "hidden" : ""
-                  }`}
-                  onClick={handleAddKeyWordsInput}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Social Media Section */}
-        <div className="flex flex-col gap-4">
-          <div className="w-full">
-            <h1 className="text-base text-mainText font-medium underline">
-              Redes Sociais
-            </h1>
-          </div>
-          {/* Checkbox Section */}
-          <div className="grid grid-cols-3 gap-4 pr-10">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="todas"
-                id="todas"
-                className="w-4 h-4"
-                checked={checkboxes.todas}
-                onChange={handleCheckboxChange}
-              />
-              <label htmlFor="todas">Todas</label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="instagram"
-                id="instagram"
-                className="w-4 h-4"
-                checked={checkboxes.instagram}
-                onChange={handleCheckboxChange}
-              />
-              <label htmlFor="instagram">Instagram</label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="facebook"
-                id="facebook"
-                className="w-4 h-4"
-                checked={checkboxes.facebook}
-                onChange={handleCheckboxChange}
-              />
-              <label htmlFor="facebook">Facebook</label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="x"
-                id="x"
-                className="w-4 h-4"
-                checked={checkboxes.x}
-                onChange={handleCheckboxChange}
-              />
-              <label htmlFor="x">X (Twitter)</label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="linkedin"
-                id="linkedin"
-                className="w-4 h-4"
-                checked={checkboxes.linkedin}
-                onChange={handleCheckboxChange}
-              />
-              <label htmlFor="linkedin">Linkedin</label>
-            </div>
-          </div>
-        </div>
-        <div className="w-[95%] h-[1px] bg-linesAndBorders" />
-        {/* Time set Section */}
-        <div className="flex flex-col gap-4">
+    <div className="w-full pb-4 pr-10 h-full overflow-y-auto">
+      <div className="mb-6 flex items-start justify-between">
+        <div className=" flex flex-col gap-10">
           <div>
-            <h1 className="text-base text-mainText font-medium underline">
-              Varredura Automática
-            </h1>
+            <label className="block text-mainText mb-2">
+              Selecione a Empresa
+            </label>
+            <select className="border rounded p-2">
+              <option value="empresa1">Selecione a Empresa</option>
+              <option value="empresa2">Jetbet</option>
+              <option value="empresa3">Bet4</option>
+              <option value="empresa4">BetWarrior</option>
+            </select>
           </div>
-          <div className="flex items-center gap-4">
-            <div>
-              <DatePicker
-                selectsRange={true}
-                startDate={startDate}
-                endDate={endDate}
-                onChange={(update) => setDateRange(update)}
-                isClearable={true}
-                placeholderText="Selecione o período"
-                maxDate={new Date()}
-                filterDate={validateDateRange}
-                className="pl-2 pr-8 py-1 border rounded-lg focus:outline-none text-mainText placeholder:text-mainText"
-                dateFormat="dd/MM/yyyy"
+          <div>
+            <label className="block text-mainText mb-2">
+              Selecione a data da análise:
+            </label>
+            <input
+              type="date"
+              className="border rounded p-2"
+              value={selectedDate}
+              onChange={(e) => handleDateSelect(e.target.value)}
+            />
+          </div>
+        </div>
+        <button className="bg-primaryLight py-2 px-4 text-white rounded-lg">
+          Baixar Relatório
+        </button>
+      </div>
+      {showResults && (
+        <div className="flex flex-col gap-6">
+          <div className="flex gap-6">
+            <div className="p-4 rounded-lg shadow w-1/3 max-h-[400px] border border-linesAndBorders">
+              <h3 className="text-xl mb-10">Nuvem de Palavras</h3>
+              <WordCloudWrapper
+                words={wordCloudData}
+                options={{
+                  fontSizes: [20, 60],
+                  colors: [
+                    "#000000",
+                    "#3B70A2",
+                    "#5BB9D3",
+                    "#101A5A",
+                    "#171717",
+                    "#303030",
+                  ],
+                  fontStyle: "normal",
+                  rotations: 3,
+                  rotationAngles: [0, 90],
+                  enableTooltip: true,
+                  deterministic: false,
+                  fontFamily: "Roboto",
+                  padding: 3,
+                  maxSpeed: "fast",
+                  spiral: "archimedean",
+                  fontWeight: "bold",
+                  spiralFromCenter: true,
+                }}
               />
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button
-              disabled={startDate === null && endDate === null}
-              onClick={simulateProgress}
-              className="bg-primaryLight px-6 disabled:text-white disabled:opacity-60"
-            >
-              Buscar
-            </Button>
-            {progress !== 0 && (
-              <div className="flex items-center gap-2">
-                <ProgressBar progress={progress} />
-                <span>{progress} %</span>
+            {/* Novo gráfico de distribuição de palavras por rede social */}
+            <div className="border border-linesAndBorders p-4 rounded-lg shadow w-1/3 max-h-[400px]">
+              <h3 className="text-xl mb-4">
+                Distribuição de Palavras por Rede Social
+              </h3>
+              <div className="h-64">
+                <Bar data={wordDistributionData} options={barProfileOptions} />
               </div>
-            )}
-          </div>
-        </div>
-        {progress === 100 && (
-          <div className="flex flex-col gap-4">
-            <h3>
-              Resultados da varredura: <span>{formatDateRange()}</span>
-            </h3>
-            <div className="overflow-y-auto h-[150px] overflow-hidden flex flex-col gap-1">
-              {deepScanResults.map((result, index) => (
-                <div key={index} className="">
-                  <a
-                    href={result.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-800 underline text-sm"
-                  >
-                    {result.name} - {result.link}
-                  </a>
-                </div>
-              ))}
+            </div>
+            <div className="border border-linesAndBorders p-4 rounded-lg shadow w-1/3 max-h-[400px]">
+              <h3 className="text-xl mb-4">Análise de Sentimento</h3>
+              <PizzaGraphs bet_name="Análise Geral" data={sentimentData} />
             </div>
           </div>
-        )}
-      </div>
-      <div className="flex flex-col gap-4">
-        <div>
-          <h3 className="underline text-mainText font-medium">
-            Núvem de Palavras
-          </h3>
-        </div>
-        {progress === 100 && (
-          <div className="flex w-full max-w-[500px] h-[250px] border border-linesAndBorders rounded-lg shadow-sm p-4">
-            <WordCloud words={words} options={options} />
-          </div>
-        )}
-        <div className="mt-10">
-          <h3 className="underline text-mainText font-medium">
-            Análise de Sentimento
-          </h3>
-        </div>
-        {progress === 100 && (
-          <div className="flex items-center gap-10">
-            <div>
-              <PizzaGraphs bet_name={"jetbet_oficial"} data={data} />
+          <div className="flex gap-6">
+            {/* Add this after your existing rows of charts */}
+            <div className="border border-linesAndBorders p-4 rounded-lg shadow col-span-full w-1/3 max-h-[400px]">
+              <h3 className="text-xl mb-4">
+                Análise de Stakeholders: Sentimento e Impacto
+              </h3>
+              <div className="h-64">
+                <Bubble data={stakeholderData} options={bubbleChartOptions} />
+              </div>
             </div>
-            <div>
-              <PizzaGraphs bet_name={"bet4"} data={data2} />
+            <div className="border border-linesAndBorders p-4 rounded-lg shadow col-span-full w-1/3 max-h-[400px]">
+              <h3 className="text-xl mb-4">
+                Análise de Mídias: Sentimento e Impacto
+              </h3>
+              <div className="h-64">
+                <Bubble data={mediaData} options={bubbleChartOptions} />
+              </div>
+            </div>
+            <div className="border border-linesAndBorders p-4 rounded-lg shadow col-span-full w-1/3 max-h-[400px]">
+              <h3 className="text-xl mb-4">Perfis com Maior Incidência</h3>
+              <div className="h-64">
+                <Bar data={profileBarData} options={barProfileOptions} />
+              </div>
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="absolute -top-28 -left-10 px-5 py-2 z-50 border border-linesAndBorders rounded-xl shadow-sm">
-        <h2 className="text-mainText font-bold">Varredura - DeepScan360</h2>
-      </div>
+          <div className="border border-linesAndBorders p-4 rounded-lg shadow col-span-full w-1/3 overflow-y-scroll max-h-[400px]">
+            <h3 className="text-xl mb-10">Posts em Disconformidade</h3>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Plataforma</th>
+                  <th className="text-left p-2">URL</th>
+                  <th className="text-left p-2">Problema</th>
+                </tr>
+              </thead>
+              <tbody>
+                {nonCompliantPosts.map((post, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="p-2">{post.platform}</td>
+                    <td className="p-2">
+                      <a
+                        href={post.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        Ver post
+                      </a>
+                    </td>
+                    <td className="p-2">{post.issue}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
