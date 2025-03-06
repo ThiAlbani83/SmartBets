@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth";
+// const API_URL = "http://localhost:5000/api/auth";
+const API_URL = "http://89.116.74.250:5002/api/auth";
 axios.defaults.withCredentials = true;
 
 export const useAuthStore = create((set) => ({
