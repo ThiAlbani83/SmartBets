@@ -15,13 +15,33 @@ dotenv.config();
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://89.116.74.250:5173",
+];
+
 app.use(
   cors({
+<<<<<<< HEAD
     /* origin: "http://localhost:5173", */
     origin: "http://89.116.74.250:5173",
     credentials: true,
+=======
+    origin: function (origin, callback) {
+      // Permitir origens no array ou origem ausente (caso de clientes sem origin como Postman)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+>>>>>>> d0070ab5451eaa092b6a6489edf897edafbd2a90
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 

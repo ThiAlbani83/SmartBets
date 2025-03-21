@@ -1,23 +1,13 @@
-# Usar uma imagem Node.js como base
-FROM node:20-alpine
+FROM node:16-alpine
 
-# Definir o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copiar os arquivos de dependências
-COPY package.json package-lock.json* ./
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 
-# Instalar as dependências
-RUN npm install
+COPY dist/ ./dist/
+COPY server.cjs .
 
-# Copiar o restante dos arquivos do projeto
-COPY . .
-
-# Construir o projeto para produção
-RUN npm run build
-
-# Expor a porta que o Vite usa (geralmente 5173)
 EXPOSE 5173
 
-# Comando para rodar o servidor de desenvolvimento do Vite
-CMD ["npm", "run", "dev"]
+CMD ["node", "server.cjs"]
