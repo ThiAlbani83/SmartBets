@@ -40,6 +40,8 @@ import Reports from "./sac/Reports";
 import SearchDeepScan from "./deepscan/SearchDeepScan";
 import HomeDeepScan from "./deepscan/HomeDeepScan";
 import ConfigDeepScan from "./deepscan/ConfigDeepScan";
+import ScrapeDeepScan from "./deepscan/ScrapeDeepScan";
+import NetworkFinder from "./deepscan/NetworkFinder";
 
 const HomePage = () => {
   const { user } = useAuthStore();
@@ -58,10 +60,10 @@ const HomePage = () => {
       <div className="relative w-full h-screen my-auto bg-[#FAFBFC]">
         <div className="homePage flex-1 w-full h-full rounded-lg overflow-y-auto">
           <NavbarV2 />
-          <div className="p-10 w-full max-w-[98%] mx-auto h-[85%] overflow-hidden rounded-b-xl mt-2 rounded-xl shadow-lg">
+          <div className="p-10 w-full max-w-[98%] overflow-y-scroll mx-auto h-[85%] rounded-b-xl mt-2 rounded-xl shadow-lg">
             <Routes>
               {/* ROTA PARA HOME PAGE BASEADA NA FUNÇÃO DO USUÁRIO */}
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<HomeDeepScan />} />
               {/* FIM DA ROTA PARA HOME PAGE BASEADA NA FUNÇÃO DO USUÁRIO */}
               {/* ROTAS PARA SESSÃO DE SAC */}
               <Route path="sac/dashboard" element={<HomeSac />} />
@@ -144,9 +146,16 @@ const HomePage = () => {
               {/* FIM DA ROTA PARA PAINEL DE ADMIN */}
               {/* ROTA PARA PAINEL DO DEEPSCAN */}
               <Route path="/deepscan/dashboard" element={<HomeDeepScan />} />
-              <Route path="/deepscan/verificacoes" element={<SearchDeepScan />} />
-              <Route path="/deepscan/config" element={<ConfigDeepScan />} />
-              {/* FIM DA ROTA PARA PAINEL DE ADMIN */}
+              <Route
+                path="/deepscan/verificacoes"
+                element={<ScrapeDeepScan />}
+              />
+              <Route path="/deepscan/config" element={<SearchDeepScan />} />
+              <Route
+                path="/deepscan/network-finder"
+                element={<NetworkFinder />}
+              />
+              {/* FIM DA ROTA PARA PAINEL DO DEEPSCAN */}
             </Routes>
           </div>
         </div>

@@ -16,11 +16,7 @@ const Sidebar = () => {
     >
       <div className="flex flex-col h-[90%] justify-between gap-0">
         <div className="px-4 mt-2">
-            <MenuV2 expanded={expanded} setExpanded={setExpanded} />
-        </div>
-        <div className="flex flex-col gap-2 absolute bottom-10 w-full">
-          <img src={logotplz} alt="logo-tropicalize" className="px-10" />
-          <p className="text-[11px] text-center text-white">Transformando o mercado de iGaming no Brasil</p>
+          <MenuV2 expanded={expanded} setExpanded={setExpanded} />
         </div>
       </div>
     </div>

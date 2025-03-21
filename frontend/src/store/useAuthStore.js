@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = "http://89.116.74.250:5002/api/auth";
 axios.defaults.withCredentials = true;
 
 export const useAuthStore = create((set) => ({
@@ -149,14 +149,14 @@ export const useAuthStore = create((set) => ({
         userData,
         { withCredentials: true }
       );
-      
+
       if (response.data.success) {
         return response.data;
       } else {
         throw new Error(response.data.message);
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Erro no registro';
+      const errorMessage = error.response?.data?.message || "Erro no registro";
       throw new Error(errorMessage);
     }
   },

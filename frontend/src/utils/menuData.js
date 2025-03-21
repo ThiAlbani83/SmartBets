@@ -71,5 +71,6 @@ export const menuItemsResponsible = [
 export const menuItemsDeepScan = [
   { name: "Dashboard", icon: home, path: "/deepscan/dashboard" },
   { name: "Raspagens", icon: insights, path: "/deepscan/verificacoes" },
-  { name: "Configurações", icon: insights, path: "/deepscan/config" },
+  { name: "Agendamento", icon: insights, path: "/deepscan/config" },
+  { name: "Network Finder", icon: insights, path: "/deepscan/network-finder" },
 ];

@@ -1,506 +1,425 @@
-import { useState } from "react";
-import WordCloudWrapper from "../../components/deepscan/WordCloudWrapper";
-import PizzaGraphs from "../../components/deepscan/PizzaGraphs";
-import { Bar, Scatter, Bubble } from "react-chartjs-2"; // Add Bubble to imports
-import {
-  Chart as ChartJS,
-  LinearScale,
-  PointElement,
-  BubbleController,
-} from "chart.js";
+import React, { useState, useEffect } from "react";
+import { useDeepScanStore } from "../../store/useDeepscanStore";
 
-// Register the bubble chart components
-ChartJS.register(LinearScale, PointElement, BubbleController);
 const SearchDeepScan = () => {
-  const [selectedDate, setSelectedDate] = useState("");
-  const [showResults, setShowResults] = useState(false);
+  const {
+    scheduleScraping,
+    getScheduledTasks,
+    scheduledTasks,
+    isLoading,
+    error,
+    schedulingStatus,
+  } = useDeepScanStore();
 
-  //fake data for the word cloud
-  const wordCloudData = [
-    { text: "Apostas", value: 64 },
-    { text: "Dinheiro", value: 42 },
-    { text: "Ganhos", value: 35 },
-    { text: "Lucro", value: 28 },
-    { text: "Investimento", value: 25 },
-    { text: "Cassino", value: 22 },
-    { text: "Bonus", value: 20 },
-    { text: "Promoção", value: 18 },
-  ];
+  // State for form fields
+  const [profiles, setProfiles] = useState([]);
+  const [searchPhrases, setSearchPhrases] = useState([]);
+  const [format, setFormat] = useState("CSV");
+  const [platforms, setPlatforms] = useState([]);
+  const [selectedDays, setSelectedDays] = useState([]);
+  const [startHour, setStartHour] = useState("10:00");
 
-  //fake data for the pie chart
-  const sentimentData = {
-    labels: ["Positivo", "Negativo", "Neutro"],
-    datasets: [
-      {
-        data: [300, 50, 100],
-        backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56"],
-      },
-    ],
+  // Input states
+  const [profile, setProfile] = useState("");
+  const [searchPhrase, setSearchPhrase] = useState("");
+  const [platform, setPlatform] = useState("");
+  const [day, setDay] = useState("");
+
+  // Fetch scheduled tasks on component mount
+  useEffect(() => {
+    getScheduledTasks();
+  }, [getScheduledTasks]);
+
+  // Handle adding/removing items from arrays
+  const handleAddProfile = () => {
+    if (profile.trim()) {
+      setProfiles([...profiles, profile.trim()]);
+      setProfile("");
+    }
   };
 
-  // Novo dado para o gráfico de distribuição de palavras por rede social
-  const wordDistributionData = {
-    labels: ["Facebook", "Instagram", "Twitter", "LinkedIn"],
-    datasets: [
-      {
-        label: "Apostas",
-        data: [25, 18, 12, 9],
-        backgroundColor: "#36A2EB",
-      },
-      {
-        label: "Dinheiro",
-        data: [15, 12, 10, 5],
-        backgroundColor: "#FF6384",
-      },
-      {
-        label: "Ganhos",
-        data: [10, 15, 8, 2],
-        backgroundColor: "#FFCE56",
-      },
-      {
-        label: "Lucro",
-        data: [8, 7, 10, 3],
-        backgroundColor: "#4BC0C0",
-      },
-    ],
+  const handleAddSearchPhrase = () => {
+    if (searchPhrase.trim()) {
+      setSearchPhrases([...searchPhrases, searchPhrase.trim()]);
+      setSearchPhrase("");
+    }
   };
 
-  // Options for the scatter chart
-  const scatterChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "bottom",
-      },
-      title: {
-        display: true,
-        text: "Perfis com Incidência de Palavras Proibidas",
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            return `${context.raw.label}: ${context.raw.y} palavras proibidas`;
-          },
-        },
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Qtd de Palavras",
-        },
-      },
-      x: {
-        ticks: {
-          // This will replace the x-axis numeric values with profile names
-          callback: function (value) {
-            const profiles = profileScatterData.datasets[0].data;
-            return profiles.find((item) => item.x === value)?.label || "";
-          },
-        },
-        title: {
-          display: true,
-          text: "Perfis",
-        },
-      },
-    },
-  };
-  // Data for the scatter plot (for a single day)
-  const profileScatterData = {
-    datasets: [
-      {
-        label: "Perfis Problemáticos",
-        data: [
-          { x: 1, y: 30, label: "/jetbet_oficial" },
-          { x: 2, y: 21, label: "@jetbet_facebook" },
-          { x: 3, y: 18, label: "jetbet_linkedin" },
-          { x: 4, y: 17, label: "/jetbet_instagram" },
-          { x: 5, y: 14, label: "/jetbet_x" },
-          { x: 6, y: 12, label: "/jetbet_" },
-          { x: 7, y: 10, label: "@jetbet_discord" },
-        ],
-        backgroundColor: [
-          "#FF6384",
-          "#36A2EB",
-          "#FFCE56",
-          "#4BC0C0",
-          "#9966FF",
-          "#FF9F40",
-          "#C9CBCF",
-        ],
-        pointRadius: 8,
-        pointHoverRadius: 12,
-      },
-    ],
+  const handleAddPlatform = () => {
+    if (platform.trim()) {
+      setPlatforms([...platforms, platform.trim()]);
+      setPlatform("");
+    }
   };
 
-  // Transforme os dados do Scatter para um formato adequado para gráfico de barras
-  const profileBarData = {
-    labels: profileScatterData.datasets[0].data.map((item) => item.label),
-    datasets: [
-      {
-        label: "Palavras Proibidas",
-        data: profileScatterData.datasets[0].data.map((item) => item.y),
-        backgroundColor: [
-          "#FF6384",
-          "#36A2EB",
-          "#FFCE56",
-          "#4BC0C0",
-          "#9966FF",
-          "#FF9F40",
-          "#C9CBCF",
-        ],
-        borderWidth: 1,
-      },
-    ],
+  const handleAddDay = () => {
+    if (day) {
+      const dayNumber = parseInt(day, 10);
+      if (!selectedDays.includes(dayNumber)) {
+        setSelectedDays([...selectedDays, dayNumber]);
+      }
+      setDay("");
+    }
   };
 
-  // Opções para o gráfico de barras
-  const barProfileOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "bottom",
-      },
-      title: {
-        display: true,
-        text: "Perfis com Incidência de Palavras Proibidas",
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            return `${context.raw} palavras proibidas`;
-          },
-        },
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Qtd de Palavras",
-        },
-      },
-      x: {
-        title: {
-          display: true,
-          text: "Perfis",
-        },
-      },
-    },
+  const handleRemoveItem = (array, setArray, index) => {
+    setArray(array.filter((_, i) => i !== index));
   };
-  //fake data for found posts
-  const nonCompliantPosts = [
-    {
-      platform: "Facebook",
-      url: "https://www.facebook.com/example",
-      issue: "Promessa de ganhos garantidos",
-    },
-    {
-      platform: "Instagram",
-      url: "https://instagram.com/post2",
-      issue: "Conteúdo inadequado",
-    },
-    {
-      platform: "Twitter",
-      url: "https://twitter.com/post3",
-      issue: "Promessa de ganhos garantidos",
-    },
-    {
-      platform: "LinkedIn",
-      url: "https://www.linkedin.com/in/example",
-      issue: "Conteúdo inadequado",
-    },
-    {
-      platform: "Facebook",
-      url: "https://www.facebook.com/example",
-      issue: "Promessa de ganhos garantidos",
-    },
-    {
-      platform: "Instagram",
-      url: "https://instagram.com/post2",
-      issue: "Conteúdo inadequado",
-    },
-    {
-      platform: "Twitter",
-      url: "https://twitter.com/post3",
-      issue: "Promessa de ganhos garantidos",
-    },
-    {
-      platform: "LinkedIn",
-      url: "https://www.linkedin.com/in/example",
-      issue: "Conteúdo inadequado",
-    },
-    {
-      platform: "LinkedIn",
-      url: "https://www.linkedin.com/in/example",
-      issue: "Conteúdo inadequado",
-    },
-    {
-      platform: "Facebook",
-      url: "https://www.facebook.com/example",
-      issue: "Promessa de ganhos garantidos",
-    },
-    {
-      platform: "Instagram",
-      url: "https://instagram.com/post2",
-      issue: "Conteúdo inadequado",
-    },
-    {
-      platform: "Twitter",
-      url: "https://twitter.com/post3",
-      issue: "Promessa de ganhos garantidos",
-    },
-    {
-      platform: "LinkedIn",
-      url: "https://www.linkedin.com/in/example",
-      issue: "Conteúdo inadequado",
-    },
-  ];
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
-    setShowResults(true);
-  };
+    if (profiles.length === 0) {
+      alert("Adicione pelo menos um perfil");
+      return;
+    }
 
-  // Stakeholder sentiment and impact data
-  const stakeholderData = {
-    datasets: [
-      {
-        label: "Stakeholders",
-        data: [
-          { x: 8, y: 7, r: 15, label: "Investidores" },
-          { x: 6, y: 9, r: 12, label: "Clientes VIP" },
-          { x: 9, y: 4, r: 18, label: "Reguladores" },
-          { x: 4, y: 8, r: 10, label: "Parceiros" },
-          { x: 7, y: 6, r: 14, label: "Funcionários" },
-          { x: 3, y: 3, r: 8, label: "Fornecedores" },
-        ],
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.6)",
-          "rgba(54, 162, 235, 0.6)",
-          "rgba(255, 206, 86, 0.6)",
-          "rgba(75, 192, 192, 0.6)",
-          "rgba(153, 102, 255, 0.6)",
-          "rgba(255, 159, 64, 0.6)",
-        ],
-        borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(255, 206, 86, 1)",
-          "rgba(75, 192, 192, 1)",
-          "rgba(153, 102, 255, 1)",
-          "rgba(255, 159, 64, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
+    if (platforms.length === 0) {
+      alert("Adicione pelo menos uma plataforma");
+      return;
+    }
 
-  // Media sentiment and impact data
-  const mediaData = {
-    datasets: [
-      {
-        label: "Canais de Mídia",
-        data: [
-          { x: 9, y: 6, r: 18, label: "Instagram" },
-          { x: 8, y: 4, r: 14, label: "globo.com" },
-          { x: 5, y: 7, r: 12, label: "UOL" },
-          { x: 3, y: 6, r: 6, label: "Blogs" },
-        ],
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.6)",
-          "rgba(54, 162, 235, 0.6)",
-          "rgba(255, 206, 86, 0.6)",
-          "rgba(75, 192, 192, 0.6)",
-          "rgba(153, 102, 255, 0.6)",
-          "rgba(255, 159, 64, 0.6)",
-          "rgba(201, 203, 207, 0.6)",
-        ],
-        borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(255, 206, 86, 1)",
-          "rgba(75, 192, 192, 1)",
-          "rgba(153, 102, 255, 1)",
-          "rgba(255, 159, 64, 1)",
-          "rgba(201, 203, 207, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
+    if (selectedDays.length === 0) {
+      alert("Selecione pelo menos um dia para agendamento");
+      return;
+    }
 
-  // Options for the bubble charts
-  const bubbleChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: true,
-        position: "bottom",
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            return `${context.raw.label}: Impacto ${context.raw.x}, Sentimento ${context.raw.y}`;
-          },
-        },
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 10,
-        title: {
-          display: true,
-          text: "Sentimento (Negativo → Positivo)",
-        },
-      },
-      x: {
-        beginAtZero: true,
-        max: 10,
-        title: {
-          display: true,
-          text: "Impacto (Baixo → Alto)",
-        },
-      },
-    },
+    // Format the time properly
+    // Make sure startHour is in the correct format (HH:MM)
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(startHour)) {
+      alert("Formato de hora inválido. Use o formato HH:MM (ex: 14:30)");
+      return;
+    }
+
+    // Send the original format that the API expects
+    const result = await scheduleScraping({
+      profiles,
+      searchPhrases,
+      format,
+      platforms,
+      selectedDays, // Keep the original selectedDays array
+      startHour, // Keep the original startHour string
+    });
+
+    console.log("Resultado do agendamento:", result);
   };
+  // Generate days for dropdown (1-31)
+  const daysOptions = Array.from({ length: 31 }, (_, i) => i + 1);
 
   return (
-    <div className="w-full pb-4 pr-10 h-full overflow-y-auto">
-      <div className="mb-6 flex items-start justify-between">
-        <div className=" flex flex-col gap-10">
-          <div>
-            <label className="block text-mainText mb-2">
-              Selecione a Empresa
-            </label>
-            <select className="border rounded p-2">
-              <option value="empresa1">Selecione a Empresa</option>
-              <option value="empresa2">Jetbet</option>
-              <option value="empresa3">Bet4</option>
-              <option value="empresa4">BetWarrior</option>
+    <div
+      className="container mx-auto p-4 overflow-auto"
+      style={{ maxHeight: "100vh" }}
+    >
+      <h1 className="text-2xl font-bold mb-4">Agendar Deep Scan</h1>
+
+      <div className="bg-white shadow-md rounded p-6 mb-6">
+        <form onSubmit={handleSubmit}>
+          {/* Profiles Section */}
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold mb-2">Perfis</h2>
+            <div className="flex mb-2">
+              <input
+                type="text"
+                value={profile}
+                onChange={(e) => setProfile(e.target.value)}
+                className="flex-1 border rounded-l p-2"
+                placeholder="Adicionar perfil"
+              />
+              <button
+                type="button"
+                onClick={handleAddProfile}
+                className="bg-blue-500 text-white px-4 py-2 rounded-r"
+              >
+                Adicionar
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
+              {profiles.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-100 px-3 py-1 rounded-full flex items-center"
+                >
+                  <span>{item}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleRemoveItem(profiles, setProfiles, index)
+                    }
+                    className="ml-2 text-red-500"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Search Phrases Section */}
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold mb-2">Frases de Busca</h2>
+            <div className="flex mb-2">
+              <input
+                type="text"
+                value={searchPhrase}
+                onChange={(e) => setSearchPhrase(e.target.value)}
+                className="flex-1 border rounded-l p-2"
+                placeholder="Adicionar frase de busca"
+              />
+              <button
+                type="button"
+                onClick={handleAddSearchPhrase}
+                className="bg-blue-500 text-white px-4 py-2 rounded-r"
+              >
+                Adicionar
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
+              {searchPhrases.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-100 px-3 py-1 rounded-full flex items-center"
+                >
+                  <span>{item}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleRemoveItem(searchPhrases, setSearchPhrases, index)
+                    }
+                    className="ml-2 text-red-500"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Format Selection */}
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold mb-2">Formato</h2>
+            <select
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+              className="border rounded p-2 w-full"
+            >
+              <option value="CSV">CSV</option>
+              <option value="JSON">JSON</option>
+              <option value="EXCEL">EXCEL</option>
             </select>
           </div>
-          <div>
-            <label className="block text-mainText mb-2">
-              Selecione a data da análise:
-            </label>
+
+          {/* Platforms Section */}
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold mb-2">Plataformas</h2>
+            <div className="flex mb-2">
+              <input
+                type="text"
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                className="flex-1 border rounded-l p-2"
+                placeholder="Adicionar plataforma"
+              />
+              <button
+                type="button"
+                onClick={handleAddPlatform}
+                className="bg-blue-500 text-white px-4 py-2 rounded-r"
+              >
+                Adicionar
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
+              {platforms.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-100 px-3 py-1 rounded-full flex items-center"
+                >
+                  <span>{item}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleRemoveItem(platforms, setPlatforms, index)
+                    }
+                    className="ml-2 text-red-500"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Selected Days Section */}
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold mb-2">Dias de Execução</h2>
+            <div className="flex mb-2">
+              <select
+                value={day}
+                onChange={(e) => setDay(e.target.value)}
+                className="flex-1 border rounded-l p-2"
+              >
+                <option value="">Selecione um dia</option>
+                {daysOptions.map((dayNum) => (
+                  <option key={dayNum} value={dayNum}>
+                    Dia {dayNum}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handleAddDay}
+                className="bg-blue-500 text-white px-4 py-2 rounded-r"
+              >
+                Adicionar
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
+              {selectedDays.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-100 px-3 py-1 rounded-full flex items-center"
+                >
+                  <span>Dia {item}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleRemoveItem(selectedDays, setSelectedDays, index)
+                    }
+                    className="ml-2 text-red-500"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Start Hour */}
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold mb-2">Horário de Início</h2>
             <input
-              type="date"
-              className="border rounded p-2"
-              value={selectedDate}
-              onChange={(e) => handleDateSelect(e.target.value)}
+              type="time"
+              value={startHour}
+              onChange={(e) => setStartHour(e.target.value)}
+              className="border rounded p-2 w-full"
             />
           </div>
-        </div>
-        <button className="bg-primaryLight py-2 px-4 text-white rounded-lg">
-          Baixar Relatório
-        </button>
+
+          <button
+            type="submit"
+            className="bg-green-500 text-white px-6 py-3 rounded w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? "Processando..." : "Agendar Deep Scan"}
+          </button>
+        </form>
       </div>
-      {showResults && (
-        <div className="flex flex-col gap-6">
-          <div className="flex gap-6">
-            <div className="p-4 rounded-lg shadow w-1/3 max-h-[400px] border border-linesAndBorders">
-              <h3 className="text-xl mb-10">Nuvem de Palavras</h3>
-              <WordCloudWrapper
-                words={wordCloudData}
-                options={{
-                  fontSizes: [20, 60],
-                  colors: [
-                    "#000000",
-                    "#3B70A2",
-                    "#5BB9D3",
-                    "#101A5A",
-                    "#171717",
-                    "#303030",
-                  ],
-                  fontStyle: "normal",
-                  rotations: 3,
-                  rotationAngles: [0, 90],
-                  enableTooltip: true,
-                  deterministic: false,
-                  fontFamily: "Roboto",
-                  padding: 3,
-                  maxSpeed: "fast",
-                  spiral: "archimedean",
-                  fontWeight: "bold",
-                  spiralFromCenter: true,
-                }}
-              />
-            </div>
-            {/* Novo gráfico de distribuição de palavras por rede social */}
-            <div className="border border-linesAndBorders p-4 rounded-lg shadow w-1/3 max-h-[400px]">
-              <h3 className="text-xl mb-4">
-                Distribuição de Palavras por Rede Social
-              </h3>
-              <div className="h-64">
-                <Bar data={wordDistributionData} options={barProfileOptions} />
-              </div>
-            </div>
-            <div className="border border-linesAndBorders p-4 rounded-lg shadow w-1/3 max-h-[400px]">
-              <h3 className="text-xl mb-4">Análise de Sentimento</h3>
-              <PizzaGraphs bet_name="Análise Geral" data={sentimentData} />
-            </div>
-          </div>
-          <div className="flex gap-6">
-            {/* Add this after your existing rows of charts */}
-            <div className="border border-linesAndBorders p-4 rounded-lg shadow col-span-full w-1/3 max-h-[400px]">
-              <h3 className="text-xl mb-4">
-                Análise de Stakeholders: Sentimento e Impacto
-              </h3>
-              <div className="h-64">
-                <Bubble data={stakeholderData} options={bubbleChartOptions} />
-              </div>
-            </div>
-            <div className="border border-linesAndBorders p-4 rounded-lg shadow col-span-full w-1/3 max-h-[400px]">
-              <h3 className="text-xl mb-4">
-                Análise de Mídias: Sentimento e Impacto
-              </h3>
-              <div className="h-64">
-                <Bubble data={mediaData} options={bubbleChartOptions} />
-              </div>
-            </div>
-            <div className="border border-linesAndBorders p-4 rounded-lg shadow col-span-full w-1/3 max-h-[400px]">
-              <h3 className="text-xl mb-4">Perfis com Maior Incidência</h3>
-              <div className="h-64">
-                <Bar data={profileBarData} options={barProfileOptions} />
-              </div>
-            </div>
-          </div>
-          <div className="border border-linesAndBorders p-4 rounded-lg shadow col-span-full w-1/3 overflow-y-scroll max-h-[400px]">
-            <h3 className="text-xl mb-10">Posts em Disconformidade</h3>
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Plataforma</th>
-                  <th className="text-left p-2">URL</th>
-                  <th className="text-left p-2">Problema</th>
+
+      {/* Loading Indicator */}
+      {isLoading && (
+        <div className="text-center p-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-2">Processando, por favor aguarde...</p>
+        </div>
+      )}
+
+      {/* Scheduling Status */}
+      {schedulingStatus && !isLoading && (
+        <div
+          className={`p-4 mb-4 rounded ${
+            schedulingStatus === "completed"
+              ? "bg-green-100 border-l-4 border-green-500 text-green-700"
+              : schedulingStatus === "failed"
+              ? "bg-red-100 border-l-4 border-red-500 text-red-700"
+              : "bg-blue-100 border-l-4 border-blue-500 text-blue-700"
+          }`}
+        >
+          <p>
+            {schedulingStatus === "completed"
+              ? "Agendamento realizado com sucesso!"
+              : schedulingStatus === "failed"
+              ? "Falha ao realizar agendamento"
+              : "Agendamento em processamento..."}
+          </p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* Scheduled Tasks List */}
+      {scheduledTasks && scheduledTasks.length > 0 && (
+        <div className="bg-white shadow-md rounded p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4">Tarefas Agendadas</h2>
+          <div className="overflow-x-auto" style={{ maxHeight: "400px" }}>
+            <table className="min-w-full bg-white border">
+              <thead className="sticky top-0 bg-white">
+                <tr>
+                  <th className="py-2 px-4 border-b">ID</th>
+                  <th className="py-2 px-4 border-b">Perfis</th>
+                  <th className="py-2 px-4 border-b">Plataformas</th>
+                  <th className="py-2 px-4 border-b">Dias</th>
+                  <th className="py-2 px-4 border-b">Horário</th>
+                  <th className="py-2 px-4 border-b">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {nonCompliantPosts.map((post, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="p-2">{post.platform}</td>
-                    <td className="p-2">
-                      <a
-                        href={post.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        Ver post
-                      </a>
+                {scheduledTasks.map((task) => (
+                  <tr key={task.id || task._id}>
+                    <td className="py-2 px-4 border-b">
+                      {task.id || task._id}
                     </td>
-                    <td className="p-2">{post.issue}</td>
+                    <td className="py-2 px-4 border-b">
+                      {Array.isArray(task.profiles)
+                        ? task.profiles.join(", ")
+                        : task.profiles}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      {Array.isArray(task.platforms)
+                        ? task.platforms.join(", ")
+                        : task.platforms}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      {Array.isArray(task.selectedDays)
+                        ? task.selectedDays
+                            .map((day) => `Dia ${day}`)
+                            .join(", ")
+                        : task.selectedDays}
+                    </td>
+                    <td className="py-2 px-4 border-b">{task.startHour}</td>
+                    <td className="py-2 px-4 border-b">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          task.status === "completed"
+                            ? "bg-green-100 text-green-800"
+                            : task.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : task.status === "failed"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {task.status || "pendente"}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {scheduledTasks && scheduledTasks.length === 0 && (
+        <div className="bg-white shadow-md rounded p-6">
+          <p className="text-center text-gray-500">
+            Nenhuma tarefa agendada encontrada.
+          </p>
         </div>
       )}
     </div>

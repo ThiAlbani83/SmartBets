@@ -144,7 +144,7 @@ export const inviteUser = async (req, res) => {
       expiresIn: "24h",
     }
   );
-  const inviteLink = `http://localhost:5173/register/${token}`;
+  const inviteLink = `http://89.116.74.250:5173/register/${token}`;
 
   let transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",

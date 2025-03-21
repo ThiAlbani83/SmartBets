@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { FaCheck, FaTimes, FaTrash, FaSpinner } from "react-icons/fa";
+import { useDeepScanStore } from "../../store/useDeepscanStore";
 
 const RegisterModal = ({ onClose, onSave, initialData, isEditing }) => {
   const [step, setStep] = useState(1);
   const [currentKeyword, setCurrentKeyword] = useState("");
   const [newTime, setNewTime] = useState("12:00");
+  const { validateProfile } = useDeepScanStore();
   const socialNetworks = {
     instagram: "Instagram",
     facebook: "Facebook",
@@ -53,8 +55,19 @@ const RegisterModal = ({ onClose, onSave, initialData, isEditing }) => {
     setStep((prev) => prev - 1);
   };
 
-  const handleSubmit = () => {
-    onSave(formData);
+  const handleSubmit = async () => {
+    // Filter only verified profiles
+    const verifiedProfiles = formData.socialProfiles.filter(
+      (p) => p.verified === true
+    );
+
+    // Create the final data object
+    const finalData = {
+      ...formData,
+      socialProfiles: verifiedProfiles,
+    };
+
+    onSave(finalData);
     onClose();
   };
 
@@ -89,10 +102,10 @@ const RegisterModal = ({ onClose, onSave, initialData, isEditing }) => {
   );
 
   const renderStep2 = () => {
-    const handleAddProfile = (e) => {
+    const handleAddProfile = async (e) => {
       e.preventDefault();
       if (selectedNetwork && profileName.trim()) {
-        // Adiciona perfil com estado de verificação
+        // Add profile with pending verification state
         const newProfile = {
           network: selectedNetwork,
           profile: profileName.trim(),
@@ -105,25 +118,42 @@ const RegisterModal = ({ onClose, onSave, initialData, isEditing }) => {
           socialProfiles: [...prev.socialProfiles, newProfile],
         }));
 
-        // Simula verificação após 5 segundos
-        setTimeout(() => {
-          setFormData((prev) => ({
-            ...prev,
-            socialProfiles: prev.socialProfiles.map((profile) => {
+        // Call the actual API validation
+        try {
+          const result = await validateProfile(
+            profileName.trim(),
+            selectedNetwork
+          );
+
+          console.log("Validation result:", result); // Debug output
+
+          setFormData((prev) => {
+            const updatedProfiles = prev.socialProfiles.map((profile) => {
               if (
                 profile.network === newProfile.network &&
                 profile.profile === newProfile.profile &&
                 profile.loading
               ) {
-                // Simula uma verificação aleatória (70% de chance de sucesso)
-                const isVerified = Math.random() > 0.3;
-                return { ...profile, loading: false, verified: isVerified };
+                const updatedProfile = {
+                  ...profile,
+                  loading: false,
+                  verified: result.verified || result.exists, // Handle both property names
+                };
+                console.log("Updated profile:", updatedProfile); // Debug output
+                return updatedProfile;
               }
               return profile;
-            }),
-          }));
-        }, 5000);
+            });
 
+            return {
+              ...prev,
+              socialProfiles: updatedProfiles,
+            };
+          });
+        } catch (error) {
+          console.error("Validation error:", error);
+          // Handle error case
+        }
         setProfileName("");
       }
     };
@@ -147,7 +177,7 @@ const RegisterModal = ({ onClose, onSave, initialData, isEditing }) => {
           >
             <option value="">Selecione uma rede</option>
             {Object.entries(socialNetworks).map(([key, label]) => (
-              <option key={key} value={key}>
+              <option key={key} value={label}>
                 {label}
               </option>
             ))}

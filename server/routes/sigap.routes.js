@@ -4,10 +4,10 @@ import { uploadFile, listFiles } from "../controllers/sigap.controller.js";
 
 const router = express.Router();
 const storage = multer.diskStorage({
-  destination: 'uploads/',
+  destination: "uploads/",
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname)
-  }
+    cb(null, Date.now() + "-" + file.originalname);
+  },
 });
 
 const upload = multer({ storage: storage });

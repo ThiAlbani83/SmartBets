@@ -82,6 +82,7 @@ const SubmitTable = ({ selectedCategory, currentPage, setCurrentPage }) => {
         },
         headers: {
           "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
         },
       });
       setData(response.data);
