@@ -14,8 +14,9 @@ const AdminInvitePage = () => {
     { id: "1", name: "SIGAP" },
     { id: "2", name: "KYC" },
     { id: "3", name: "SAC" },
-    { id: "4", name: "Responsible Gaming" },
-    { id: "5", name: "Administrativo" },
+    { id: "4", name: "Deepscan" },
+    { id: "5", name: "Responsible Gaming" },
+    { id: "6", name: "Administrativo" },
   ];
 
   const handleChange = (e) => {

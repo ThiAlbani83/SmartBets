@@ -4,8 +4,8 @@
   "main": "server/server.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon /server/server.js",
-    "dev": "nodemon /server/server.js",
+    "start": "nodemon server/server.js",
+    "dev": "nodemon server/server.js",
     "prisma:format": "prisma format"
   },
   "keywords": [],

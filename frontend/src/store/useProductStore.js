@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/products";
+/* const API_URL = "http://localhost:5000/api/products"; */
+const API_URL = "http://89.116.74.250:5002/api/products";
 axios.defaults.withCredentials = true;
 
 export const useProductStore = create((set) => ({
@@ -37,7 +38,7 @@ export const useProductStore = create((set) => ({
     } catch (error) {
       set((state) => ({
         ...state,
-        error: "Nada encontrado" ,
+        error: "Nada encontrado",
         isLoading: false,
       }));
     }
