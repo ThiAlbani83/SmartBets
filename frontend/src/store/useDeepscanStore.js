@@ -10,11 +10,58 @@ export const useDeepScanStore = create((set) => ({
   searchPhrases: [],
   format: "CSV",
   platforms: [],
+  selectedPlatforms: [], // Add this state to track selected platforms
   scrapingResults: null,
   error: null,
   isLoading: false,
   scheduledTasks: [],
   schedulingStatus: null,
+  scrapedData: null,
+
+  // Add a method to update selected platforms
+  setSelectedPlatforms: (platforms) => {
+    set((state) => ({ ...state, selectedPlatforms: platforms }));
+  },
+
+  getScrapedData: async (platforms, keywords) => {
+    set((state) => ({
+      ...state,
+      isLoading: true,
+      error: null,
+      selectedPlatforms: platforms, // Update selected platforms when fetching data
+    }));
+    try {
+      // Modificado para aceitar arrays de plataformas e palavras-chave
+      const response = await axios.get(`${API_URL}/api/query/scraped-data`, {
+        params: {
+          platforms: platforms.join(","),
+          keywords: keywords.join(","),
+        },
+      });
+
+      // Atualizar o estado com os dados obtidos
+      set((state) => ({
+        ...state,
+        scrapedData: response.data,
+        isLoading: false,
+      }));
+
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Erro ao buscar dados de scraping";
+
+      set((state) => ({
+        ...state,
+        error: errorMessage,
+        isLoading: false,
+      }));
+
+      return { success: false, error: errorMessage };
+    }
+  },
 
   validateProfile: async (profile, platform) => {
     set((state) => ({ ...state, isLoading: true }));
@@ -56,6 +103,7 @@ export const useDeepScanStore = create((set) => ({
       isLoading: true,
       error: null,
       schedulingStatus: "pending",
+      selectedPlatforms: params.platforms, // Update selected platforms when scheduling
     }));
 
     const maxRetries = 3;
@@ -147,7 +195,12 @@ export const useDeepScanStore = create((set) => ({
   },
 
   scrape: async (params) => {
-    set((state) => ({ ...state, isLoading: true, error: null }));
+    set((state) => ({
+      ...state,
+      isLoading: true,
+      error: null,
+      selectedPlatforms: params.platforms, // Update selected platforms when scraping
+    }));
     try {
       const { profiles, searchPhrases, format, platforms } = params;
 

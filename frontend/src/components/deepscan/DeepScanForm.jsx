@@ -11,11 +11,22 @@ const DeepScanForm = ({
   setFormat,
   handleSubmit,
   isLoading,
+  searchMode,
 }) => {
   const platformOptions = [
     { value: "Instagram", label: "Instagram" },
-    { value: "twitter", label: "Twitter" },
+    { value: "Twitter", label: "X" },
     { value: "Telegram", label: "Telegram" },
+    { value: "LinkedIn", label: "LinkedIn" },
+    { value: "TikTok", label: "TikTok" },
+    { value: "Youtube", label: "Youtube" },
+    { value: "Facebook", label: "Facebook" },
+    { value: "Reddit", label: "Reddit" },
+    { value: "Dark Web", label: "Dark Web" },
+    { value: "Discord", label: "Discord" },
+    { value: "Google", label: "Google" },
+    { value: "Blogs", label: "Blogs" },
+    { value: "Sites de Notícias", label: "Sites de Notícias" },
   ];
 
   const handlePlatformChange = (platform) => {
@@ -29,46 +40,62 @@ const DeepScanForm = ({
   return (
     <div className="bg-white rounded-lg shadow-md mb-8">
       <div className="bg-gray-100 px-6 py-4 rounded-t-lg border-b">
-        <h2 className="text-xl font-semibold">Configuração do Scraping</h2>
+        <h2 className="text-xl font-semibold">
+          {searchMode === "scrape"
+            ? "Configuração do Scraping"
+            : "Consulta de Dados"}
+        </h2>
       </div>
       <div className="p-6">
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="profiles"
-            >
-              Perfis (um por linha)
-            </label>
-            <textarea
-              id="profiles"
-              rows="3"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              value={profiles}
-              onChange={(e) => setProfiles(e.target.value)}
-              placeholder="@usuario1&#10;@usuario2"
-              required
-            />
-            <p className="text-gray-600 text-xs mt-1">
-              Insira os nomes de usuário, um por linha
-            </p>
-          </div>
+          {searchMode === "scrape" && (
+            <div className="mb-4">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="profiles"
+              >
+                Perfis (um por linha)
+              </label>
+              <textarea
+                id="profiles"
+                rows="3"
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                value={profiles}
+                onChange={(e) => setProfiles(e.target.value)}
+                placeholder="@usuario1&#10;@usuario2"
+                required={searchMode === "scrape"}
+              />
+              <p className="text-gray-600 text-xs mt-1">
+                Insira os nomes de usuário, um por linha
+              </p>
+            </div>
+          )}
 
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
               htmlFor="searchPhrases"
             >
-              Frases de busca (opcional, uma por linha)
+              {searchMode === "scrape"
+                ? "Frases de busca (opcional, uma por linha)"
+                : "Palavra-chave para consulta"}
             </label>
             <textarea
               id="searchPhrases"
-              rows="3"
+              rows={searchMode === "scrape" ? "3" : "1"}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               value={searchPhrases}
               onChange={(e) => setSearchPhrases(e.target.value)}
-              placeholder="frase1&#10;frase2"
+              placeholder={
+                searchMode === "scrape" ? "frase1&#10;frase2" : "palavra-chave"
+              }
+              required={searchMode === "query"}
             />
+            {/* {searchMode === "query" && (
+              <p className="text-gray-600 text-xs mt-1">
+                Selecione as plataformas para consulta
+              </p>
+            )} */}
           </div>
 
           <div className="mb-4">
@@ -96,7 +123,7 @@ const DeepScanForm = ({
             </div>
           </div>
 
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
               htmlFor="format"
@@ -112,15 +139,23 @@ const DeepScanForm = ({
               <option value="CSV">CSV</option>
               <option value="JSON">JSON</option>
             </select>
-          </div>
+          </div> */}
 
           <button
             type="submit"
             disabled={
-              isLoading || !profiles.trim() || selectedPlatforms.length === 0
+              isLoading ||
+              (searchMode === "scrape" &&
+                (!profiles.trim() || selectedPlatforms.length === 0)) ||
+              (searchMode === "query" &&
+                (!searchPhrases.trim() || selectedPlatforms.length === 0))
             }
             className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
-              isLoading || !profiles.trim() || selectedPlatforms.length === 0
+              isLoading ||
+              (searchMode === "scrape" &&
+                (!profiles.trim() || selectedPlatforms.length === 0)) ||
+              (searchMode === "query" &&
+                (!searchPhrases.trim() || selectedPlatforms.length === 0))
                 ? "opacity-50 cursor-not-allowed"
                 : ""
             }`}
@@ -149,8 +184,10 @@ const DeepScanForm = ({
                 </svg>
                 Processando...
               </div>
-            ) : (
+            ) : searchMode === "scrape" ? (
               "Iniciar Scraping"
+            ) : (
+              "Consultar Dados"
             )}
           </button>
         </form>

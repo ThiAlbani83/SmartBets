@@ -63,7 +63,7 @@ const HomePage = () => {
           <div className="p-10 w-full max-w-[98%] overflow-y-scroll mx-auto h-[85%] rounded-b-xl mt-2 rounded-xl shadow-lg">
             <Routes>
               {/* ROTA PARA HOME PAGE BASEADA NA FUNÇÃO DO USUÁRIO */}
-              <Route path="/" element={<HomeDeepScan />} />
+              <Route path="/" element={<Home />} />
               {/* FIM DA ROTA PARA HOME PAGE BASEADA NA FUNÇÃO DO USUÁRIO */}
               {/* ROTAS PARA SESSÃO DE SAC */}
               <Route path="sac/dashboard" element={<HomeSac />} />
@@ -151,10 +151,7 @@ const HomePage = () => {
                 element={<ScrapeDeepScan />}
               />
               <Route path="/deepscan/config" element={<SearchDeepScan />} />
-              <Route
-                path="/deepscan/network-finder"
-                element={<NetworkFinder />}
-              />
+              <Route path="/deepscan/betcrawler" element={<NetworkFinder />} />
               {/* FIM DA ROTA PARA PAINEL DO DEEPSCAN */}
             </Routes>
           </div>

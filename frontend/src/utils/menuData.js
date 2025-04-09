@@ -72,5 +72,5 @@ export const menuItemsDeepScan = [
   { name: "Dashboard", icon: home, path: "/deepscan/dashboard" },
   { name: "Raspagens", icon: insights, path: "/deepscan/verificacoes" },
   { name: "Agendamento", icon: insights, path: "/deepscan/config" },
-  { name: "Network Finder", icon: insights, path: "/deepscan/network-finder" },
+  { name: "BetCrawler", icon: insights, path: "/deepscan/betcrawler" },
 ];

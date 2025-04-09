@@ -13,7 +13,37 @@ const NetworkFinder = () => {
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState("7days");
 
-  // Simulated data for demonstration
+  // Function to generate dates between today and 7 days ago in dd-mm-YYYY format
+  const generateRecentDate = () => {
+    const today = new Date();
+    const daysAgo = Math.floor(Math.random() * 7); // Random number between 0-6 days ago
+    const date = new Date(today);
+    date.setDate(today.getDate() - daysAgo);
+
+    // Format as dd-mm-YYYY
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  };
+
+  // Function to generate creation date (older than last activity)
+  const generateCreationDate = () => {
+    const today = new Date();
+    const monthsAgo = Math.floor(Math.random() * 24) + 6; // Random between 6-30 months ago
+    const date = new Date(today);
+    date.setMonth(today.getMonth() - monthsAgo);
+
+    // Format as dd-mm-YYYY
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  };
+
+  // Simulated data for demonstration with expanded fields
   const mockResults = [
     {
       id: 1,
@@ -21,9 +51,14 @@ const NetworkFinder = () => {
       platforms: ["Instagram", "Facebook"],
       followers: 45000,
       posts: 127,
-      lastActivity: "2023-11-15",
+      lastActivity: generateRecentDate(),
       status: "Não Regulamentada",
       risk: "Alto",
+      domain: "betwinner.com",
+      gateways: ["PIX", "Boleto", "Crypto"],
+      cnpj: "Não identificado",
+      banks: ["Nubank", "Itaú"],
+      creationDate: generateCreationDate(),
     },
     {
       id: 2,
@@ -31,9 +66,14 @@ const NetworkFinder = () => {
       platforms: ["Instagram", "Twitter"],
       followers: 28000,
       posts: 89,
-      lastActivity: "2023-11-18",
+      lastActivity: generateRecentDate(),
       status: "Não Regulamentada",
       risk: "Médio",
+      domain: "luckyplay.bet",
+      gateways: ["PIX", "Transferência"],
+      cnpj: "12.345.678/0001-99",
+      banks: ["Bradesco"],
+      creationDate: generateCreationDate(),
     },
     {
       id: 3,
@@ -41,9 +81,14 @@ const NetworkFinder = () => {
       platforms: ["Facebook"],
       followers: 32000,
       posts: 103,
-      lastActivity: "2023-11-14",
+      lastActivity: generateRecentDate(),
       status: "Não Regulamentada",
       risk: "Alto",
+      domain: "goldenbet.com.br",
+      gateways: ["PIX", "Boleto", "Cartão"],
+      cnpj: "Não identificado",
+      banks: ["Santander", "Inter"],
+      creationDate: generateCreationDate(),
     },
     {
       id: 4,
@@ -51,9 +96,14 @@ const NetworkFinder = () => {
       platforms: ["Instagram", "Twitter"],
       followers: 18500,
       posts: 67,
-      lastActivity: "2023-11-17",
+      lastActivity: generateRecentDate(),
       status: "Não Regulamentada",
       risk: "Baixo",
+      domain: "winnersbet.io",
+      gateways: ["PIX", "Crypto"],
+      cnpj: "23.456.789/0001-10",
+      banks: ["C6", "Inter"],
+      creationDate: generateCreationDate(),
     },
     {
       id: 5,
@@ -61,9 +111,165 @@ const NetworkFinder = () => {
       platforms: ["Instagram", "Facebook", "Twitter"],
       followers: 52000,
       posts: 145,
-      lastActivity: "2023-11-16",
+      lastActivity: generateRecentDate(),
       status: "Não Regulamentada",
       risk: "Alto",
+      domain: "betking.com",
+      gateways: ["PIX", "Boleto", "Transferência"],
+      cnpj: "Não identificado",
+      banks: ["Itaú", "Bradesco", "Nubank"],
+      creationDate: generateCreationDate(),
+    },
+    // 10 more tropicalized results
+    {
+      id: 6,
+      name: "SambaBet",
+      platforms: ["Instagram", "TikTok"],
+      followers: 63000,
+      posts: 215,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Alto",
+      domain: "sambabet.com.br",
+      gateways: ["PIX", "Boleto", "Crypto"],
+      cnpj: "34.567.890/0001-21",
+      banks: ["Nubank", "Caixa"],
+      creationDate: generateCreationDate(),
+    },
+    {
+      id: 7,
+      name: "CarnavalGames",
+      platforms: ["Facebook", "YouTube"],
+      followers: 41200,
+      posts: 178,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Médio",
+      domain: "carnavalgames.bet",
+      gateways: ["PIX", "Transferência"],
+      cnpj: "Não identificado",
+      banks: ["Banco do Brasil", "Inter"],
+      creationDate: generateCreationDate(),
+    },
+    {
+      id: 8,
+      name: "CopacabanaCasino",
+      platforms: ["Instagram", "Twitter", "TikTok"],
+      followers: 87500,
+      posts: 342,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Alto",
+      domain: "copacabanacasino.com",
+      gateways: ["PIX", "Boleto", "Cartão", "Crypto"],
+      cnpj: "45.678.901/0001-32",
+      banks: ["Itaú", "Santander", "BTG"],
+      creationDate: generateCreationDate(),
+    },
+    {
+      id: 9,
+      name: "IpanemaJogos",
+      platforms: ["Facebook", "Instagram"],
+      followers: 29800,
+      posts: 112,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Baixo",
+      domain: "ipanemajogos.bet",
+      gateways: ["PIX", "Boleto"],
+      cnpj: "Não identificado",
+      banks: ["Nubank"],
+      creationDate: generateCreationDate(),
+    },
+    {
+      id: 10,
+      name: "FuteBet Brasil",
+      platforms: ["Twitter", "Instagram"],
+      followers: 76300,
+      posts: 289,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Alto",
+      domain: "futebet.com.br",
+      gateways: ["PIX", "Transferência", "Crypto"],
+      cnpj: "56.789.012/0001-43",
+      banks: ["Bradesco", "Banco do Brasil"],
+      creationDate: generateCreationDate(),
+    },
+    {
+      id: 11,
+      name: "AçaíBet",
+      platforms: ["Instagram", "TikTok", "YouTube"],
+      followers: 54200,
+      posts: 198,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Médio",
+      domain: "acaibet.com.br",
+      gateways: ["PIX", "Boleto"],
+      cnpj: "Não identificado",
+      banks: ["C6", "Inter", "Nubank"],
+      creationDate: generateCreationDate(),
+    },
+    {
+      id: 12,
+      name: "CaipirinhaCasino",
+      platforms: ["Facebook", "Twitter"],
+      followers: 32700,
+      posts: 143,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Alto",
+      domain: "caipirinhacasino.bet",
+      gateways: ["PIX", "Crypto"],
+      cnpj: "67.890.123/0001-54",
+      banks: ["Itaú", "Santander"],
+      creationDate: generateCreationDate(),
+    },
+    {
+      id: 13,
+      name: "GuaranáGames",
+      platforms: ["Instagram"],
+      followers: 21500,
+      posts: 87,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Baixo",
+      domain: "guaranagames.com",
+      gateways: ["PIX"],
+      cnpj: "Não identificado",
+      banks: ["Nubank"],
+      creationDate: generateCreationDate(),
+    },
+    {
+      id: 14,
+      name: "FeijoadadaBet",
+      platforms: ["TikTok", "Instagram"],
+      followers: 48900,
+      posts: 231,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Médio",
+      domain: "feijoadadabet.bet",
+      gateways: ["PIX", "Boleto", "Transferência"],
+      cnpj: "78.901.234/0001-65",
+      banks: ["Bradesco", "Caixa"],
+      creationDate: generateCreationDate(),
+    },
+    {
+      id: 15,
+      name: "CaipiraBet",
+      platforms: ["Facebook", "Instagram", "Twitter", "YouTube"],
+      followers: 93200,
+      posts: 376,
+      lastActivity: generateRecentDate(),
+      status: "Não Regulamentada",
+      risk: "Alto",
+      domain: "caipirabet.com.br",
+      gateways: ["PIX", "Boleto", "Cartão", "Crypto"],
+      cnpj: "89.012.345/0001-76",
+      banks: ["Itaú", "Bradesco", "Santander", "Inter"],
+      creationDate: generateCreationDate(),
     },
   ];
 
@@ -110,14 +316,14 @@ const NetworkFinder = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-8xl w-full">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        Network Finder - Detecção de Casas de Apostas Não Regulamentadas
+        BetCrawler - Detecção de Casas de Apostas Não Regulamentadas
       </h1>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="md:col-span-6">
+          {/* <div className="md:col-span-6">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Termos de busca (ex: apostas, bet, bônus, cassino)
             </label>
@@ -128,7 +334,7 @@ const NetworkFinder = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Digite palavras-chave separadas por vírgula"
             />
-          </div>
+          </div> */}
 
           <div className="md:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -142,7 +348,6 @@ const NetworkFinder = () => {
               <option value="24h">Últimas 24 horas</option>
               <option value="7days">Últimos 7 dias</option>
               <option value="30days">Últimos 30 dias</option>
-              <option value="custom">Personalizado</option>
             </select>
           </div>
 
@@ -208,21 +413,33 @@ const NetworkFinder = () => {
               Plataformas:
             </p>
             <div className="flex flex-wrap gap-2">
-              {["Instagram", "Facebook", "Twitter", "TikTok", "YouTube"].map(
-                (platform) => (
-                  <button
-                    key={platform}
-                    onClick={() => togglePlatform(platform)}
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      selectedPlatforms.includes(platform)
-                        ? "bg-blue-100 text-blue-800 border border-blue-200"
-                        : "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200"
-                    }`}
-                  >
-                    {platform}
-                  </button>
-                )
-              )}
+              {[
+                "Instagram",
+                "Facebook",
+                "Google",
+                "Linkedin",
+                "Discord",
+                "Telegram",
+                "Deep/Dark Web",
+                "Reddit",
+                "Sites de Notícias",
+                "Twitter",
+                "TikTok",
+                "YouTube",
+                "Blogs",
+              ].map((platform) => (
+                <button
+                  key={platform}
+                  /* onClick={() => togglePlatform(platform)} */
+                  className={`px-3 py-1 rounded-full text-sm font-medium cursor-default ${
+                    selectedPlatforms.includes(platform)
+                      ? "bg-blue-100 text-blue-800 border border-blue-200"
+                      : "bg-gray-100 text-gray-800 border border-gray-200"
+                  }`}
+                >
+                  {platform}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -296,88 +513,175 @@ const NetworkFinder = () => {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Nome
+                    Casa de Apostas
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Plataformas
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Seguidores
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Posts
+                    Presença Digital
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Última Atividade
+                    Informações Legais
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Status
+                    Métodos de Pagamento
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Nível de Risco
+                    Avaliação de Risco
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {results.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {row.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex flex-wrap gap-1">
-                        {row.platforms.map((platform) => (
-                          <span
-                            key={platform}
-                            className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800"
-                          >
-                            {platform}
+                  <React.Fragment key={row.id}>
+                    {/* Main row with reorganized data */}
+                    <tr className="hover:bg-gray-50">
+                      {/* Casa de Apostas */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-900 mb-1">
+                            {row.name}
                           </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                      {row.followers.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                      {row.posts}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {row.lastActivity}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 border border-red-200">
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full border ${getRiskBadgeColor(
-                          row.risk
-                        )}`}
-                      >
-                        {row.risk}
-                      </span>
-                    </td>
-                  </tr>
+                          <a
+                            href={`https://${row.domain}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            {row.domain}
+                          </a>
+                          <span className="text-xs text-gray-500 mt-1">
+                            Criado em: {row.creationDate}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Presença Digital */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {row.platforms.map((platform) => (
+                              <span
+                                key={platform}
+                                className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800"
+                              >
+                                {platform}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-4 text-xs">
+                            <div>
+                              <span className="text-gray-500">Seguidores:</span>{" "}
+                              <span className="font-medium text-gray-700">
+                                {row.followers.toLocaleString()}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Posts:</span>{" "}
+                              <span className="font-medium text-gray-700">
+                                {row.posts}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Última atividade: {row.lastActivity}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Informações Legais */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <div className="mb-2">
+                            <span className="text-xs text-gray-500">CNPJ:</span>{" "}
+                            <span className="text-xs font-medium text-gray-700">
+                              {row.cnpj}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">
+                              Status:
+                            </span>{" "}
+                            <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 border border-red-200">
+                              {row.status}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Métodos de Pagamento */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <div className="mb-2">
+                            <span className="text-xs text-gray-500">
+                              Gateways:
+                            </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {row.gateways.map((gateway) => (
+                                <span
+                                  key={gateway}
+                                  className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+                                >
+                                  {gateway}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">
+                              Bancos:
+                            </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {row.banks.map((bank) => (
+                                <span
+                                  key={bank}
+                                  className="px-2 py-1 text-xs rounded-full bg-gray-50 text-gray-700 border border-gray-200"
+                                >
+                                  {bank}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Avaliação de Risco */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col items-center justify-center">
+                          <span
+                            className={`px-3 py-1 text-sm rounded-full border font-medium ${getRiskBadgeColor(
+                              row.risk
+                            )}`}
+                          >
+                            Risco {row.risk}
+                          </span>
+
+                          {/* Indicador visual de risco */}
+                          <div className="w-full mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${
+                                row.risk === "Alto"
+                                  ? "bg-red-500 w-full"
+                                  : row.risk === "Médio"
+                                  ? "bg-yellow-500 w-2/3"
+                                  : "bg-green-500 w-1/3"
+                              }`}
+                            ></div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

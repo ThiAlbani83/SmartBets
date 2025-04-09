@@ -46,18 +46,23 @@ const NavbarV2 = () => {
       </div>
       <div
         onClick={handleOpenDropDown}
-        className="flex items-start gap-4 relative cursor-pointer"
+        className="flex items-start gap-4 relative cursor-pointer pr-10"
         ref={dropdownRef}
       >
+        <div>
+          <img
+            src={person}
+            alt="person"
+            className="w-[52px] h-[52px] rounded-full"
+          />
+        </div>
         <div className="flex flex-col">
           <p className="text-black font-bold text-base">{user.name}</p>
           <p className="text-[#737791] font-light text-sm text-right">
             {user.role}
           </p>
         </div>
-        <div>
-          <img src={person} alt="person" className="" />
-        </div>
+
         {user.role === "admin" && isOpenDropDown && (
           <div className="w-[200px] py-4 bg-white rounded-lg absolute top-16 right-0 duration-700 border border-gray-300">
             <div className="flex items-center gap-2 hover:bg-gray-100 px-1 cursor-pointer">

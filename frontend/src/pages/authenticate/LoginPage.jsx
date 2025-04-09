@@ -91,9 +91,6 @@ const LoginPage = () => {
               <span>Esqueceu a senha?</span>
             </div>
           </div>
-          <div className="flex justify-center text-sm cursor-pointer justify-self-end mt-24 mb-10">
-            <img src={logoImage} alt="logo-tropicalize" className="w-48" />
-          </div>
         </div>
         <div className="flex flex-1">
           <img src={loginImage} alt="login-cassino-image" />
@@ -149,9 +146,6 @@ const LoginPage = () => {
             <div className="flex justify-center text-sm cursor-pointer">
               <span>Esqueceu a senha?</span>
             </div>
-          </div>
-          <div className="flex justify-center text-sm cursor-pointer justify-self-end mt-10 mb-10">
-            <img src={logoImage} alt="logo-tropicalize" className="w-48" />
           </div>
         </div>
       </div>

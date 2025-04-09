@@ -37,7 +37,14 @@ ChartJS.register(
 );
 
 const ScrapeDeepScan = () => {
-  const { scrape, isLoading, error, scrapingResults } = useDeepScanStore();
+  const {
+    scrape,
+    getScrapedData,
+    isLoading,
+    error,
+    scrapingResults,
+    scrapedData,
+  } = useDeepScanStore();
 
   const [profiles, setProfiles] = useState("");
   const [searchPhrases, setSearchPhrases] = useState("");
@@ -46,6 +53,7 @@ const ScrapeDeepScan = () => {
   const [sentimentData, setSentimentData] = useState(null);
   const [scatterData, setScatterData] = useState(null);
   const [wordcloudData, setWordcloudData] = useState([]);
+  const [searchMode, setSearchMode] = useState("query"); // "scrape" ou "query"
 
   // Gerar dados de sentimento simulados quando os resultados mudam
   useEffect(() => {
@@ -60,32 +68,57 @@ const ScrapeDeepScan = () => {
     }
   }, [scrapingResults, searchPhrases]);
 
+  // Efeito similar para scrapedData
+  useEffect(() => {
+    if (scrapedData && scrapedData.length > 0) {
+      setSentimentData(generateSentimentData());
+      setScatterData(generateScatterData({ results: scrapedData }));
+      setWordcloudData(
+        generateWordcloudData({ results: scrapedData }, searchPhrases)
+      );
+    }
+  }, [scrapedData, searchPhrases]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Parse profiles and search phrases from text inputs
-    const profilesList = profiles
-      .split("\n")
-      .map((p) => p.trim())
-      .filter((p) => p);
-    const searchPhrasesList = searchPhrases
-      .split("\n")
-      .map((p) => p.trim())
-      .filter((p) => p);
+    if (searchMode === "scrape") {
+      // Parse profiles and search phrases from text inputs
+      const profilesList = profiles
+        .split("\n")
+        .map((p) => p.trim())
+        .filter((p) => p);
+      const searchPhrasesList = searchPhrases
+        .split("\n")
+        .map((p) => p.trim())
+        .filter((p) => p);
 
-    await scrape({
-      profiles: profilesList,
-      searchPhrases: searchPhrasesList,
-      format,
-      platforms: selectedPlatforms,
-    });
+      await scrape({
+        profiles: profilesList,
+        searchPhrases: searchPhrasesList,
+        format,
+        platforms: selectedPlatforms,
+      });
+    } else if (searchMode === "query") {
+      // Modificado para suportar múltiplas plataformas e palavras-chave
+      const keywordsList = searchPhrases
+        .split("\n")
+        .map((p) => p.trim())
+        .filter((p) => p);
+
+      if (selectedPlatforms.length > 0 && keywordsList.length > 0) {
+        await getScrapedData(selectedPlatforms, keywordsList);
+      }
+    }
   };
 
   const downloadResults = () => {
-    if (!scrapingResults) return;
+    if (!scrapingResults && !scrapedData) return;
+
+    const dataToDownload = scrapedData || scrapingResults;
 
     const { content, filename } = prepareDownloadContent(
-      scrapingResults,
+      dataToDownload,
       format
     );
 
@@ -106,6 +139,31 @@ const ScrapeDeepScan = () => {
     <div className="mx-auto px-4 py-8 flex flex-col">
       <h1 className="text-3xl font-bold mb-6">Deep Scan</h1>
 
+      <div className="mb-4">
+        <div className="flex space-x-4">
+          {/* <button
+            className={`px-4 py-2 rounded-md ${
+              searchMode === "scrape"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+            onClick={() => setSearchMode("scrape")}
+          >
+            Novo Scraping
+          </button> */}
+          {/* <button
+            className={`px-4 py-2 rounded-md ${
+              searchMode === "query"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+            onClick={() => setSearchMode("query")}
+          >
+            Verificar
+          </button> */}
+        </div>
+      </div>
+
       <DeepScanForm
         profiles={profiles}
         setProfiles={setProfiles}
@@ -117,6 +175,7 @@ const ScrapeDeepScan = () => {
         setFormat={setFormat}
         handleSubmit={handleSubmit}
         isLoading={isLoading}
+        searchMode={searchMode}
       />
 
       {error && (
@@ -129,14 +188,16 @@ const ScrapeDeepScan = () => {
         </div>
       )}
 
-      {scrapingResults && (
+      {(scrapingResults || scrapedData) && (
         <ResultsPanel
           scrapingResults={scrapingResults}
+          scrapedData={scrapedData}
           sentimentData={sentimentData}
           scatterData={scatterData}
           wordcloudData={wordcloudData}
           format={format}
           downloadResults={downloadResults}
+          searchMode={searchMode}
         />
       )}
     </div>

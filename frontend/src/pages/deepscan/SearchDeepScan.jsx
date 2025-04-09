@@ -26,9 +26,9 @@ const SearchDeepScan = () => {
   const [day, setDay] = useState("");
 
   // Fetch scheduled tasks on component mount
-  useEffect(() => {
+  /* useEffect(() => {
     getScheduledTasks();
-  }, [getScheduledTasks]);
+  }, [getScheduledTasks]); */
 
   // Handle adding/removing items from arrays
   const handleAddProfile = () => {
@@ -369,29 +369,37 @@ const SearchDeepScan = () => {
                 </tr>
               </thead>
               <tbody>
-                {scheduledTasks.map((task) => (
-                  <tr key={task.id || task._id}>
+                {scheduledTasks.map((task, index) => (
+                  <tr key={task.id || task._id || index}>
                     <td className="py-2 px-4 border-b">
-                      {task.id || task._id}
+                      {task.id || task._id || `Task ${index + 1}`}
                     </td>
                     <td className="py-2 px-4 border-b">
                       {Array.isArray(task.profiles)
                         ? task.profiles.join(", ")
-                        : task.profiles}
+                        : typeof task.profiles === "string"
+                        ? task.profiles
+                        : "N/A"}
                     </td>
                     <td className="py-2 px-4 border-b">
                       {Array.isArray(task.platforms)
                         ? task.platforms.join(", ")
-                        : task.platforms}
+                        : typeof task.platforms === "string"
+                        ? task.platforms
+                        : "N/A"}
                     </td>
                     <td className="py-2 px-4 border-b">
                       {Array.isArray(task.selectedDays)
                         ? task.selectedDays
                             .map((day) => `Dia ${day}`)
                             .join(", ")
-                        : task.selectedDays}
+                        : typeof task.selectedDays === "string"
+                        ? task.selectedDays
+                        : "N/A"}
                     </td>
-                    <td className="py-2 px-4 border-b">{task.startHour}</td>
+                    <td className="py-2 px-4 border-b">
+                      {task.startHour || "N/A"}
+                    </td>
                     <td className="py-2 px-4 border-b">
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
