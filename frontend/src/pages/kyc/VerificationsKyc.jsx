@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import { FaChevronDown } from "react-icons/fa";
 import calendar from "../../assets/calendar.png";
-import VerificationsTable from "../../components/kyc/VerificationsTable";
+/* import VerificationsTable from "../../components/kyc/VerificationsTable"; */
 
 const VerificationsKyc = () => {
   const [selectedCompany, setSelectedCompany] = useState("Empresa");
@@ -77,11 +77,11 @@ const VerificationsKyc = () => {
         </button>
       </div>
       <div className="overflow-y-auto">
-        <VerificationsTable
+        {/* <VerificationsTable
           selectedCompany={selectedCompany}
           selectedStatus={selectedStatus}
           selectedDate={selectedDate}
-        />
+        /> */}
       </div>
     </div>
   );

@@ -7,6 +7,8 @@ import {
   PointElement,
   Tooltip,
   Legend,
+  Filler,
+  Title,
 } from "chart.js";
 
 // Registrando os componentes necessários do Chart.js
@@ -16,21 +18,23 @@ ChartJS.register(
   LineElement,
   PointElement,
   Tooltip,
-  Legend
+  Legend,
+  Filler,
+  Title
 );
 
 // Dados fictícios: valores totais de apostas por dia
 const dailyBetValues = [
-  { dia: "2024-12-01", valor: 1500 },
-  { dia: "2024-12-02", valor: 2000 },
-  { dia: "2024-12-03", valor: 1800 },
-  { dia: "2024-12-04", valor: 2200 },
-  { dia: "2024-12-05", valor: 2500 },
-  { dia: "2024-12-06", valor: 2400 },
-  { dia: "2024-12-07", valor: 2300 },
+  { dia: "01/12", valor: 1500 },
+  { dia: "02/12", valor: 2000 },
+  { dia: "03/12", valor: 1800 },
+  { dia: "04/12", valor: 2200 },
+  { dia: "05/12", valor: 2500 },
+  { dia: "06/12", valor: 2400 },
+  { dia: "07/12", valor: 2300 },
 ];
 
-const LineGraphsDailyBets = () => {
+const LineGraphsDailyBets = ({ timeRange }) => {
   const labels = dailyBetValues.map((entry) => entry.dia);
   const dataValues = dailyBetValues.map((entry) => entry.valor);
 
@@ -41,11 +45,17 @@ const LineGraphsDailyBets = () => {
         label: "Valores Totais de Apostas (R$)",
         data: dataValues,
         borderColor: "rgba(75, 192, 192, 1)",
-        backgroundColor: "rgba(75, 192, 192, 0.3)",
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
         fill: true,
         tension: 0.4, // Suaviza a linha
-        pointRadius: 5,
+        pointRadius: 6,
         pointBackgroundColor: "rgba(75, 192, 192, 1)",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 2,
+        pointHoverRadius: 8,
+        pointHoverBackgroundColor: "rgba(75, 192, 192, 1)",
+        pointHoverBorderColor: "#fff",
+        pointHoverBorderWidth: 2,
       },
     ],
   };
@@ -56,37 +66,75 @@ const LineGraphsDailyBets = () => {
     plugins: {
       legend: {
         position: "bottom",
+        labels: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
+          usePointStyle: true,
+          padding: 20,
+        },
       },
       tooltip: {
-        enabled: true,
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleFont: {
+          size: 14,
+          family: "'Poppins', sans-serif",
+        },
+        bodyFont: {
+          size: 13,
+          family: "'Poppins', sans-serif",
+        },
+        padding: 12,
+        cornerRadius: 6,
+        displayColors: false,
+        callbacks: {
+          label: function (context) {
+            return `Valor: R$ ${context.raw.toLocaleString("pt-BR")}`;
+          },
+        },
+      },
+      title: {
+        display: false,
       },
     },
     scales: {
       x: {
-        title: {
-          display: true,
-          text: "Data",
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
         },
       },
       y: {
-        title: {
-          display: true,
-          text: "Valores Totais (R$)",
-        },
         beginAtZero: true,
-        suggestedMax: 3000,
+        grid: {
+          color: "rgba(0, 0, 0, 0.05)",
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
+          callback: function (value) {
+            return "R$ " + value.toLocaleString("pt-BR");
+          },
+        },
       },
+    },
+    animation: {
+      duration: 1000,
+      easing: "easeOutQuart",
     },
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-[30%] h-[40%] px-8 py-8 shadow-md rounded-lg border border-linesAndBorders">
-      <div className="flex items-center text-center">
-        <p className="w-full font-bold">Valores Totais em Apostas por Dia</p>
-      </div>
-      <div className="w-full h-full flex justify-center items-center text-sm mt-2">
-        <Line data={data} options={options} />
-      </div>
+    <div className="w-full h-full">
+      <Line data={data} options={options} />
     </div>
   );
 };

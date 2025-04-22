@@ -6,10 +6,18 @@ import {
   BarElement,
   Tooltip,
   Legend,
+  Title,
 } from "chart.js";
 
 // Registrando os componentes necessários do Chart.js
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+  Legend,
+  Title
+);
 
 const betStatusDistribution = {
   Premiada: 50,
@@ -18,7 +26,7 @@ const betStatusDistribution = {
   Pendente: 20,
 };
 
-const BarGraphsStatusBet = () => {
+const BarGraphsStatusBet = ({ timeRange }) => {
   const statusLabels = Object.keys(betStatusDistribution);
   const statusValues = Object.values(betStatusDistribution);
 
@@ -29,10 +37,19 @@ const BarGraphsStatusBet = () => {
         label: "Quantidade de Apostas",
         data: statusValues,
         backgroundColor: [
-          "rgba(75, 192, 192, 0.6)", // Premiada
+          "rgba(75, 192, 192, 0.7)", // Premiada
+          "rgba(255, 99, 132, 0.7)", // Não Premiada
+          "rgba(255, 205, 86, 0.7)", // Cancelada
+          "rgba(153, 102, 255, 0.7)", // Pendente
         ],
-        borderColor: ["rgba(75, 192, 192, 1)"],
+        borderColor: [
+          "rgba(75, 192, 192, 1)",
+          "rgba(255, 99, 132, 1)",
+          "rgba(255, 205, 86, 1)",
+          "rgba(153, 102, 255, 1)",
+        ],
         borderWidth: 1,
+        borderRadius: 5,
       },
     ],
   };
@@ -43,37 +60,68 @@ const BarGraphsStatusBet = () => {
     plugins: {
       legend: {
         position: "bottom",
+        labels: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
+          usePointStyle: true,
+          padding: 20,
+        },
       },
       tooltip: {
-        enabled: true,
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleFont: {
+          size: 14,
+          family: "'Poppins', sans-serif",
+        },
+        bodyFont: {
+          size: 13,
+          family: "'Poppins', sans-serif",
+        },
+        padding: 12,
+        cornerRadius: 6,
+        displayColors: false,
+      },
+      title: {
+        display: false,
       },
     },
     scales: {
       x: {
-        title: {
-          display: true,
-          text: "Status da Aposta",
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
         },
       },
       y: {
-        title: {
-          display: true,
-          text: "Quantidade",
-        },
         beginAtZero: true,
-        suggestedMax: 150,
+        grid: {
+          color: "rgba(0, 0, 0, 0.05)",
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
+          precision: 0,
+        },
       },
+    },
+    animation: {
+      duration: 1000,
+      easing: "easeOutQuart",
     },
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-[30%] h-[40%] px-8 py-8 shadow-md rounded-lg border border-linesAndBorders">
-      <div className="flex items-center text-center">
-        <p className="w-full font-bold">Distribuição por Status da Aposta</p>
-      </div>
-      <div className="w-full h-full flex justify-center items-center text-sm mt-2">
-        <Bar data={data} options={options} />
-      </div>
+    <div className="w-full h-full">
+      <Bar data={data} options={options} />
     </div>
   );
 };

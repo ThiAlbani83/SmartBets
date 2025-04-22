@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from "react";
-import auditSuccess from "../../assets/auditSuccess.png";
-import auditPending from "../../assets/auditPending.png";
-import viewFile from "../../assets/viewFile.png";
-import axios from "axios";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import {
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+  FaCheckCircle,
+  FaEye,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
 
 const SubmitTable = ({ selectedCategory, currentPage, setCurrentPage }) => {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [itemsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState({
     key: null,
@@ -61,11 +68,15 @@ const SubmitTable = ({ selectedCategory, currentPage, setCurrentPage }) => {
     setData(Object.fromEntries(entries));
   };
 
-  const getSortIndicator = (columnName) => {
+  const getSortIcon = (columnName) => {
     if (sortConfig.key === columnName) {
-      return sortConfig.direction === "ascending" ? " ↑" : " ↓";
+      return sortConfig.direction === "ascending" ? (
+        <FaSortUp className="inline ml-1 text-blue-600" />
+      ) : (
+        <FaSortDown className="inline ml-1 text-blue-600" />
+      );
     }
-    return "";
+    return <FaSort className="inline ml-1 text-gray-400" />;
   };
 
   useEffect(() => {
@@ -73,6 +84,7 @@ const SubmitTable = ({ selectedCategory, currentPage, setCurrentPage }) => {
   }, [selectedCategory]);
 
   const fetchFiles = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(API_URL + "list_files", {
         params: {
@@ -86,74 +98,114 @@ const SubmitTable = ({ selectedCategory, currentPage, setCurrentPage }) => {
         },
       });
       setData(response.data);
-      console.log(data);
     } catch (error) {
       console.log("Response details:", error.response?.data);
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (Object.keys(data).length === 0) {
+    return (
+      <div className="bg-gray-50 rounded-lg p-8 text-center">
+        <p className="text-gray-600">
+          Nenhum arquivo encontrado para esta categoria.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
-      <div className="w-full overflow-auto max-h-[540px]">
-        <table className="min-w-full border-primary">
-          <thead>
-            <tr className="text-black border-b border-b-[#ECECEC] font-rem text-sm font-light">
+      <div className="overflow-x-auto rounded-lg shadow">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
               <th
-                className="px-4 py-2 text-left  gap-2"
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => sortData("sequencial")}
               >
-                Sequencial {getSortIndicator("sequencial")}
+                Sequencial {getSortIcon("sequencial")}
               </th>
               <th
-                className="px-4 py-2 text-left gap-2"
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => sortData("fileName")}
               >
-                Nome do Arquivo {getSortIndicator("fileName")}
+                Nome do Arquivo {getSortIcon("fileName")}
               </th>
               <th
-                className="px-4 py-2 text-left  gap-2"
-                onClick={() => sortData("date")}
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Data {getSortIndicator("date")}
+                Data
               </th>
-              <th className="px-4 py-2 text-left  gap-2">Empresa</th>
-              <th className="px-4 py-2 text-left  gap-2">Tipo do Arquivo</th>
-              <th className="px-4 py-2 text-left  gap-2">Auditar</th>
-              <th className="px-4 py-2 text-left  gap-2">Ver</th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Empresa
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Tipo do Arquivo
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Auditar
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Ver
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {currentItems.map(([key, fileName]) => (
-              <tr key={key} className="border-b border-b-[#ECECEC]">
-                <td className="x-4 py-2 font-rem font-semibold text-sm text-[#333333]">
+              <tr key={key} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {key}
                 </td>
-                <td className="x-4 py-2 font-rem font-semibold text-sm text-[#333333]">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                   {fileName}
                 </td>
-                <td className="px-4 py-[10px] text-[#979797] font-rem font-normal text-sm">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formattedDate}
                 </td>
-                <td className="px-4 py-[10px] text-[#979797] font-rem font-normal text-sm">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   -
                 </td>
-                <td className="px-4 py-[10px] text-[#979797] font-rem font-normal text-sm">
-                  {selectedCategory}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                    {selectedCategory}
+                  </span>
                 </td>
-                <td className="px-4 py-[10px] text-[#979797] font-rem font-normal text-sm cursor-pointer">
-                  <img
-                    src={auditSuccess}
-                    alt="success"
-                    className="place-self-center"
-                  />
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <button className="text-green-500 hover:text-green-700 transition-colors">
+                    <FaCheckCircle className="text-xl" />
+                  </button>
                 </td>
-                <td className="px-4 py-2 cursor-pointer">
-                  <Link to={"/sigap/detalhes_arquivo"}>
-                    <img
-                      src={viewFile}
-                      alt="view"
-                      className="place-self-center"
-                    />
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <Link
+                    to={"/sigap/detalhes_arquivo"}
+                    className="text-blue-500 hover:text-blue-700 transition-colors"
+                  >
+                    <FaEye className="text-xl" />
                   </Link>
                 </td>
               </tr>
@@ -161,38 +213,68 @@ const SubmitTable = ({ selectedCategory, currentPage, setCurrentPage }) => {
           </tbody>
         </table>
       </div>
+
       {/* Pagination Controls */}
-      <div className="flex justify-center gap-2 mt-4">
-        <button
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-3 py-1 rounded bg-[#E5F4F8] disabled:opacity-50"
-        >
-          Previous
-        </button>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-4 py-3 sm:px-6 mt-4 rounded-lg shadow">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Próximo
+            </button>
+          </div>
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
+            <div>
+              <nav
+                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                aria-label="Pagination"
+              >
+                <button
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="sr-only">Anterior</span>
+                  <FaChevronLeft className="h-5 w-5" aria-hidden="true" />
+                </button>
 
-        {[...Array(totalPages)].map((_, index) => (
-          <button
-            key={index + 1}
-            onClick={() => paginate(index + 1)}
-            className={`px-3 py-1 rounded ${
-              currentPage === index + 1
-                ? "bg-blue-500 text-white"
-                : "bg-[#E5F4F8]"
-            }`}
-          >
-            {index + 1}
-          </button>
-        ))}
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => paginate(index + 1)}
+                    className={`relative inline-flex items-center px-4 py-2 border ${
+                      currentPage === index + 1
+                        ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                        : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                    } text-sm font-medium`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
 
-        <button
-          onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 rounded bg-[#E5F4F8] disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+                <button
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="sr-only">Próximo</span>
+                  <FaChevronRight className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

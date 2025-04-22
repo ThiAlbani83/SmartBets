@@ -136,9 +136,9 @@ export const checkAuth = (req, res) => {
 };
 
 export const inviteUser = async (req, res) => {
-  const { email, role, name, modules } = req.body;
+  const { email, role, name, modules, message } = req.body;
   const token = jwt.sign(
-    { email, role, name, modules },
+    { email, role, name, modules, message },
     process.env.JWT_SECRET,
     {
       expiresIn: "24h",
@@ -162,7 +162,11 @@ export const inviteUser = async (req, res) => {
     subject: "Convite para Registro",
     html: `
       <h3>Olá ${name},</h3>
-      <p>Você foi convidado a se registrar no nosso sistema. Clique no link abaixo para continuar:</p>
+      ${message && `<p>${message}</p>`}
+      ${
+        message === "" &&
+        `<p>Você foi convidado a se registrar no nosso sistema. Clique no link abaixo para continuar:</p>`
+      }
       <a href="${inviteLink}">Registrar-se</a>
     `,
   };

@@ -6,12 +6,20 @@ import {
   BarElement,
   Tooltip,
   Legend,
+  Title,
 } from "chart.js";
 
 // Registrando os componentes necessários do Chart.js
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+  Legend,
+  Title
+);
 
-const BarGraphsGenero = () => {
+const BarGraphsGenero = ({ timeRange }) => {
   // Distribuição dos apostadores por gênero
   const genderDistribution = {
     Masculino: 50, // Número de apostadores masculinos
@@ -27,17 +35,17 @@ const BarGraphsGenero = () => {
         label: "Distribuição por Gênero",
         data: Object.values(genderDistribution), // Quantidade de apostadores em cada gênero
         backgroundColor: [
-          "rgba(75, 192, 192, 0.6)", // Masculino
-          "rgba(75, 192, 192, 0.6)", // Feminino
-          "rgba(75, 192, 192, 0.6)", // Não Informado
+          "rgba(54, 162, 235, 0.7)", // Masculino
+          "rgba(255, 99, 132, 0.7)", // Feminino
+          "rgba(255, 205, 86, 0.7)", // Não Informado
         ],
         borderColor: [
-          "rgba(75, 192, 192, 1)",
-          "rgba(75, 192, 192, 1)",
-          "rgba(75, 192, 192, 1)",
-          "rgba(75, 192, 192, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 99, 132, 1)",
+          "rgba(255, 205, 86, 1)",
         ],
         borderWidth: 1,
+        borderRadius: 5,
       },
     ],
   };
@@ -49,37 +57,73 @@ const BarGraphsGenero = () => {
     plugins: {
       legend: {
         position: "bottom",
+        labels: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
+          usePointStyle: true,
+          padding: 20,
+        },
       },
       tooltip: {
-        enabled: true,
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleFont: {
+          size: 14,
+          family: "'Poppins', sans-serif",
+        },
+        bodyFont: {
+          size: 13,
+          family: "'Poppins', sans-serif",
+        },
+        padding: 12,
+        cornerRadius: 6,
+        displayColors: false,
+        callbacks: {
+          label: function (context) {
+            return `${context.label}: ${context.raw} apostadores`;
+          },
+        },
+      },
+      title: {
+        display: false,
       },
     },
     scales: {
       x: {
-        title: {
-          display: true,
-          text: "Gênero",
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
         },
       },
       y: {
-        title: {
-          display: true,
-          text: "Número de Apostadores",
-        },
         beginAtZero: true,
-        suggestedMax: Math.max(...Object.values(genderDistribution)) + 5,
+        grid: {
+          color: "rgba(0, 0, 0, 0.05)",
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
+          precision: 0,
+        },
       },
+    },
+    animation: {
+      duration: 1000,
+      easing: "easeOutQuart",
     },
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-[30%] h-[40%] px-8 py-8 shadow-md rounded-lg border border-linesAndBorders">
-      <div className="flex items-center text-center">
-        <p className="w-full font-bold">Distribuição por Gênero</p>
-      </div>
-      <div className="w-full h-full flex justify-center items-center text-sm mt-2">
-        <Bar data={data} options={options} />
-      </div>
+    <div className="w-full h-full">
+      <Bar data={data} options={options} />
     </div>
   );
 };

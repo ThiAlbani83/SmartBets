@@ -39,32 +39,32 @@ import Tickets from "./sac/Tickets";
 import Reports from "./sac/Reports";
 import SearchDeepScan from "./deepscan/SearchDeepScan";
 import HomeDeepScan from "./deepscan/HomeDeepScan";
-import ConfigDeepScan from "./deepscan/ConfigDeepScan";
 import ScrapeDeepScan from "./deepscan/ScrapeDeepScan";
-import NetworkFinder from "./deepscan/NetworkFinder";
+import BetCrawlerDeepScan from "./deepscan/BetCrawlerDeepScan";
+import Antifraude from "./sigap/Antifraude";
 
 const HomePage = () => {
   const { user } = useAuthStore();
 
   return (
     <motion.div
-      className="flex w-full h-screen"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.5 }}
+      className="flex w-full h-screen overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
     >
       <Sidebar />
 
       {/* Main Content com rotas internas */}
-      <div className="relative w-full h-screen my-auto bg-[#FAFBFC]">
-        <div className="homePage flex-1 w-full h-full rounded-lg overflow-y-auto">
-          <NavbarV2 />
-          <div className="p-10 w-full max-w-[98%] overflow-y-scroll mx-auto h-[85%] rounded-b-xl mt-2 rounded-xl shadow-lg">
+      <div className="flex-1 h-screen bg-[#FAFBFC] overflow-hidden">
+        <div className="w-full h-full px-4 py-3">
+          <div className="w-full h-full overflow-auto bg-white rounded-lg shadow-sm px-6 py-4">
             <Routes>
               {/* ROTA PARA HOME PAGE BASEADA NA FUNÇÃO DO USUÁRIO */}
               <Route path="/" element={<Home />} />
               {/* FIM DA ROTA PARA HOME PAGE BASEADA NA FUNÇÃO DO USUÁRIO */}
+
               {/* ROTAS PARA SESSÃO DE SAC */}
               <Route path="sac/dashboard" element={<HomeSac />} />
               <Route path="sac/perguntas-frequentes" element={<FAQ />} />
@@ -74,6 +74,7 @@ const HomePage = () => {
               {/* Rota de Teste */}
               <Route path="pin/bonus" element={<FluxoPinBonus />} />
               {/* FIM DAS ROTAS PARA SESSÃO DE SAC */}
+
               {/* ROTAS PARA SESSÃO DE AQUISIÇÃO DE PRODUTOS */}
               <Route path="fornecedores/cadastro" element={<AddSuppliers />} />
               <Route
@@ -95,6 +96,7 @@ const HomePage = () => {
               />
               <Route path="compras/historico" element={<OrderHistory />} />
               {/* FIM DAS ROTAS PARA SESSÃO DE AQUISIÇÃO DE PRODUTOS */}
+
               {/* ROTAS PARA PAGINAS DO SIGAP */}
               <Route path="/sigap/dashboard" element={<HomeSigap />} />
               <Route
@@ -114,7 +116,9 @@ const HomePage = () => {
                 path="/sigap/detalhes_arquivo"
                 element={<SigapFileDetails />}
               />
+              <Route path="/sigap/antifraude" element={<Antifraude />} />
               {/* FIM DAS ROTAS PARA PAGINAS DO SIGAP */}
+
               {/* ROTA PARA PÁGINAS DO KYC */}
               <Route path="/kyc/dashboard" element={<HomeKyc />} />
               <Route path="/kyc/verificacoes" element={<VerificationsKyc />} />
@@ -122,18 +126,21 @@ const HomePage = () => {
               <Route path="/kyc/antifraude" element={<Antifraud />} />
               <Route path="/kyc/insights" element={<InsightsKyc />} />
               {/* FIM DAS ROTAS PARA PÁGINAS DO KYC */}
+
               {/* ROTA PARA PÁGINAS DO ADMINISTRATIVO */}
               <Route
                 path="/administrativo/dashboard"
                 element={<HomeAdministrativo />}
               />
               {/* FIM DAS ROTAS PARA PÁGINAS DO ADMINISTRATIVO */}
+
               {/* ROTA PARA PÁGINAS DO JOGO RESPONSÁVEL */}
               <Route
                 path="/jogo-responsavel/dashboard"
                 element={<HomeResponsibleGaming />}
               />
-              {/* FIM DAS ROTAS PARA PÁGINAS DO RESPONSÁVELSTRATIVO */}
+              {/* FIM DAS ROTAS PARA PÁGINAS DO JOGO RESPONSÁVEL */}
+
               {/* ROTA PARA PAINEL DE ADMIN */}
               <Route
                 path="/admin"
@@ -144,14 +151,21 @@ const HomePage = () => {
                 }
               />
               {/* FIM DA ROTA PARA PAINEL DE ADMIN */}
+
               {/* ROTA PARA PAINEL DO DEEPSCAN */}
               <Route path="/deepscan/dashboard" element={<HomeDeepScan />} />
               <Route
                 path="/deepscan/verificacoes"
                 element={<ScrapeDeepScan />}
               />
-              <Route path="/deepscan/config" element={<SearchDeepScan />} />
-              <Route path="/deepscan/betcrawler" element={<NetworkFinder />} />
+              <Route
+                path="/deepscan/betcrawler"
+                element={<BetCrawlerDeepScan />}
+              />
+              <Route
+                path="/deepscan/agendamentos"
+                element={<SearchDeepScan />}
+              />
               {/* FIM DA ROTA PARA PAINEL DO DEEPSCAN */}
             </Routes>
           </div>

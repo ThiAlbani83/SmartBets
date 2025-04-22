@@ -38,10 +38,10 @@ export const menuItemsAdministrativo = [
 
 export const menuItemsSigap = [
   { name: "Dashboard", icon: dashboard, path: "/sigap/dashboard" },
+  { name: "Antifraude", icon: antifraud, path: "/sigap/antifraude" },
   { name: "Submeter", icon: submeter, path: "/sigap/submeter-arquivos" },
   { name: "Auditar", icon: tasks, path: "/sigap/auditar-arquivos" },
   { name: "Relatórios", icon: department, path: "/sigap/relatorios" },
-  { name: "Admin", icon: admin },
 ];
 
 export const menuItemsSac = [
@@ -69,8 +69,8 @@ export const menuItemsResponsible = [
 ];
 
 export const menuItemsDeepScan = [
-  { name: "Dashboard", icon: home, path: "/deepscan/dashboard" },
-  { name: "Raspagens", icon: insights, path: "/deepscan/verificacoes" },
-  { name: "Agendamento", icon: insights, path: "/deepscan/config" },
-  { name: "BetCrawler", icon: insights, path: "/deepscan/betcrawler" },
+  { name: "Dashboard", path: "/deepscan/dashboard" },
+  { name: "Raspagens", path: "/deepscan/verificacoes" },
+  { name: "Agendamento", path: "/deepscan/agendamentos" },
+  { name: "BetCrawler", path: "/deepscan/betcrawler" },
 ];

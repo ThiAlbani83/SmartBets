@@ -7,6 +7,8 @@ import {
   PointElement,
   Tooltip,
   Legend,
+  Filler,
+  Title,
 } from "chart.js";
 
 // Registrando os componentes necessários do Chart.js
@@ -16,7 +18,9 @@ ChartJS.register(
   LineElement,
   PointElement,
   Tooltip,
-  Legend
+  Legend,
+  Filler,
+  Title
 );
 
 // Dados fictícios: ganho médio dos apostadores por tipo de aposta
@@ -28,7 +32,7 @@ const betTypeData = [
   { tipo: "Pré-Jogo", ganhoMedio: 100 },
 ];
 
-const LineGraphWinLoose = () => {
+const LineGraphWinLoose = ({ timeRange }) => {
   const data = {
     labels: betTypeData.map((item) => item.tipo), // Tipos de aposta no eixo X
     datasets: [
@@ -36,10 +40,16 @@ const LineGraphWinLoose = () => {
         label: "Ganho Médio (R$)",
         data: betTypeData.map((item) => item.ganhoMedio), // Ganho médio no eixo Y
         borderColor: "rgba(75, 192, 192, 1)",
-        backgroundColor: "rgba(75, 192, 192, 0.3)",
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
         tension: 0.4, // Suaviza a linha
-        pointRadius: 5,
+        pointRadius: 6,
         pointBackgroundColor: "rgba(75, 192, 192, 1)",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 2,
+        pointHoverRadius: 8,
+        pointHoverBackgroundColor: "rgba(75, 192, 192, 1)",
+        pointHoverBorderColor: "#fff",
+        pointHoverBorderWidth: 2,
         fill: true,
       },
     ],
@@ -49,36 +59,77 @@ const LineGraphWinLoose = () => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: "bottom" },
-      tooltip: { enabled: true },
+      legend: {
+        position: "bottom",
+        labels: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
+          usePointStyle: true,
+          padding: 20,
+        },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleFont: {
+          size: 14,
+          family: "'Poppins', sans-serif",
+        },
+        bodyFont: {
+          size: 13,
+          family: "'Poppins', sans-serif",
+        },
+        padding: 12,
+        cornerRadius: 6,
+        displayColors: false,
+        callbacks: {
+          label: function (context) {
+            return `Ganho Médio: R$ ${context.raw}`;
+          },
+        },
+      },
+      title: {
+        display: false,
+      },
     },
     scales: {
       x: {
-        title: {
-          display: true,
-          text: "Tipos de Aposta",
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
         },
       },
       y: {
-        title: {
-          display: true,
-          text: "Ganho Médio (R$)",
-        },
         beginAtZero: true,
+        grid: {
+          color: "rgba(0, 0, 0, 0.05)",
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: "'Poppins', sans-serif",
+          },
+          callback: function (value) {
+            return "R$ " + value;
+          },
+        },
       },
+    },
+    animation: {
+      duration: 1000,
+      easing: "easeOutQuart",
     },
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-[30%] h-[40%] px-8 py-8 shadow-md rounded-lg border border-linesAndBorders">
-      <div className="flex items-center w-full  text-center">
-        <p className="w-full font-bold">
-          Ganho Médio dos Apostadores por Tipo de Aposta
-        </p>
-      </div>
-      <div className="w-full h-full flex justify-center items-center mt-4">
-        <Line data={data} options={options} />
-      </div>
+    <div className="w-full h-full">
+      <Line data={data} options={options} />
     </div>
   );
 };

@@ -1,95 +1,50 @@
 import React from "react";
-import filter from "../../assets/filter.png";
+import { FaFilter } from "react-icons/fa";
 
 const TypeFilter = ({ onFilterChange }) => {
   const handleChange = (e) => {
     onFilterChange(e.target.value);
   };
 
+  const filterOptions = [
+    { id: "apostador", label: "Apostador" },
+    { id: "aposta", label: "Aposta" },
+    { id: "carteira", label: "Carteira" },
+    { id: "jogo", label: "Jogo" },
+    { id: "operador-diario", label: "Operador Diário" },
+    { id: "operador-mensal", label: "Operador Mensal" },
+  ];
+
   return (
-    <div className="flex flex-col gap-4 w-full max-w-[170px] h-full pr-4 border-r border-r-linesAndBorders">
-      <div className="flex items-center gap-2 mb-4">
-        <img src={filter} alt="filter" />
-        <span className="text-mainText">Filtro</span>
+    <div className="bg-white rounded-lg p-4">
+      <div className="flex items-center gap-2 mb-5 pb-2 border-b border-gray-200">
+        <FaFilter className="text-blue-600" />
+        <h3 className="text-gray-800 font-medium">Filtrar por Tipo</h3>
       </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="radio"
-          id="apostador"
-          name="radioGroup"
-          value="apostador"
-          defaultChecked
-          onChange={handleChange}
-          className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
-        />
-        <label htmlFor="apostador" className="text-mainText">
-          Apostador
-        </label>
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="radio"
-          id="aposta"
-          name="radioGroup"
-          value="aposta"
-          onChange={handleChange}
-          className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
-        />
-        <label htmlFor="aposta" className="text-mainText">
-          Aposta
-        </label>
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="radio"
-          id="carteira"
-          name="radioGroup"
-          value="carteira"
-          onChange={handleChange}
-          className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
-        />
-        <label htmlFor="carteira" className="text-mainText">
-          Carteira
-        </label>
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="radio"
-          id="jogo"
-          name="radioGroup"
-          value="jogo"
-          onChange={handleChange}
-          className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
-        />
-        <label htmlFor="jogo" className="text-mainText">
-          Jogo
-        </label>
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="radio"
-          id="operador-diario"
-          name="radioGroup"
-          value="operador-diario"
-          onChange={handleChange}
-          className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
-        />
-        <label htmlFor="operador-diario" className="text-mainText">
-          Operador Diário
-        </label>
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="radio"
-          id="operador-mensal"
-          name="radioGroup"
-          value="operador-mensal"
-          onChange={handleChange}
-          className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
-        />
-        <label htmlFor="operador-mensal" className="text-mainText">
-          Operador Mensal
-        </label>
+
+      <div className="space-y-3">
+        {filterOptions.map((option) => (
+          <div
+            key={option.id}
+            className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-md transition-colors"
+          >
+            <input
+              type="radio"
+              id={option.id}
+              name="radioGroup"
+              value={option.id}
+              defaultChecked={option.id === "apostador"}
+              onChange={handleChange}
+              className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
+            />
+            <label
+              htmlFor={option.id}
+              className="text-gray-700 cursor-pointer font-medium text-sm flex-1"
+            >
+              {option.label}
+            </label>
+          </div>
+        ))}
       </div>
     </div>
   );
