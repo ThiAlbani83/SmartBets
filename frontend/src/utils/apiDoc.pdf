@@ -1,0 +1,848 @@
+Okay, here is a complete documentation for each identified API endpoint based on the provided
+code, including descriptions, inputs, outputs, expected responses, and curl commands.
+The API is served under the /api/v1 prefix, as defined in server.js . Authentication for most
+endpoints is handled by the clientAuth middleware, requiring X-API-Key and X-API-Secret
+headers.
+API Documentation
+Base URL: /api/v1
+Authentication: Most endpoints require authentication. Provide your API Key and API Secret in
+the request headers:
+• X-API-Key: <your-api-key>
+• X-API-Secret: <your-api-secret>
+Authenticated endpoints will return 401 Unauthorized if credentials are not provided, or 403
+Forbidden if credentials are invalid.
+Content Type: For endpoints accepting a request body (POST, DELETE), set the Content-Type
+header to application/json .
+General Routes
+1. API Root
+• Path: /
+• Method: GET
+• Description: A simple root endpoint to indicate the API is running.
+• Authentication: No
+• Request Parameters: None
+• Expected Response:
+◦ 200 OK :
+API is running. Access docs at /api/docs
+• Curl Example:
+curl http://localhost:5001/
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+1 of 24 29/04/2025, 15:49
+2. Swagger Documentation
+• Path: /api/docs
+• Method: GET
+• Description: Serves the interactive Swagger UI documentation.
+• Authentication: No
+• Request Parameters: None
+• Expected Response:
+◦ 200 OK : Returns HTML content for the Swagger UI page.
+• Curl Example:
+curl http://localhost:5001/api/docs/
+(Navigate to the URL in a web browser to see the interactive UI)
+Scraping & Data Retrieval Routes
+These routes are defined in ./routes/scrapingRoutes.js and ./controllers/
+scrapingController.js , and some in ./controllers/queryController.js . They are mounted
+under /api/v1 .
+1. Validate Profile Existence
+• Path: /api/v1/validate/profile
+• Method: POST
+• Description: Checks if a profile exists on a specific social media platform. This route appears
+to be public based on the code.
+• Authentication: No (Based on scrapingRoutes.js ) - Self-Correction: Although the route
+definition doesn't have clientAuth , the server.js mounts scrapingRoutes after
+queryRoutes which also uses auth, but importantly, the route router.post('/validate/
+profile', validateProfile); in scrapingRoutes.js does not have the clientAuth
+middleware applied directly. Assuming it's intended to be public.
+• Request Parameters:
+◦ Body (JSON):
+▪ profile (string, required): The username or identifier of the profile.
+▪ platform (string, required): The platform name (e.g., "Instagram", "Twitter").
+• Expected Response:
+◦ 200 OK :
+{
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+2 of 24 29/04/2025, 15:49
+"exists": true | false
+}
+◦ 400 Bad Request : If profile or platform is missing or invalid.
+{
+"error": "Perfil e plataforma são obrigatórios" | "Plataforma desconhecida ou não}
+◦ 500 Internal Server Error : If an error occurs during validation.
+{
+"error": "Erro interno ao validar perfil",
+"details": "..."
+}
+• Curl Example:
+curl -X POST http://localhost:5001/api/v1/validate/profile \
+-H "Content-Type: application/json" \
+-d '{"profile": "instagram", "platform": "Instagram"}'
+curl -X POST http://localhost:5001/api/v1/validate/profile \
+-H "Content-Type: application/json" \
+-d '{"profile": "nonexistentprofile12345", "platform": "Twitter"}'
+2. Get Scraped Data by Profile
+• Path: /api/v1/data/profiles/:profileName
+• Method: GET
+• Description: Retrieves scraped data entries associated with a specific profile name for the
+authenticated client.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Path:
+▪ profileName (string, required): The username of the profile to filter data by.
+• Expected Response:
+◦ 200 OK : If data is found.
+{
+"data": [
+ {
+"id": 1,
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+3 of 24 29/04/2025, 15:49
+"scrape_id": "uuid",
+"plataforma": "Twitter",
+"perfil": "profileName",
+"link": "...",
+"texto": "...",
+"sentimento": "POSITIVO" | "NEGATIVO" | "NEUTRO" | "ERROR" | null,
+"createdAt": "YYYY-MM-DDTHH:mm:ss.sssZ",
+"updatedAt": "YYYY-MM-DDTHH:mm:ss.sssZ"
+ }
+ // ... more scraped data objects
+ ],
+"total": 10 // Total number of records found for this profile and client
+}
+◦ 400 Bad Request : If profileName is missing (though path param ensures presence,
+controller checks existence).
+{
+"error": "O parâmetro \"profileName\" é obrigatório."
+}
+◦ 404 Not Found : If no data is found for the specified profile for this client.
+{
+"data": [],
+"total": 0,
+"message": "Nenhum dado encontrado para o perfil informado neste cliente."
+}
+◦ 500 Internal Server Error : If an error occurs during data retrieval.
+{
+"error": "Erro ao buscar dados para o perfil.",
+"details": "..."
+}
+• Curl Example:
+curl -X GET "http://localhost:5001/api/v1/data/profiles/exampleUser" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+3. Schedule Scraping Task
+• Path: /api/v1/schedule
+• Method: POST
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+4 of 24 29/04/2025, 15:49
+• Description: Schedules a scraping task to run on specific days of the month at a given time
+for the authenticated client. This creates entries in the scrapes table with status 'scheduled'.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Body (JSON):
+▪ profiles (string[], optional): Array of profile usernames to scrape (for profile
+scraping).
+▪ searchPhrases (string[], optional): Array of search phrases (currently used by
+Twitter scraper, might be informative for others).
+▪ platforms (string[], required): Array of platforms to scrape (e.g., ["Twitter",
+"Instagram", "Google"]).
+▪ format (string, required): Expected format (currently 'DB' is the only format
+implemented for saving).
+▪ selectedDays (integer[], required): Array of days of the month (1-31) when the task
+should run.
+▪ startHour (string, required): The time of day in "HH:MM" format (24-hour clock)
+when the task should start.
+▪ afterDate (string, optional): Date filter (YYYY-MM-DD) to scrape content after
+(used by Google).
+▪ beforeDate (string, optional): Date filter (YYYY-MM-DD) to scrape content before
+(used by Google).
+• Expected Response:
+◦ 201 Created : If all tasks were scheduled successfully.
+{
+"success": true,
+"message": "Raspagem(ns) agendada(s) com sucesso!",
+"scheduled": [
+ {
+"day": 15,
+"time": "10:30",
+"scheduledAt": "YYYY-MM-DDTHH:mm:ss.sssZ",
+"scrapeId": "uuid"
+ }
+ // ... one entry per scheduled day
+ ]
+}
+◦ 207 Multi-Status : If some tasks were scheduled, but others failed (e.g., due to invalid
+date/time for a specific day).
+{
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+5 of 24 29/04/2025, 15:49
+"message": "Algumas tarefas foram agendadas, mas outras falharam.",
+"scheduled": [
+ // ... successfully scheduled entries
+ ],
+"errors": [
+"Erro ao processar data/hora para o dia 31.",
+"Data/hora inválida fornecida para o dia 5: 25:00"
+ ]
+}
+◦ 400 Bad Request : If required fields are missing or invalid format.
+{
+"error": "Dias selecionados (array) e horário de início (string HH:MM) são obrig}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro interno ao agendar a raspagem.",
+"details": "..."
+}
+• Curl Example:
+curl -X POST http://localhost:5001/api/v1/schedule \
+-H "Content-Type: application/json" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>" \
+-d '{
+ "platforms": ["Twitter"],
+ "profiles": ["exampleUser"],
+ "format": "DB",
+ "selectedDays": [1, 15],
+ "startHour": "08:00"
+}'
+4. Cancel Scheduled Scraping Task
+• Path: /api/v1/schedule/:scrapeId
+• Method: DELETE
+• Description: Cancels a scheduled scraping task identified by its ID. Only tasks with status
+'scheduled' can be cancelled.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+6 of 24 29/04/2025, 15:49
+◦ Path:
+▪ scrapeId (string, required): The UUID of the scheduled scrape task.
+• Expected Response:
+◦ 200 OK : If the scheduled task was found and cancelled.
+{
+"message": "Agendamento cancelado com sucesso."
+}
+◦ 400 Bad Request : If scrapeId is missing (though path param requires it, controller
+might validate format).
+{
+"error": "Scrape ID is required to cancel a schedule."
+}
+◦ 404 Not Found : If no scheduled task exists with the given ID for this client.
+{
+"error": "Nenhum agendamento encontrado com o ID especificado ou não pertence a e}
+◦ 409 Conflict : If the task exists and belongs to the client, but its status is not 'scheduled'
+(e.g., 'in_progress', 'completed', 'failed').
+{
+"error": "O agendamento <scrapeId> não está no status 'scheduled' (Status atual:}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro interno ao cancelar o agendamento."
+}
+• Curl Example:
+curl -X DELETE http://localhost:5001/api/v1/schedule/a1b2c3d4-e5f6-7890-1234-567890abc-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+5. Monitor Scraping Progress
+• Path: /api/v1/scrapes/:scrapeId/progress
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+7 of 24 29/04/2025, 15:49
+• Method: GET
+• Description: Establishes a Server-Sent Events (SSE) connection to receive progress updates
+for a specific background scraping task identified by its Scrape ID. The client must own the
+scrape task.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Path:
+▪ scrapeId (string, required): The UUID of the background scrape task to monitor.
+• Expected Response:
+◦ 200 OK : Headers for SSE ( Content-Type: text/event-stream ). The response body
+will consist of a stream of events.
+data: {"scrapeId":"uuid","progress":0,"message":"Connected to progress stream for data: {"scrapeId":"uuid","progress":10,"message":"Starting Twitter scraping..."
+data: {"scrapeId":"uuid","progress":55,"message":"Analisando feed (5/50)... Tweetsdata: {"scrapeId":"uuid","progress":90,"message":"Scraping completed successfully.data: {"scrapeId":"uuid","progress":100,"message":"Scraping completed successfullyEach data: line contains a JSON object.
+▪ scrapeId (string): The ID of the task being monitored.
+▪ progress (number): Percentage completion (0-100).
+▪ message (string): A human-readable status message.
+▪ status (string, only in final event): The final status ('completed', 'failed',
+'cancelled').
+◦ 400 Bad Request : If scrapeId is missing (though path param ensures presence).
+{
+"error": "Scrape ID is required in the URL path (/scrapes/:scrapeId/progress)."
+}
+◦ 404 Not Found : If the scrapeId does not exist or does not belong to the authenticated
+client.
+{
+"error": "Scrape ID not found or does not belong to this client."
+}
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+8 of 24 29/04/2025, 15:49
+◦ 500 Internal Server Error : If a server error occurs during setup.
+{
+"error": "Internal server error setting up progress stream."
+}
+• Curl Example:
+curl -N http://localhost:5001/api/v1/scrapes/a1b2c3d4-e5f6-7890-1234-567890abcdef/prog-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+( -N disables buffering for SSE)
+6. Initiate Background Profile Scraping
+• Path: /api/v1/scrape/profiles
+• Method: POST
+• Description: Submits a request to initiate a profile scraping task. The server acknowledges
+the request and starts the task in the background. Use the /scrapes/:scrapeId/progress
+endpoint to monitor status.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Body (JSON):
+▪ profiles (string[], required): Array of profile usernames to scrape.
+▪ platforms (string[], required): Array of platforms for profile scraping (e.g., ["Twitter",
+"Instagram"]). Only platforms supported by the profile scrapers (TwitterScraper,
+InstagramScraper) are valid.
+▪ searchPhrases (string[], optional): Array of search phrases (currently informative).
+▪ format (string, required): Expected format (currently 'DB' is the only format
+implemented for saving).
+• Expected Response:
+◦ 202 Accepted : If the task was successfully initiated in the background.
+{
+"message": "Profile scraping task received and scheduled for background execution"scrapeId": "uuid",
+"monitor": "/api/v1/scrapes/uuid/progress"
+}
+◦ 400 Bad Request : If required fields are missing or invalid.
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+9 of 24 29/04/2025, 15:49
+{
+"error": "Profiles (array) and platforms (array) are required."
+}
+◦ 500 Internal Server Error : If a server error prevents task initiation (e.g., database
+error creating the task record).
+{
+"error": "Failed to initiate profile scraping task due to internal error."
+}
+• Curl Example:
+curl -X POST http://localhost:5001/api/v1/scrape/profiles \
+-H "Content-Type: application/json" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>" \
+-d '{
+ "profiles": ["user1", "user2"],
+ "platforms": ["Twitter", "Instagram"],
+ "format": "DB"
+}'
+7. Initiate Background Keyword Scraping
+• Path: /api/v1/scrape/keywords
+• Method: POST
+• Description: Submits a request to initiate a keyword scraping task. The server acknowledges
+the request and starts the task in the background. Use the /scrapes/:scrapeId/progress
+endpoint to monitor status.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Body (JSON):
+▪ keywords (string[], required): Array of keywords to search for.
+▪ platforms (string[], required): Array of platforms for keyword scraping (e.g.,
+["Twitter", "Instagram", "Google"]). Only platforms supported by the keyword scrapers
+(TwitterKeywordScraper, InstagramKeywordScraper, GoogleKeywordScraper) are
+valid.
+▪ searchPhrases (string[], optional): Array of search phrases (currently used by
+Twitter keyword scraper).
+▪ format (string, optional): Expected format (currently 'DB' is the only format
+implemented for saving). Defaults to 'DB' in the controller logic.
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+10 of 24 29/04/2025, 15:49
+▪ afterDate (string, optional): Date filter (YYYY-MM-DD) to scrape content after
+(used by Google).
+▪ beforeDate (string, optional): Date filter (YYYY-MM-DD) to scrape content before
+(used by Google).
+• Expected Response:
+◦ 202 Accepted : If the task was successfully initiated in the background.
+{
+"message": "Keyword scraping task received and scheduled for background executio"scrapeId": "uuid",
+"monitor": "/api/v1/scrapes/uuid/progress"
+}
+◦ 400 Bad Request : If required fields are missing or invalid.
+{
+"error": "Keywords (array) and platforms (array) are required."
+}
+◦ 500 Internal Server Error : If a server error prevents task initiation (e.g., database
+error creating the task record).
+{
+"error": "Failed to initiate keyword scraping task due to internal error."
+}
+• Curl Example:
+curl -X POST http://localhost:5001/api/v1/scrape/keywords \
+-H "Content-Type: application/json" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>" \
+-d '{
+ "keywords": ["example", "test"],
+ "platforms": ["Twitter", "Google"],
+ "afterDate": "2023-10-01",
+ "beforeDate": "2024-03-31"
+}'
+Query Routes
+These routes are defined in ./routes/queryRoutes.js and ./controllers/
+queryController.js . They are mounted under /api/v1 .
+1. Get Unique Usernames
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+11 of 24 29/04/2025, 15:49
+• Path: /api/v1/data/profiles/unique
+• Method: GET
+• Description: Retrieves a list of unique profile usernames that have been scraped and stored
+for the authenticated client.
+• Authentication: Yes ( clientAuth )
+• Request Parameters: None
+• Expected Response:
+◦ 200 OK :
+{
+"usernames": [
+"user1",
+"user2",
+"exampleProfile"
+ // ... unique usernames
+ ]
+}
+◦ 500 Internal Server Error : If an error occurs during data retrieval.
+{
+"error": "Erro ao buscar nomes de usuários únicos",
+"details": "..."
+}
+• Curl Example:
+curl -X GET http://localhost:5001/api/v1/data/profiles/unique \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+2. Filter Scraped Data
+• Path: /api/v1/data/filter
+• Method: GET
+• Description: Filters scraped data entries for the authenticated client based on various criteria.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Query:
+▪ platform (string, optional): Filter by platform name (e.g., "Twitter", "Instagram",
+"Google").
+▪ username (string, optional): Filter by profile username.
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+12 of 24 29/04/2025, 15:49
+▪ keywords (string, optional): Filter by content containing any of the comma-separated
+keywords (case-insensitive, contains match). Example: keywords=promo,oferta .
+▪ scrapeId (string, optional): Filter by the UUID of the scrape task that produced the
+data.
+• Expected Response:
+◦ 200 OK : Returns filtered data and total count.
+{
+ "total": 5, // Total number of records matching filters
+ "data": [
+ {
+ "id": 1,
+ "scrape_id": "uuid",
+ "plataforma": "Twitter",
+ "perfil": "username",
+ "link": "...",
+ "texto": "...",
+ "sentimento": "POSITIVO" | "NEGATIVO" | "NEUTRO" | "ERROR" | null,
+ "createdAt": "YYYY-MM-DDTHH:mm:ss.sssZ",
+ "updatedAt": "YYYY-MM-DDTHH:mm:ss.sssZ"
+ }
+ // ... filtered data objects
+ ]
+}
+◦ 500 Internal Server Error : If an error occurs during filtering.
+{
+"error": "Erro ao filtrar dados raspados",
+"details": "..."
+}
+• Curl Example:
+curl -X GET "http://localhost:5001/api/v1/data/filter?platform=Twitter&username=example-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+curl -X GET "http://localhost:5001/api/v1/data/filter?scrapeId=a1b2c3d4-e5f6-7890-1234--H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+3. Get Sentiment Counts
+• Path: /api/v1/data/sentiment/counts
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+13 of 24 29/04/2025, 15:49
+• Method: GET
+• Description: Provides a breakdown of sentiment counts (POSITIVO, NEGATIVO, NEUTRO,
+ERROR) for the authenticated client's scraped data, optionally filtered by criteria. Only data
+with non-null sentimento is counted.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Query: (Same as Filter Scraped Data)
+▪ platform (string, optional): Filter by platform name.
+▪ perfil (string, optional): Filter by profile username.
+▪ keywords (string, optional): Filter by content containing any of the comma-separated
+keywords.
+▪ scrapeId (string, optional): Filter by the UUID of the scrape task.
+• Expected Response:
+◦ 200 OK : Returns a list of sentiment counts.
+[
+ {
+"sentimento": "POSITIVO",
+"count": 50
+ },
+ {
+"sentimento": "NEGATIVO",
+"count": 15
+ },
+ {
+"sentimento": "NEUTRO",
+"count": 30
+ },
+ {
+"sentimento": "ERROR",
+"count": 5
+ }
+ // May only include sentiments with count > 0
+]
+◦ 500 Internal Server Error : If an error occurs during the count retrieval.
+{
+"error": "Erro ao buscar contagem de sentimentos",
+"details": "..."
+}
+• Curl Example:
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+14 of 24 29/04/2025, 15:49
+curl -X GET "http://localhost:5001/api/v1/data/sentiment/counts?platform=Twitter&perfil-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+Occurrences Routes
+These routes are defined in ./routes/occurrencesRoutes.js and ./controllers/
+occurrencesController.js . They are mounted under /api/v1 . Note: The 'Occurrences' model
+( ocorrencias ) appears to be global, not client-specific, based on the model definition and
+controller logic. However, the routes are protected by clientAuth , meaning only authenticated
+clients can access/modify this global data.
+1. Get Global Occurrences
+• Path: /api/v1/occurrences/
+• Method: POST
+• Description: Retrieves global occurrences from the ocorrencias table based on provided
+keywords and platform name.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Body (JSON):
+▪ keywords (string[], required): An array of global keywords to search for.
+▪ platformName (string, required): The name of the platform (e.g., "Twitter",
+"Instagram").
+• Expected Response:
+◦ 200 OK : Returns a list of matching occurrences.
+{
+"occurrences": [
+ {
+"id": 1,
+"plataforma": "Twitter",
+"palavraChave": "tecnologia",
+"usuario": "someUser",
+"conteudo": "...",
+"url": "...",
+"data_ocorrencia": "YYYY-MM-DDTHH:mm:ss.sssZ"
+ }
+ // ... matching occurrence objects
+ ]
+}
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+15 of 24 29/04/2025, 15:49
+◦ 400 Bad Request : If required parameters are missing.
+{
+"error": "Palavras-chave (array) e nome da plataforma são obrigatórios."
+}
+◦ 404 Not Found : If the specified platformName does not exist in the database.
+{
+"error": "Plataforma não encontrada"
+}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro ao buscar ocorrências globais",
+"details": "..."
+}
+• Curl Example:
+curl -X POST http://localhost:5001/api/v1/occurrences/ \
+-H "Content-Type: application/json" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>" \
+-d '{
+ "keywords": ["tecnologia", "inovação"],
+ "platformName": "Twitter"
+}'
+2. Get Global Keywords
+• Path: /api/v1/occurrences/keywords
+• Method: GET
+• Description: Retrieves the list of all registered global keywords.
+• Authentication: Yes ( clientAuth )
+• Request Parameters: None
+• Expected Response:
+◦ 200 OK :
+{
+"keywords": [
+ {
+"id": 1,
+"termo": "tecnologia"
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+16 of 24 29/04/2025, 15:49
+ },
+ {
+"id": 2,
+"termo": "marketing"
+ }
+ // ... registered keyword objects
+ ]
+}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro ao buscar palavras-chave globais.",
+"details": "..."
+}
+• Curl Example:
+curl -X GET http://localhost:5001/api/v1/occurrences/keywords \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+3. Register Global Keywords
+• Path: /api/v1/occurrences/keywords/register
+• Method: POST
+• Description: Registers one or more new global keywords. Duplicates are ignored.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Body (JSON):
+▪ keywords (string[], required): An array of keyword terms to register.
+• Expected Response:
+◦ 201 Created : If new keywords were registered.
+{
+"message": "Palavras-chave registradas com sucesso (N novas).",
+"created": ["newKeyword1", "newKeyword2"] // List of newly created terms
+}
+◦ 200 OK : If all provided keywords already existed.
+{
+"message": "Todas as palavras-chave fornecidas já existem."
+}
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+17 of 24 29/04/2025, 15:49
+◦ 400 Bad Request : If the input is invalid.
+{
+"error": "Lista de palavras-chave não fornecida ou vazia." | "Nenhuma palavra-ch}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro ao registrar palavras-chave globais.",
+"details": "..."
+}
+• Curl Example:
+curl -X POST http://localhost:5001/api/v1/occurrences/keywords/register \
+-H "Content-Type: application/json" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>" \
+-d '{"keywords": ["newKeyword", "anotherTerm"]}'
+4. Delete Global Keywords
+• Path: /api/v1/occurrences/keywords/delete
+• Method: POST
+• Description: Deletes one or more global keywords by their term. Keywords not found are
+ignored.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Body (JSON):
+▪ keywords (string[], required): An array of keyword terms to delete.
+• Expected Response:
+◦ 200 OK :
+{
+"message": "Palavras-chave deletadas com sucesso (N removidas).",
+"deletedCount": 2 // Number of keywords actually deleted
+}
+◦ 400 Bad Request : If the input is invalid.
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+18 of 24 29/04/2025, 15:49
+{
+"error": "Lista de palavras-chave não fornecida ou vazia para exclusão." |
+}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro ao deletar palavras-chave globais.",
+"details": "..."
+}
+• Curl Example:
+curl -X POST http://localhost:5001/api/v1/occurrences/keywords/delete \
+-H "Content-Type: application/json" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>" \
+-d '{"keywords": ["oldKeyword", "anotherOldTerm"]}'
+5. Get Word Map
+• Path: /api/v1/occurrences/wordmap/:keyword
+• Method: GET
+• Description: Generates a frequency map of words that appear alongside a specific keyword
+within the scraped data belonging to the authenticated client. Excludes the primary keyword
+itself and common stopwords.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Path:
+▪ keyword (string, required): The primary keyword to analyze co-occurring words for.
+• Expected Response:
+◦ 200 OK : Returns the word frequency map and total occurrences of the primary keyword.
+{
+"wordmap": [
+ {
+"word": "tecnologia",
+"count": 50
+ },
+ {
+"word": "novo",
+"count": 25
+ }
+ // ... up to 100 most frequent co-occurring words
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+19 of 24 29/04/2025, 15:49
+ ],
+"totalOccurrences": 150 // Total count of scraped items containing the primary k}
+If no data is found containing the keyword for the client:
+{
+"wordmap": [],
+"totalOccurrences": 0,
+"message": "Nenhum dado raspado encontrado com a palavra-chave para este clien}
+◦ 400 Bad Request : If keyword is missing (though path param requires it, controller might
+validate).
+{
+"error": "Keyword parameter is required."
+}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro interno do servidor ao gerar wordmap."
+}
+• Curl Example:
+curl -X GET "http://localhost:5001/api/v1/occurrences/wordmap/tecnologia" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+Monitoring Routes
+These routes are defined in ./routes/monitoringRoutes.js and ./controllers/
+monitoringController.js . They are mounted under /api/v1 . These endpoints manage a clientspecific list of profiles for recurring monitoring.
+1. Add Profile to Monitoring List
+• Path: /api/v1/monitoring/list
+• Method: POST
+• Description: Adds a profile (username + platform) to the authenticated client's monitoring list.
+This list is used for scheduled or manually triggered monitoring scrapes.
+• Authentication: Yes ( clientAuth )
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+20 of 24 29/04/2025, 15:49
+• Request Parameters:
+◦ Body (JSON):
+▪ username (string, required): The username of the profile to monitor.
+▪ platform (string, required): The platform of the profile (e.g., "Twitter", "Instagram").
+• Expected Response:
+◦ 201 Created : If the profile was successfully added.
+{
+"message": "Perfil adicionado à lista de monitoramento.",
+"entry": {
+"id": 1,
+"username": "user",
+"platform": "Platform",
+"createdAt": "YYYY-MM-DDTHH:mm:ss.sssZ"
+ }
+}
+◦ 400 Bad Request : If required parameters are missing.
+{
+"error": "Username e platform são obrigatórios."
+}
+◦ 409 Conflict : If the profile already exists in the client's monitoring list.
+{
+"error": "Este perfil já está na lista de monitoramento deste cliente."
+}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro interno do servidor ao adicionar à lista."
+}
+• Curl Example:
+curl -X POST http://localhost:5001/api/v1/monitoring/list \
+-H "Content-Type: application/json" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>" \
+-d '{"username": "exampleMonitoredUser", "platform": "Twitter"}'
+2. Remove Profile from Monitoring List
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+21 of 24 29/04/2025, 15:49
+• Path: /api/v1/monitoring/list
+• Method: DELETE
+• Description: Removes a profile (username + platform) from the authenticated client's
+monitoring list.
+• Authentication: Yes ( clientAuth )
+• Request Parameters:
+◦ Body (JSON):
+▪ username (string, required): The username of the profile to remove.
+▪ platform (string, required): The platform of the profile.
+• Expected Response:
+◦ 200 OK : If the profile was successfully removed.
+{
+"message": "Perfil removido da lista de monitoramento."
+}
+◦ 400 Bad Request : If required parameters are missing.
+{
+"error": "Username e platform são obrigatórios."
+}
+◦ 404 Not Found : If the profile was not found in the client's monitoring list.
+{
+"error": "Perfil não encontrado na lista de monitoramento deste cliente."
+}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro interno do servidor ao remover da lista."
+}
+• Curl Example:
+curl -X DELETE http://localhost:5001/api/v1/monitoring/list \
+-H "Content-Type: application/json" \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>" \
+-d '{"username": "exampleMonitoredUser", "platform": "Twitter"}'
+3. Get Monitoring List
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+22 of 24 29/04/2025, 15:49
+• Path: /api/v1/monitoring/list
+• Method: GET
+• Description: Retrieves the entire monitoring list for the authenticated client.
+• Authentication: Yes ( clientAuth )
+• Request Parameters: None
+• Expected Response:
+◦ 200 OK : Returns the list of monitored profiles.
+{
+"entries": [
+ {
+"id": 1,
+"username": "user1",
+"platform": "Twitter",
+"createdAt": "YYYY-MM-DDTHH:mm:ss.sssZ",
+"updatedAt": "YYYY-MM-DDTHH:mm:ss.sssZ"
+ },
+ {
+"id": 2,
+"username": "user2",
+"platform": "Instagram",
+"createdAt": "YYYY-MM-DDTHH:mm:ss.sssZ",
+"updatedAt": "YYYY-MM-DDTHH:mm:ss.sssZ"
+ }
+ // ... more entries
+ ]
+}
+◦ 500 Internal Server Error : If a server error occurs.
+{
+"error": "Erro interno do servidor ao buscar a lista."
+}
+• Curl Example:
+curl -X GET http://localhost:5001/api/v1/monitoring/list \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+4. Trigger Manual Monitoring Scrape
+• Path: /api/v1/monitoring/trigger
+• Method: POST
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+23 of 24 29/04/2025, 15:49
+• Description: Initiates a scraping task in the background for all profiles currently in the
+authenticated client's monitoring list. Use the /scrapes/:scrapeId/progress endpoint(s) to
+monitor status.
+• Authentication: Yes ( clientAuth )
+• Request Parameters: None (The list is determined by the authenticated client).
+• Expected Response:
+◦ 202 Accepted : If monitoring scrapes were initiated. Returns an array of the created
+Scrape IDs (one per platform with monitored users).
+{
+"message": "Monitoramento iniciado em segundo plano para N perfis.",
+"scrapeIds": ["uuid1", "uuid2", ...] // UUIDs of the created scrape tasks
+}
+◦ 200 OK : If the monitoring list is empty.
+{
+"message": "Nenhum perfil na lista de monitoramento para raspar."
+}
+◦ 500 Internal Server Error : If a server error occurs during task initiation.
+{
+"error": "Erro interno ao iniciar o scraping de monitoramento."
+}
+• Curl Example:
+curl -X POST http://localhost:5001/api/v1/monitoring/trigger \
+-H "X-API-Key: <your-api-key>" \
+-H "X-API-Secret: <your-api-secret>"
+This documentation covers all the API endpoints found in the provided Express routes
+( scrapingRoutes.js , queryRoutes.js , occurrencesRoutes.js , monitoringRoutes.js )
+mounted under /api/v1 . It includes details on authentication, request parameters, and expected
+responses with curl examples for testing.
+md2pdf - Markdown to PDF https://md2pdf.netlify.app/
+24 of 24 29/04/2025, 15:49

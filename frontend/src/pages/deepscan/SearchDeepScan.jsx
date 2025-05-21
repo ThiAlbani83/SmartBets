@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  registerBet,
-  scheduledMonitorings,
-  monitoringSchedules,
-} from "../../utils/fakeData.js";
+import { registerBet } from "../../utils/fakeData.js";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -18,6 +14,9 @@ import {
   ArcElement,
 } from "chart.js";
 import { Bar, Pie } from "react-chartjs-2";
+import { useDeepScanStore } from "../../store/useDeepscanStore.js";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 // Registrar os componentes do Chart.js
 ChartJS.register(
@@ -34,22 +33,38 @@ ChartJS.register(
 );
 
 const SearchDeepScan = () => {
+  const {
+    scheduleScraping,
+    scheduledTasks,
+    getScheduledTasks,
+    cancelScheduledTask,
+    monitorScrapeProgress,
+    isLoading,
+    error,
+    platforms,
+  } = useDeepScanStore();
+
   const [empresas, setEmpresas] = useState([]);
   const [selectedEmpresa, setSelectedEmpresa] = useState("");
-  const [redesSociais, setRedesSociais] = useState([]);
   const [selectedRedes, setSelectedRedes] = useState([]);
-  const [agendamentos, setAgendamentos] = useState(scheduledMonitorings);
+  const [agendamentos, setAgendamentos] = useState([]);
   const [filteredAgendamentos, setFilteredAgendamentos] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [progressMonitors, setProgressMonitors] = useState({});
 
   // Form state
   const [formData, setFormData] = useState({
     empresa: "",
-    redesSociais: [],
-    dataAgendamento: "",
-    horaAgendamento: "08:00",
-    frequencia: "Semanal",
+    profiles: [],
+    searchPhrases: [],
+    platforms: [],
+    format: "DB", // Default format as per API
+    selectedDays: [],
+    startHour: "08:00",
+    afterDate: "",
+    beforeDate: "",
+    frequencia: "Mensal",
     responsavel: "",
     observacoes: "",
   });
@@ -58,14 +73,43 @@ const SearchDeepScan = () => {
   const [agendamentosPorEmpresa, setAgendamentosPorEmpresa] = useState({});
   const [agendamentosPorDia, setAgendamentosPorDia] = useState({});
 
+  // Função para formatar tarefas agendadas da API para o formato da UI
+  const formatScheduledTasks = (tasks) => {
+    return tasks.map((task, index) => {
+      // Extrair dia e hora da data agendada
+      const scheduledDate = new Date(task.scheduledAt || new Date());
+
+      return {
+        id: task.scrapeId || `MS${index + 1}`.padStart(5, "0"),
+        empresa: task.clientName || selectedEmpresa || "Cliente",
+        redesSociais: task.platforms || [],
+        dataAgendamento: task.scheduledAt || new Date().toISOString(),
+        frequencia: task.recurring ? "Mensal" : "Única",
+        responsavel: task.responsavel || "Sistema",
+        status: task.status || "Agendado",
+        ultimaExecucao: task.lastRun || null,
+        proximaExecucao: task.nextRun || task.scheduledAt,
+        observacoes: task.notes || "",
+        scrapeId: task.scrapeId,
+        day: task.day,
+        time: task.time,
+      };
+    });
+  };
+
   useEffect(() => {
+    // Buscar tarefas agendadas quando o componente montar
+    const fetchScheduledTasks = async () => {
+      const tasks = await getScheduledTasks();
+      const formattedTasks = formatScheduledTasks(tasks);
+      setAgendamentos(formattedTasks);
+    };
+
+    fetchScheduledTasks();
+
     // Extrair empresas únicas dos dados
     const empresasData = registerBet.map((item) => item.empresa);
     setEmpresas(empresasData);
-
-    // Extrair todas as redes sociais possíveis
-    const todasRedes = ["Instagram", "X", "Facebook", "Telegram", "Discord"];
-    setRedesSociais(todasRedes);
 
     // Filtrar agendamentos com base na busca
     let filtered = [...agendamentos];
@@ -129,7 +173,12 @@ const SearchDeepScan = () => {
       agendDia[diasSemana[diaSemana]] += 1;
     });
     setAgendamentosPorDia(agendDia);
-  }, [agendamentos, searchTerm, sortConfig]);
+  }, [getScheduledTasks, searchTerm, sortConfig]);
+
+  // Atualizar filteredAgendamentos quando agendamentos mudar
+  useEffect(() => {
+    setFilteredAgendamentos(agendamentos);
+  }, [agendamentos]);
 
   // Função para ordenar resultados
   const requestSort = (key) => {
@@ -161,62 +210,244 @@ const SearchDeepScan = () => {
         setFormData({
           ...formData,
           empresa: value,
-          redesSociais: redesDisponiveis,
+          platforms: redesDisponiveis,
         });
       }
     }
   };
 
-  const handleRedesSociaisChange = (e) => {
+  const handleProfilesChange = (e) => {
+    const profiles = e.target.value.split(",").map((profile) => profile.trim());
+    setFormData({
+      ...formData,
+      profiles,
+    });
+  };
+
+  const handleSearchPhrasesChange = (e) => {
+    const searchPhrases = e.target.value
+      .split(",")
+      .map((phrase) => phrase.trim());
+    setFormData({
+      ...formData,
+      searchPhrases,
+    });
+  };
+
+  const handlePlatformsChange = (e) => {
     const { value, checked } = e.target;
-    let novasRedes = [...formData.redesSociais];
+    let novasPlatforms = [...formData.platforms];
 
     if (checked) {
-      novasRedes.push(value);
+      novasPlatforms.push(value);
     } else {
-      novasRedes = novasRedes.filter((rede) => rede !== value);
+      novasPlatforms = novasPlatforms.filter((platform) => platform !== value);
     }
 
     setFormData({
       ...formData,
-      redesSociais: novasRedes,
+      platforms: novasPlatforms,
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSelectedDaysChange = (e) => {
+    const { value, checked } = e.target;
+    const day = parseInt(value, 10);
+    let novosDias = [...formData.selectedDays];
+
+    if (checked) {
+      novosDias.push(day);
+    } else {
+      novosDias = novosDias.filter((d) => d !== day);
+    }
+
+    setFormData({
+      ...formData,
+      selectedDays: novosDias,
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Criar novo agendamento
-    const dataHora = `${formData.dataAgendamento}T${formData.horaAgendamento}:00`;
-
-    const novoAgendamento = {
-      id: `MS${agendamentos.length + 1}`.padStart(5, "0"),
-      empresa: formData.empresa,
-      redesSociais: formData.redesSociais,
-      dataAgendamento: dataHora,
-      frequencia: formData.frequencia,
-      responsavel: formData.responsavel,
-      status: "Agendado",
-      ultimaExecucao: null,
-      proximaExecucao: dataHora,
-      observacoes: formData.observacoes,
+    // Preparar dados para a API
+    const scrapingParams = {
+      profiles: formData.profiles,
+      searchPhrases: formData.searchPhrases,
+      platforms: formData.platforms,
+      format: formData.format,
+      selectedDays: formData.selectedDays,
+      startHour: formData.startHour,
+      afterDate: formData.afterDate || undefined,
+      beforeDate: formData.beforeDate || undefined,
     };
 
-    // Adicionar à lista de agendamentos
-    setAgendamentos([...agendamentos, novoAgendamento]);
+    try {
+      // Chamar a API para agendar a raspagem
+      const result = await scheduleScraping(scrapingParams);
 
-    // Limpar formulário
-    setFormData({
-      empresa: "",
-      redesSociais: [],
-      dataAgendamento: "",
-      horaAgendamento: "08:00",
-      frequencia: "Semanal",
-      responsavel: "",
-      observacoes: "",
+      if (result.success) {
+        // Adicionar à lista de agendamentos local para UI
+        const novosAgendamentos = result.scheduled.map((schedule) => {
+          // Criar uma data válida para o agendamento
+          const currentDate = new Date();
+          const currentYear = currentDate.getFullYear();
+          const currentMonth = currentDate.getMonth();
+
+          // Criar uma data para o dia agendado no mês atual
+          // Se o dia for maior que o último dia do mês, usar o último dia
+          const lastDayOfMonth = new Date(
+            currentYear,
+            currentMonth + 1,
+            0
+          ).getDate();
+          const scheduledDay = Math.min(schedule.day, lastDayOfMonth);
+
+          // Extrair horas e minutos do horário
+          const [hours, minutes] = schedule.time.split(":").map(Number);
+
+          // Criar um objeto de data válido
+          const scheduledDate = new Date(
+            currentYear,
+            currentMonth,
+            scheduledDay,
+            hours,
+            minutes
+          );
+
+          // Se a data já passou neste mês, agendar para o próximo mês
+          if (scheduledDate < currentDate) {
+            scheduledDate.setMonth(scheduledDate.getMonth() + 1);
+          }
+
+          return {
+            id:
+              schedule.scrapeId ||
+              `MS${agendamentos.length + 1}`.padStart(5, "0"),
+            empresa: formData.empresa,
+            redesSociais: formData.platforms,
+            dataAgendamento: scheduledDate.toISOString(),
+            frequencia: formData.frequencia,
+            responsavel: formData.responsavel,
+            status: "Agendado",
+            ultimaExecucao: null,
+            proximaExecucao: scheduledDate.toISOString(),
+            observacoes: formData.observacoes,
+            scrapeId: schedule.scrapeId,
+            day: schedule.day,
+            time: schedule.time,
+          };
+        });
+
+        setAgendamentos([...agendamentos, ...novosAgendamentos]);
+
+        // Limpar formulário
+        setFormData({
+          empresa: "",
+          profiles: [],
+          searchPhrases: [],
+          platforms: [],
+          format: "DB",
+          selectedDays: [],
+          startHour: "08:00",
+          afterDate: "",
+          beforeDate: "",
+          frequencia: "Mensal",
+          responsavel: "",
+          observacoes: "",
+        });
+
+        alert("Agendamento criado com sucesso!");
+      } else {
+        alert(`Erro ao agendar: ${result.error || "Erro desconhecido"}`);
+      }
+    } catch (error) {
+      console.error("Erro ao agendar raspagem:", error);
+      alert(`Erro ao agendar: ${error.message || "Erro desconhecido"}`);
+    }
+  };
+
+  // Função para cancelar um agendamento
+  const handleCancelSchedule = async (scrapeId) => {
+    if (window.confirm(`Deseja cancelar o agendamento?`)) {
+      try {
+        const result = await cancelScheduledTask(scrapeId);
+
+        if (result.success) {
+          // Remover da lista local
+          const updatedAgendamentos = agendamentos.filter(
+            (item) => item.scrapeId !== scrapeId
+          );
+          setAgendamentos(updatedAgendamentos);
+          alert("Agendamento cancelado com sucesso!");
+        } else {
+          alert(`Erro ao cancelar: ${result.error}`);
+        }
+      } catch (error) {
+        console.error("Erro ao cancelar agendamento:", error);
+        alert(`Erro ao cancelar: ${error.message || "Erro desconhecido"}`);
+      }
+    }
+  };
+
+  // Função para iniciar monitoramento de progresso
+  const startProgressMonitoring = (scrapeId) => {
+    // Inicializar o estado de progresso
+    setProgressMonitors((prev) => ({
+      ...prev,
+      [scrapeId]: { progress: 0, message: "Iniciando monitoramento..." },
+    }));
+
+    // Iniciar o monitoramento via SSE
+    const closeMonitor = monitorScrapeProgress(scrapeId, (data) => {
+      if (data.error) {
+        setProgressMonitors((prev) => ({
+          ...prev,
+          [scrapeId]: {
+            ...prev[scrapeId],
+            error: data.error,
+            message: "Erro no monitoramento",
+          },
+        }));
+        return;
+      }
+
+      setProgressMonitors((prev) => ({
+        ...prev,
+        [scrapeId]: {
+          progress: data.progress,
+          message: data.message,
+          status: data.status,
+        },
+      }));
+
+      // Atualizar o status do agendamento na lista
+      if (
+        data.status === "completed" ||
+        data.status === "failed" ||
+        data.status === "cancelled"
+      ) {
+        setAgendamentos((prev) =>
+          prev.map((item) =>
+            item.scrapeId === scrapeId
+              ? {
+                  ...item,
+                  status:
+                    data.status === "completed"
+                      ? "Concluído"
+                      : data.status === "failed"
+                      ? "Falhou"
+                      : "Cancelado",
+                  ultimaExecucao: new Date().toISOString(),
+                }
+              : item
+          )
+        );
+      }
     });
 
-    alert("Agendamento criado com sucesso!");
+    // Retornar função para parar o monitoramento
+    return closeMonitor;
   };
 
   // Preparar dados para gráficos
@@ -277,8 +508,21 @@ const SearchDeepScan = () => {
     },
   };
 
-  // Obter data atual formatada para o input date
-  const today = new Date().toISOString().split("T")[0];
+  // Gerar dias do mês para seleção
+  const diasDoMes = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  // Função para formatar data
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+
+    try {
+      const date = new Date(dateString);
+      return format(date, "dd/MM/yyyy HH:mm", { locale: ptBR });
+    } catch (error) {
+      console.error("Erro ao formatar data:", error);
+      return "Data inválida";
+    }
+  };
 
   return (
     <div className="mx-auto px-4 py-8 flex flex-col">
@@ -324,29 +568,44 @@ const SearchDeepScan = () => {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Perfis (separados por vírgula)
+              </label>
+              <input
+                type="text"
+                name="profiles"
+                value={formData.profiles.join(", ")}
+                onChange={handleProfilesChange}
+                placeholder="usuario1, usuario2, usuario3"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Termos de Busca (separados por vírgula)
+              </label>
+              <input
+                type="text"
+                name="searchPhrases"
+                value={formData.searchPhrases.join(", ")}
+                onChange={handleSearchPhrasesChange}
+                placeholder="termo1, termo2, termo3"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data
-              </label>
-              <input
-                type="date"
-                name="dataAgendamento"
-                value={formData.dataAgendamento}
-                onChange={handleInputChange}
-                min={today}
-                required
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hora
+                Horário de Início
               </label>
               <input
                 type="time"
-                name="horaAgendamento"
-                value={formData.horaAgendamento}
+                name="startHour"
+                value={formData.startHour}
                 onChange={handleInputChange}
                 required
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -354,45 +613,93 @@ const SearchDeepScan = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Frequência
+                Data Inicial (opcional)
               </label>
-              <select
-                name="frequencia"
-                value={formData.frequencia}
+              <input
+                type="date"
+                name="afterDate"
+                value={formData.afterDate}
                 onChange={handleInputChange}
-                required
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="Única">Única</option>
-                <option value="Diária">Diária</option>
-                <option value="Semanal">Semanal</option>
-                <option value="Quinzenal">Quinzenal</option>
-                <option value="Mensal">Mensal</option>
-              </select>
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Data Final (opcional)
+              </label>
+              <input
+                type="date"
+                name="beforeDate"
+                value={formData.beforeDate}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Redes Sociais
+              Plataformas
             </label>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              {redesSociais.map((rede, index) => (
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+              {platforms.map((rede, index) => (
                 <div key={index} className="flex items-center">
                   <input
                     type="checkbox"
-                    id={`rede-${rede}`}
+                    id={`platform-${rede}`}
                     value={rede}
-                    checked={formData.redesSociais.includes(rede)}
-                    onChange={handleRedesSociaisChange}
+                    checked={formData.platforms.includes(rede)}
+                    onChange={handlePlatformsChange}
                     className="mr-2"
                   />
-                  <label htmlFor={`rede-${rede}`} className="text-sm">
+                  <label htmlFor={`platform-${rede}`} className="text-sm">
                     {rede}
                   </label>
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Dias do Mês para Agendamento
+            </label>
+            <div className="grid grid-cols-5 md:grid-cols-10 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
+              {diasDoMes.map((dia) => (
+                <div key={dia} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`dia-${dia}`}
+                    value={dia}
+                    checked={formData.selectedDays.includes(dia)}
+                    onChange={handleSelectedDaysChange}
+                    className="mr-1"
+                  />
+                  <label htmlFor={`dia-${dia}`} className="text-sm">
+                    {dia}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Frequência
+            </label>
+            <select
+              name="frequencia"
+              value={formData.frequencia}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Única">Única</option>
+              <option value="Diária">Diária</option>
+              <option value="Semanal">Semanal</option>
+              <option value="Quinzenal">Quinzenal</option>
+              <option value="Mensal">Mensal</option>
+            </select>
           </div>
 
           <div className="mb-4">
@@ -409,12 +716,21 @@ const SearchDeepScan = () => {
             ></textarea>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+              {error}
+            </div>
+          )}
+
           <div className="flex justify-end">
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isLoading}
+              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Agendar Monitoramento
+              {isLoading ? "Agendando..." : "Agendar Monitoramento"}
             </button>
           </div>
         </form>
@@ -519,7 +835,7 @@ const SearchDeepScan = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Redes Sociais
+                  Plataformas
                 </th>
                 <th
                   scope="col"
@@ -572,27 +888,19 @@ const SearchDeepScan = () => {
                     {agendamento.empresa}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(agendamento.dataAgendamento).toLocaleDateString(
-                      "pt-BR",
-                      {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )}
+                    {formatDate(agendamento.dataAgendamento)}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     <div className="flex flex-wrap gap-1">
-                      {agendamento.redesSociais.map((rede, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                        >
-                          {rede}
-                        </span>
-                      ))}
+                      {agendamento.redesSociais &&
+                        agendamento.redesSociais.map((rede, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                          >
+                            {rede}
+                          </span>
+                        ))}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -610,40 +918,81 @@ const SearchDeepScan = () => {
                           ? "bg-blue-100 text-blue-800"
                           : agendamento.status === "Concluído"
                           ? "bg-green-100 text-green-800"
+                          : agendamento.status === "Falhou"
+                          ? "bg-red-100 text-red-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
                       {agendamento.status}
                     </span>
+
+                    {/* Mostrar progresso se estiver em andamento */}
+                    {progressMonitors[agendamento.scrapeId] && (
+                      <div className="mt-1">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div
+                            className="bg-blue-600 h-2.5 rounded-full"
+                            style={{
+                              width: `${
+                                progressMonitors[agendamento.scrapeId].progress
+                              }%`,
+                            }}
+                          ></div>
+                        </div>
+                        <p className="text-xs mt-1">
+                          {progressMonitors[agendamento.scrapeId].message}
+                        </p>
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                      onClick={() => {
-                        // Lógica para editar agendamento
-                        alert(`Editar agendamento ${agendamento.id}`);
-                      }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => {
-                        // Lógica para cancelar agendamento
-                        if (
-                          window.confirm(
-                            `Deseja cancelar o agendamento ${agendamento.id}?`
-                          )
-                        ) {
-                          const updatedAgendamentos = agendamentos.filter(
-                            (item) => item.id !== agendamento.id
-                          );
-                          setAgendamentos(updatedAgendamentos);
+                    {agendamento.status === "Agendado" && (
+                      <>
+                        <button
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                          onClick={() => {
+                            // Iniciar monitoramento de progresso
+                            startProgressMonitoring(agendamento.scrapeId);
+                          }}
+                        >
+                          Monitorar
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-900"
+                          onClick={() =>
+                            handleCancelSchedule(agendamento.scrapeId)
+                          }
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    )}
+
+                    {agendamento.status === "Em andamento" && (
+                      <button
+                        className="text-orange-600 hover:text-orange-900"
+                        onClick={() =>
+                          handleCancelSchedule(agendamento.scrapeId)
                         }
-                      }}
-                    >
-                      Cancelar
-                    </button>
+                      >
+                        Interromper
+                      </button>
+                    )}
+
+                    {(agendamento.status === "Concluído" ||
+                      agendamento.status === "Falhou") && (
+                      <button
+                        className="text-green-600 hover:text-green-900"
+                        onClick={() => {
+                          // Lógica para ver resultados
+                          alert(
+                            `Ver resultados do agendamento ${agendamento.id}`
+                          );
+                        }}
+                      >
+                        Ver Resultados
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -657,7 +1006,11 @@ const SearchDeepScan = () => {
         <h2 className="text-xl font-semibold mb-4">Próximos Agendamentos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredAgendamentos
-            .filter((item) => new Date(item.dataAgendamento) > new Date())
+            .filter(
+              (item) =>
+                item.status === "Agendado" &&
+                new Date(item.dataAgendamento) > new Date()
+            )
             .sort(
               (a, b) =>
                 new Date(a.dataAgendamento) - new Date(b.dataAgendamento)
@@ -684,48 +1037,53 @@ const SearchDeepScan = () => {
                 </div>
                 <p className="text-sm text-gray-500 mb-2">
                   <span className="font-medium">Data/Hora:</span>{" "}
-                  {new Date(agendamento.dataAgendamento).toLocaleDateString(
-                    "pt-BR",
-                    {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}
+                  {formatDate(agendamento.dataAgendamento)}
                 </p>
                 <p className="text-sm text-gray-500 mb-2">
                   <span className="font-medium">Responsável:</span>{" "}
                   {agendamento.responsavel}
                 </p>
                 <p className="text-sm text-gray-500 mb-2">
-                  <span className="font-medium">Redes:</span>
+                  <span className="font-medium">Plataformas:</span>
                 </p>
                 <div className="flex flex-wrap gap-1 mb-2">
-                  {agendamento.redesSociais.map((rede, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                    >
-                      {rede}
-                    </span>
-                  ))}
+                  {agendamento.redesSociais &&
+                    agendamento.redesSociais.map((rede, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        {rede}
+                      </span>
+                    ))}
                 </div>
                 <div className="flex justify-end mt-2">
                   <button
                     className="text-sm text-blue-600 hover:text-blue-800"
                     onClick={() => {
-                      // Lógica para visualizar detalhes
-                      alert(`Detalhes do agendamento ${agendamento.id}`);
+                      // Iniciar monitoramento de progresso
+                      startProgressMonitoring(agendamento.scrapeId);
+                      alert(
+                        `Monitoramento iniciado para o agendamento ${agendamento.id}`
+                      );
                     }}
                   >
-                    Ver detalhes
+                    Monitorar
                   </button>
                 </div>
               </div>
             ))}
         </div>
+
+        {filteredAgendamentos.filter(
+          (item) =>
+            item.status === "Agendado" &&
+            new Date(item.dataAgendamento) > new Date()
+        ).length === 0 && (
+          <p className="text-center text-gray-500 py-4">
+            Não há agendamentos futuros.
+          </p>
+        )}
       </div>
 
       {/* Ações em Lote */}
@@ -735,8 +1093,44 @@ const SearchDeepScan = () => {
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             onClick={() => {
-              // Lógica para exportar agendamentos
-              alert("Exportando agendamentos...");
+              // Exportar agendamentos como CSV
+              const headers = [
+                "ID",
+                "Empresa",
+                "Data/Hora",
+                "Plataformas",
+                "Frequência",
+                "Responsável",
+                "Status",
+              ];
+              const csvContent = [
+                headers.join(","),
+                ...filteredAgendamentos.map((item) =>
+                  [
+                    item.id,
+                    item.empresa,
+                    formatDate(item.dataAgendamento),
+                    item.redesSociais ? item.redesSociais.join(";") : "",
+                    item.frequencia,
+                    item.responsavel,
+                    item.status,
+                  ].join(",")
+                ),
+              ].join("\n");
+
+              const blob = new Blob([csvContent], {
+                type: "text/csv;charset=utf-8;",
+              });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.setAttribute(
+                "download",
+                `agendamentos_${new Date().toISOString().split("T")[0]}.csv`
+              );
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
             }}
           >
             Exportar Agendamentos
@@ -744,8 +1138,9 @@ const SearchDeepScan = () => {
           <button
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
             onClick={() => {
-              // Lógica para gerar relatório
+              // Gerar relatório
               alert("Gerando relatório de agendamentos...");
+              // Aqui você poderia implementar uma função para gerar um relatório mais detalhado
             }}
           >
             Gerar Relatório
@@ -753,8 +1148,11 @@ const SearchDeepScan = () => {
           <button
             className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
             onClick={() => {
-              // Lógica para agendar em lote
-              alert("Abrindo agendamento em lote...");
+              // Agendar em lote
+              alert(
+                "Para agendar em lote, prepare um arquivo CSV com os dados e importe-o."
+              );
+              // Aqui você poderia implementar um modal para upload de CSV
             }}
           >
             Agendar em Lote
@@ -762,11 +1160,20 @@ const SearchDeepScan = () => {
           <button
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
             onClick={() => {
-              // Lógica para cancelar agendamentos selecionados
-              alert("Cancelando agendamentos selecionados...");
+              // Cancelar todos os agendamentos pendentes
+              if (
+                window.confirm(
+                  "Tem certeza que deseja cancelar todos os agendamentos pendentes?"
+                )
+              ) {
+                // Implementar lógica para cancelar todos os agendamentos pendentes
+                alert(
+                  "Função de cancelamento em lote será implementada em breve."
+                );
+              }
             }}
           >
-            Cancelar Selecionados
+            Cancelar Pendentes
           </button>
         </div>
       </div>
@@ -790,10 +1197,7 @@ const SearchDeepScan = () => {
                   Responsável
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Redes Monitoradas
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Violações
+                  Plataformas Monitoradas
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -804,74 +1208,93 @@ const SearchDeepScan = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {monitoringSchedules.slice(0, 5).map((schedule, index) => (
-                <tr
-                  key={index}
-                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {schedule.empresa}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(schedule.dataAgendamento).toLocaleDateString(
-                      "pt-BR",
-                      {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {schedule.responsavel}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    <div className="flex flex-wrap gap-1">
-                      {schedule.redesMonitorar.map((rede, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                        >
-                          {rede}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      {Math.floor(Math.random() * 5)} detectadas
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        schedule.status === "Agendado"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : schedule.status === "Em andamento"
-                          ? "bg-blue-100 text-blue-800"
-                          : schedule.status === "Concluído"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {schedule.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button
-                      className="text-blue-600 hover:text-blue-900"
-                      onClick={() => {
-                        // Lógica para ver relatório
-                        alert(`Ver relatório do monitoramento ${schedule.id}`);
-                      }}
-                    >
-                      Ver Relatório
-                    </button>
+              {filteredAgendamentos
+                .filter(
+                  (item) =>
+                    item.status === "Concluído" ||
+                    item.status === "Falhou" ||
+                    (item.status === "Cancelado" && item.ultimaExecucao)
+                )
+                .sort(
+                  (a, b) =>
+                    new Date(b.ultimaExecucao || b.dataAgendamento) -
+                    new Date(a.ultimaExecucao || a.dataAgendamento)
+                )
+                .slice(0, 5)
+                .map((agendamento, index) => (
+                  <tr
+                    key={index}
+                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {agendamento.empresa}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(
+                        agendamento.ultimaExecucao ||
+                          agendamento.dataAgendamento
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {agendamento.responsavel}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      <div className="flex flex-wrap gap-1">
+                        {agendamento.redesSociais &&
+                          agendamento.redesSociais.map((rede, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                            >
+                              {rede}
+                            </span>
+                          ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          agendamento.status === "Concluído"
+                            ? "bg-green-100 text-green-800"
+                            : agendamento.status === "Falhou"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {agendamento.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <button
+                        className="text-blue-600 hover:text-blue-900"
+                        onClick={() => {
+                          // Lógica para ver relatório/resultados
+                          alert(
+                            `Ver resultados do monitoramento ${agendamento.id}`
+                          );
+                        }}
+                      >
+                        Ver Resultados
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+
+              {filteredAgendamentos.filter(
+                (item) =>
+                  item.status === "Concluído" ||
+                  item.status === "Falhou" ||
+                  (item.status === "Cancelado" && item.ultimaExecucao)
+              ).length === 0 && (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="px-6 py-4 text-center text-sm text-gray-500"
+                  >
+                    Nenhum histórico de monitoramento disponível.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -916,8 +1339,8 @@ const SearchDeepScan = () => {
               Monitoramento Completo
             </h3>
             <p className="text-sm text-gray-600">
-              Inclua todas as redes sociais da empresa para garantir uma
-              cobertura completa e evitar violações não detectadas.
+              Inclua todas as plataformas da empresa para garantir uma cobertura
+              completa e evitar violações não detectadas.
             </p>
           </div>
           <div className="border-l-4 border-yellow-500 pl-4 py-2">
@@ -927,6 +1350,46 @@ const SearchDeepScan = () => {
               remoção do conteúdo em até 24 horas.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Status da API */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 className="text-xl font-semibold mb-4">Status da API</h2>
+        <div className="flex items-center mb-4">
+          <div
+            className={`w-3 h-3 rounded-full mr-2 ${
+              error ? "bg-red-500" : "bg-green-500"
+            }`}
+          ></div>
+          <span className="text-sm font-medium">
+            {error ? "API com problemas" : "API operacional"}
+          </span>
+        </div>
+
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-700">{error}</p>
+            <button
+              className="mt-2 text-xs text-blue-600 hover:text-blue-800"
+              onClick={() => getScheduledTasks()}
+            >
+              Tentar reconectar
+            </button>
+          </div>
+        )}
+
+        <div className="mt-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">
+            Endpoints disponíveis:
+          </h3>
+          <ul className="text-sm text-gray-600 space-y-1 ml-4 list-disc">
+            <li>Agendamento de monitoramentos</li>
+            <li>Validação de perfis</li>
+            <li>Busca de dados por perfil</li>
+            <li>Monitoramento de progresso em tempo real</li>
+            <li>Filtragem de dados raspados</li>
+          </ul>
         </div>
       </div>
     </div>

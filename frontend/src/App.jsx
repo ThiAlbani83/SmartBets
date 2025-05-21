@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import RedirectAuthenticatedUser from "./components/RedirectAuthenticatedUser";
 import HomePage from "./pages/HomePage";
 import InvitedUserRegistration from "./pages/authenticate/InvitedUserRegistration";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   const { checkAuth } = useAuthStore();
@@ -37,6 +38,7 @@ function App() {
     <div
       className={`relative flex items-center justify-center h-screen min-h-screen overflow-hidden ${getBackgroundClass()}`}
     >
+      <Toaster position="top-center" />
       <Routes>
         <Route
           path="/login"

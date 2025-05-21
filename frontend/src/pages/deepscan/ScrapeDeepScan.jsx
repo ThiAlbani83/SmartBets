@@ -535,7 +535,7 @@ const ScrapeDeepScan = () => {
       </div>
 
       {/* Ações em Lote */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Ações em Lote</h2>
         <div className="flex flex-wrap gap-4">
           <button
@@ -575,7 +575,7 @@ const ScrapeDeepScan = () => {
             Notificar Violações
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
