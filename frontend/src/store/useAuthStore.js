@@ -5,6 +5,16 @@ import axios from "axios";
 
 const API_URL = "http://89.116.74.250:5002/api/auth";
 axios.defaults.withCredentials = true;
+axios.interceptors.request.use((config) => {
+  if (config.headers) {
+    delete config.headers["x-api-secret"];
+    delete config.headers["X-API-SECRET"];
+    delete config.headers["x-api-key"];
+    delete config.headers["X-API-KEY"];
+  }
+  return config;
+});
+
 
 export const useAuthStore = create((set) => ({
   user: null,
@@ -20,7 +30,12 @@ export const useAuthStore = create((set) => ({
       const res = await axios.post(
         `${API_URL}/login`,
         { email, password },
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          }, 
+        }
       );
 
       // Armazena o estado do usuário no localStorage

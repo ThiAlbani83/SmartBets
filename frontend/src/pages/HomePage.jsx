@@ -42,7 +42,7 @@ import HomeDeepScan from "./deepscan/HomeDeepScan";
 import ScrapeDeepScan from "./deepscan/ScrapeDeepScan";
 import BetCrawlerDeepScan from "./deepscan/BetCrawlerDeepScan";
 import Antifraude from "./sigap/Antifraude";
-import ClientRegistration from "./deepscan/ClientRegistration";
+// import ClientRegistration from "./deepscan/ClientRegistration";
 
 const HomePage = () => {
   const { user } = useAuthStore();

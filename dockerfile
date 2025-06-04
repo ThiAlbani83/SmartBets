@@ -26,7 +26,7 @@ RUN npx prisma generate
 WORKDIR /tropicalize-app
 
 # Expor a porta que o servidor usa
-EXPOSE 5000
+EXPOSE 5002
 
 # Comando para rodar o servidor
 CMD ["npm", "run", "dev"]

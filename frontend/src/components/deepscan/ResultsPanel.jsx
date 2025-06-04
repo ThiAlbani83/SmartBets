@@ -96,6 +96,7 @@ const ResultsPanel = ({
   }, [resultsData, selectedPlatforms]);
 
   return (
+    
     <div className="bg-white rounded-lg shadow-md w-full max-w-full mb-8 overflow-hidden">
       <div className="bg-gray-100 px-4 py-3 rounded-t-lg border-b flex flex-wrap justify-between items-center">
         <h2 className="text-lg sm:text-xl font-semibold">
