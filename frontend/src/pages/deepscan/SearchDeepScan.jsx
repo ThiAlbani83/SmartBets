@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { registerBet } from "../../utils/fakeData.js";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,10 +12,7 @@ import {
   Filler,
   ArcElement,
 } from "chart.js";
-import { Bar, Pie } from "react-chartjs-2";
 import { useDeepScanStore } from "../../store/useDeepscanStore.js";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 // Registrar os componentes do Chart.js
 ChartJS.register(
@@ -33,33 +29,12 @@ ChartJS.register(
 );
 
 const SearchDeepScan = () => {
-  const {
-    scheduleScraping,
-    scheduledTasks,
-    getScheduledTasks,
-    cancelScheduledTask,
-    monitorScrapeProgress,
-    isLoading,
-    error,
-    platforms,
-  } = useDeepScanStore();
-
-  const [empresas, setEmpresas] = useState([]);
-  const [selectedEmpresa, setSelectedEmpresa] = useState("");
-  const [selectedRedes, setSelectedRedes] = useState([]);
-  const [agendamentos, setAgendamentos] = useState([]);
-  const [filteredAgendamentos, setFilteredAgendamentos] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  const [progressMonitors, setProgressMonitors] = useState({});
-
-  // Form state
   const [formData, setFormData] = useState({
-    empresa: "",
     profiles: [],
+    keywords: [],
     searchPhrases: [],
     platforms: [],
-    format: "DB", // Default format as per API
+    format: "DB",
     selectedDays: [],
     startHour: "08:00",
     afterDate: "",
@@ -68,461 +43,239 @@ const SearchDeepScan = () => {
     responsavel: "",
     observacoes: "",
   });
+  const [error, setError] = useState("");
 
-  // Estatísticas
-  const [agendamentosPorEmpresa, setAgendamentosPorEmpresa] = useState({});
-  const [agendamentosPorDia, setAgendamentosPorDia] = useState({});
-
-  // Função para formatar tarefas agendadas da API para o formato da UI
-  const formatScheduledTasks = (tasks) => {
-    return tasks.map((task, index) => {
-      // Extrair dia e hora da data agendada
-      const scheduledDate = new Date(task.scheduledAt || new Date());
-
-      return {
-        id: task.scrapeId || `MS${index + 1}`.padStart(5, "0"),
-        empresa: task.clientName || selectedEmpresa || "Cliente",
-        redesSociais: task.platforms || [],
-        dataAgendamento: task.scheduledAt || new Date().toISOString(),
-        frequencia: task.recurring ? "Mensal" : "Única",
-        responsavel: task.responsavel || "Sistema",
-        status: task.status || "Agendado",
-        ultimaExecucao: task.lastRun || null,
-        proximaExecucao: task.nextRun || task.scheduledAt,
-        observacoes: task.notes || "",
-        scrapeId: task.scrapeId,
-        day: task.day,
-        time: task.time,
-      };
-    });
-  };
-
-  useEffect(() => {
-    // Buscar tarefas agendadas quando o componente montar
-    const fetchScheduledTasks = async () => {
-      const tasks = await getScheduledTasks();
-      const formattedTasks = formatScheduledTasks(tasks);
-      setAgendamentos(formattedTasks);
-    };
-
-    fetchScheduledTasks();
-
-    // Extrair empresas únicas dos dados
-    const empresasData = registerBet.map((item) => item.empresa);
-    setEmpresas(empresasData);
-
-    // Filtrar agendamentos com base na busca
-    let filtered = [...agendamentos];
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (item) =>
-          item.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.responsavel.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Ordenar resultados se necessário
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "asc" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "asc" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
-    setFilteredAgendamentos(filtered);
-
-    // Calcular estatísticas
-    const agendEmpresa = {};
-    agendamentos.forEach((item) => {
-      if (!agendEmpresa[item.empresa]) {
-        agendEmpresa[item.empresa] = 0;
-      }
-      agendEmpresa[item.empresa] += 1;
-    });
-    setAgendamentosPorEmpresa(agendEmpresa);
-
-    // Agendamentos por dia da semana
-    const agendDia = {
-      Segunda: 0,
-      Terça: 0,
-      Quarta: 0,
-      Quinta: 0,
-      Sexta: 0,
-      Sábado: 0,
-      Domingo: 0,
-    };
-
-    agendamentos.forEach((item) => {
-      const date = new Date(item.dataAgendamento);
-      const diaSemana = date.getDay();
-      const diasSemana = [
-        "Domingo",
-        "Segunda",
-        "Terça",
-        "Quarta",
-        "Quinta",
-        "Sexta",
-        "Sábado",
-      ];
-      agendDia[diasSemana[diaSemana]] += 1;
-    });
-    setAgendamentosPorDia(agendDia);
-  }, [getScheduledTasks, searchTerm, sortConfig]);
-
-  // Atualizar filteredAgendamentos quando agendamentos mudar
-  useEffect(() => {
-    setFilteredAgendamentos(agendamentos);
-  }, [agendamentos]);
-
-  // Função para ordenar resultados
-  const requestSort = (key) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
-
-  // Manipulação do formulário
+  // Função para lidar com a mudança dos inputs do formulário
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-
-    if (name === "empresa") {
-      const empresaSelecionada = registerBet.find(
-        (item) => item.empresa === value
-      );
-      if (empresaSelecionada) {
-        // Pré-selecionar redes sociais da empresa
-        const redesDisponiveis = Object.keys(
-          empresaSelecionada.redesSociais
-        ).map((key) => key.charAt(0).toUpperCase() + key.slice(1));
-        setSelectedRedes(redesDisponiveis);
-        setFormData({
-          ...formData,
-          empresa: value,
-          platforms: redesDisponiveis,
-        });
-      }
-    }
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleProfilesChange = (e) => {
-    const profiles = e.target.value.split(",").map((profile) => profile.trim());
     setFormData({
       ...formData,
-      profiles,
+      profiles: e.target.value.split(",").map((profile) => profile.trim()),
     });
+    setError(""); // Limpar erro
+  };
+
+  const handleKeywordsChange = (e) => {
+    setFormData({
+      ...formData,
+      keywords: e.target.value.split(",").map((keyword) => keyword.trim()),
+    });
+    setError(""); // Limpar erro
   };
 
   const handleSearchPhrasesChange = (e) => {
-    const searchPhrases = e.target.value
-      .split(",")
-      .map((phrase) => phrase.trim());
     setFormData({
       ...formData,
-      searchPhrases,
+      searchPhrases: e.target.value.split(",").map((phrase) => phrase.trim()),
     });
   };
 
   const handlePlatformsChange = (e) => {
     const { value, checked } = e.target;
-    let novasPlatforms = [...formData.platforms];
-
-    if (checked) {
-      novasPlatforms.push(value);
-    } else {
-      novasPlatforms = novasPlatforms.filter((platform) => platform !== value);
-    }
-
-    setFormData({
-      ...formData,
-      platforms: novasPlatforms,
-    });
+    const updatedPlatforms = checked
+      ? [...formData.platforms, value]
+      : formData.platforms.filter((platform) => platform !== value);
+    setFormData({ ...formData, platforms: updatedPlatforms });
   };
 
   const handleSelectedDaysChange = (e) => {
     const { value, checked } = e.target;
-    const day = parseInt(value, 10);
-    let novosDias = [...formData.selectedDays];
-
-    if (checked) {
-      novosDias.push(day);
-    } else {
-      novosDias = novosDias.filter((d) => d !== day);
-    }
-
-    setFormData({
-      ...formData,
-      selectedDays: novosDias,
-    });
+    const updatedDays = checked
+      ? [...formData.selectedDays, parseInt(value)]
+      : formData.selectedDays.filter((day) => day !== parseInt(value));
+    setFormData({ ...formData, selectedDays: updatedDays });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Função para fazer a requisição de agendamento
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-    // Preparar dados para a API
-    const scrapingParams = {
-      profiles: formData.profiles,
-      searchPhrases: formData.searchPhrases,
-      platforms: formData.platforms,
-      format: formData.format,
-      selectedDays: formData.selectedDays,
-      startHour: formData.startHour,
-      afterDate: formData.afterDate || undefined,
-      beforeDate: formData.beforeDate || undefined,
-    };
+  // Verificar se 'profiles' ou 'keywords' não estão vazios
+  if (formData.profiles.length === 0 && formData.keywords.length === 0) {
+    setError("Pelo menos um perfil ou palavra-chave deve ser fornecido.");
+    setIsLoading(false);
+    return;
+  }
 
+  // Verificar se os campos obrigatórios foram preenchidos
+  if (formData.platforms.length === 0) {
+    setError("Pelo menos uma plataforma deve ser selecionada.");
+    setIsLoading(false);
+    return;
+  }
+
+  if (formData.selectedDays.length === 0) {
+    setError("Pelo menos um dia do mês deve ser selecionado.");
+    setIsLoading(false);
+    return;
+  }
+
+  if (!formData.startHour) {
+    setError("O horário de início é obrigatório.");
+    setIsLoading(false);
+    return;
+  }
+
+  if (!formData.frequencia) {
+    setError("A frequência é obrigatória.");
+    setIsLoading(false);
+    return;
+  }
+
+  // Limpar o erro caso os campos estejam corretamente preenchidos
+  setError("");
+
+  const scrapingParams = {
+    searchPhrases: formData.searchPhrases,
+    platforms: formData.platforms,
+    format: formData.format,
+    selectedDays: formData.selectedDays,
+    startHour: formData.startHour,
+    afterDate: formData.afterDate || undefined,
+    beforeDate: formData.beforeDate || undefined,
+  };
+
+  const makeRequest = async (params, type) => {
     try {
-      // Chamar a API para agendar a raspagem
-      const result = await scheduleScraping(scrapingParams);
-
-      if (result.success) {
-        // Adicionar à lista de agendamentos local para UI
-        const novosAgendamentos = result.scheduled.map((schedule) => {
-          // Criar uma data válida para o agendamento
-          const currentDate = new Date();
-          const currentYear = currentDate.getFullYear();
-          const currentMonth = currentDate.getMonth();
-
-          // Criar uma data para o dia agendado no mês atual
-          // Se o dia for maior que o último dia do mês, usar o último dia
-          const lastDayOfMonth = new Date(
-            currentYear,
-            currentMonth + 1,
-            0
-          ).getDate();
-          const scheduledDay = Math.min(schedule.day, lastDayOfMonth);
-
-          // Extrair horas e minutos do horário
-          const [hours, minutes] = schedule.time.split(":").map(Number);
-
-          // Criar um objeto de data válido
-          const scheduledDate = new Date(
-            currentYear,
-            currentMonth,
-            scheduledDay,
-            hours,
-            minutes
-          );
-
-          // Se a data já passou neste mês, agendar para o próximo mês
-          if (scheduledDate < currentDate) {
-            scheduledDate.setMonth(scheduledDate.getMonth() + 1);
-          }
-
-          return {
-            id:
-              schedule.scrapeId ||
-              `MS${agendamentos.length + 1}`.padStart(5, "0"),
-            empresa: formData.empresa,
-            redesSociais: formData.platforms,
-            dataAgendamento: scheduledDate.toISOString(),
-            frequencia: formData.frequencia,
-            responsavel: formData.responsavel,
-            status: "Agendado",
-            ultimaExecucao: null,
-            proximaExecucao: scheduledDate.toISOString(),
-            observacoes: formData.observacoes,
-            scrapeId: schedule.scrapeId,
-            day: schedule.day,
-            time: schedule.time,
-          };
-        });
-
-        setAgendamentos([...agendamentos, ...novosAgendamentos]);
-
-        // Limpar formulário
-        setFormData({
-          empresa: "",
-          profiles: [],
-          searchPhrases: [],
-          platforms: [],
-          format: "DB",
-          selectedDays: [],
-          startHour: "08:00",
-          afterDate: "",
-          beforeDate: "",
-          frequencia: "Mensal",
-          responsavel: "",
-          observacoes: "",
-        });
-
-        alert("Agendamento criado com sucesso!");
-      } else {
-        alert(`Erro ao agendar: ${result.error || "Erro desconhecido"}`);
-      }
-    } catch (error) {
-      console.error("Erro ao agendar raspagem:", error);
-      alert(`Erro ao agendar: ${error.message || "Erro desconhecido"}`);
-    }
-  };
-
-  // Função para cancelar um agendamento
-  const handleCancelSchedule = async (scrapeId) => {
-    if (window.confirm(`Deseja cancelar o agendamento?`)) {
-      try {
-        const result = await cancelScheduledTask(scrapeId);
-
-        if (result.success) {
-          // Remover da lista local
-          const updatedAgendamentos = agendamentos.filter(
-            (item) => item.scrapeId !== scrapeId
-          );
-          setAgendamentos(updatedAgendamentos);
-          alert("Agendamento cancelado com sucesso!");
-        } else {
-          alert(`Erro ao cancelar: ${result.error}`);
-        }
-      } catch (error) {
-        console.error("Erro ao cancelar agendamento:", error);
-        alert(`Erro ao cancelar: ${error.message || "Erro desconhecido"}`);
-      }
-    }
-  };
-
-  // Função para iniciar monitoramento de progresso
-  const startProgressMonitoring = (scrapeId) => {
-    // Inicializar o estado de progresso
-    setProgressMonitors((prev) => ({
-      ...prev,
-      [scrapeId]: { progress: 0, message: "Iniciando monitoramento..." },
-    }));
-
-    // Iniciar o monitoramento via SSE
-    const closeMonitor = monitorScrapeProgress(scrapeId, (data) => {
-      if (data.error) {
-        setProgressMonitors((prev) => ({
-          ...prev,
-          [scrapeId]: {
-            ...prev[scrapeId],
-            error: data.error,
-            message: "Erro no monitoramento",
-          },
-        }));
-        return;
-      }
-
-      setProgressMonitors((prev) => ({
-        ...prev,
-        [scrapeId]: {
-          progress: data.progress,
-          message: data.message,
-          status: data.status,
+      const response = await fetch("http://89.116.74.250:5001/api/v1/schedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
+          "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b", // Substitua com sua chave de API
+          "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a", // Substitua com seu segredo de API
         },
-      }));
+        body: JSON.stringify(params),
+      });
 
-      // Atualizar o status do agendamento na lista
-      if (
-        data.status === "completed" ||
-        data.status === "failed" ||
-        data.status === "cancelled"
-      ) {
-        setAgendamentos((prev) =>
-          prev.map((item) =>
-            item.scrapeId === scrapeId
-              ? {
-                  ...item,
-                  status:
-                    data.status === "completed"
-                      ? "Concluído"
-                      : data.status === "failed"
-                      ? "Falhou"
-                      : "Cancelado",
-                  ultimaExecucao: new Date().toISOString(),
-                }
-              : item
-          )
-        );
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        alert(`${type} Agendado com sucesso!`);
+      } else {
+        setError(result.error || "Erro desconhecido");
       }
-    });
-
-    // Retornar função para parar o monitoramento
-    return closeMonitor;
+    } catch (err) {
+      setError(err.message || "Erro ao agendar");
+    }
   };
 
-  // Preparar dados para gráficos
-  const agendamentosEmpresaData = {
-    labels: Object.keys(agendamentosPorEmpresa),
-    datasets: [
-      {
-        label: "Agendamentos por Empresa",
-        data: Object.values(agendamentosPorEmpresa),
-        backgroundColor: "rgba(53, 162, 235, 0.5)",
-      },
-    ],
-  };
+  // Realizar a requisição para 'profiles' ou 'keywords' separadamente
+  const requests = [];
 
-  const agendamentosDiaData = {
-    labels: Object.keys(agendamentosPorDia),
-    datasets: [
-      {
-        label: "Agendamentos por Dia da Semana",
-        data: Object.values(agendamentosPorDia),
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.5)",
-          "rgba(54, 162, 235, 0.5)",
-          "rgba(255, 206, 86, 0.5)",
-          "rgba(75, 192, 192, 0.5)",
-          "rgba(153, 102, 255, 0.5)",
-          "rgba(255, 159, 64, 0.5)",
-          "rgba(199, 199, 199, 0.5)",
-        ],
-      },
-    ],
-  };
+  // Se houver 'profiles', fazer a requisição
+  if (formData.profiles.length > 0) {
+    const profilesParams = {
+      ...scrapingParams,
+      profiles: formData.profiles,
+    };
+    requests.push(makeRequest(profilesParams, "Perfis"));
+  }
 
-  // Opções para os gráficos
-  const barOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "Agendamentos por Empresa",
-      },
-    },
-  };
+  // Se houver 'keywords', fazer a requisição
+  if (formData.keywords.length > 0) {
+    const keywordsParams = {
+      ...scrapingParams,
+      keywords: formData.keywords,
+    };
+    requests.push(makeRequest(keywordsParams, "Palavras-chave"));
+  }
 
-  const pieOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "Distribuição por Dia da Semana",
-      },
-    },
-  };
+  // Esperar todas as requisições finalizarem
+  await Promise.all(requests);
+
+  setIsLoading(false);
+};
+
+
+
+  // Exemplo de plataformas
+  const platforms = ["Twitter", "Facebook", "Instagram", "Google"];
 
   // Gerar dias do mês para seleção
   const diasDoMes = Array.from({ length: 31 }, (_, i) => i + 1);
 
-  // Função para formatar data
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+  //************************************************************************* */
+  //************************************************************************* */
+  //************************************************************************* */
 
+    const [agendamentos, setAgendamentos] = useState([]);
+    const [filteredAgendamentos, setFilteredAgendamentos] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [sortConfig, setSortConfig] = useState({
+        key: "id", // Coluna inicial para ordenação
+        direction: "asc", // Direção de ordenação inicial (crescente)
+    });
+
+
+    const fetchAgendamentos = async () => {
     try {
-      const date = new Date(dateString);
-      return format(date, "dd/MM/yyyy HH:mm", { locale: ptBR });
+        const response = await fetch("http://89.116.74.250:5001/api/v1/scrapes?limit=100&offset=0", {
+        method: 'GET',
+        headers: {
+            'accept': 'application/json',
+            'X-API-Key': 'c9f93bcc-4369-43de-9a00-6af58446935b', 
+            'X-API-Secret': '74354ff0-2649-4af7-b71e-7086cc14978a' 
+        }
+        });
+
+        const data = await response.json();
+        // Processar os dados recebidos da API
+        const scrapes = data.scrapes.map((scrape) => {
+        const parameters = JSON.parse(scrape.parameters); // Parse do parâmetro JSON
+
+        return {
+            id: scrape.id,
+            client_id: scrape.client_id,
+            status: scrape.status,
+            profiles: parameters.profiles || [],
+            keywords: parameters.keywords || [],
+            platforms: parameters.platforms || [],
+            scheduledAt: scrape.scheduled_at,
+        };
+        });
+
+        // Atualizar os estados com os dados processados
+        setAgendamentos(scrapes);
+        setFilteredAgendamentos(scrapes); // Inicializa com todos os dados
+        setIsLoading(false);
     } catch (error) {
-      console.error("Erro ao formatar data:", error);
-      return "Data inválida";
+        console.error("Erro ao buscar agendamentos:", error);
+        setIsLoading(false);
     }
-  };
+    };
+
+
+    useEffect(() => {
+        fetchAgendamentos(); // Chama a função de fetch quando o componente é montado
+    }, []);
+
+    const requestSort = (key) => {
+        let direction = "asc";
+        if (sortConfig.key === key && sortConfig.direction === "asc") {
+            direction = "desc";
+        }
+        const sortedData = [...filteredAgendamentos].sort((a, b) => {
+            if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
+            if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
+            return 0;
+        });
+        setFilteredAgendamentos(sortedData);
+        setSortConfig({ key, direction });
+    };
+
+
+    const formatDate = (date) => {
+        const d = new Date(date);
+        return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+    };
+
+
 
   return (
     <div className="mx-auto px-4 py-8 flex flex-col">
@@ -532,42 +285,7 @@ const SearchDeepScan = () => {
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Novo Agendamento</h2>
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Empresa
-              </label>
-              <select
-                name="empresa"
-                value={formData.empresa}
-                onChange={handleInputChange}
-                required
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Selecione uma empresa</option>
-                {empresas.map((empresa, index) => (
-                  <option key={index} value={empresa}>
-                    {empresa}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Responsável
-              </label>
-              <input
-                type="text"
-                name="responsavel"
-                value={formData.responsavel}
-                onChange={handleInputChange}
-                required
-                placeholder="Nome do responsável"
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
+          {/* Perfis e Termos de Busca */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -579,24 +297,25 @@ const SearchDeepScan = () => {
                 value={formData.profiles.join(", ")}
                 onChange={handleProfilesChange}
                 placeholder="usuario1, usuario2, usuario3"
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Termos de Busca (separados por vírgula)
+                Palavras-chave (separadas por vírgula)
               </label>
               <input
                 type="text"
-                name="searchPhrases"
-                value={formData.searchPhrases.join(", ")}
-                onChange={handleSearchPhrasesChange}
-                placeholder="termo1, termo2, termo3"
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                name="keywords"
+                value={formData.keywords.join(", ")}
+                onChange={handleKeywordsChange}
+                placeholder="palavra1, palavra2, palavra3"
+                className="w-full p-2 border border-gray-300 rounded-md"
               />
             </div>
           </div>
 
+          {/* Data e Horário */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -608,7 +327,7 @@ const SearchDeepScan = () => {
                 value={formData.startHour}
                 onChange={handleInputChange}
                 required
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md"
               />
             </div>
             <div>
@@ -620,7 +339,7 @@ const SearchDeepScan = () => {
                 name="afterDate"
                 value={formData.afterDate}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md"
               />
             </div>
             <div>
@@ -632,11 +351,12 @@ const SearchDeepScan = () => {
                 name="beforeDate"
                 value={formData.beforeDate}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md"
               />
             </div>
           </div>
 
+          {/* Plataformas */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Plataformas
@@ -660,6 +380,7 @@ const SearchDeepScan = () => {
             </div>
           </div>
 
+          {/* Dias do mês */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Dias do Mês para Agendamento
@@ -683,6 +404,7 @@ const SearchDeepScan = () => {
             </div>
           </div>
 
+          {/* Frequência */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Frequência
@@ -692,7 +414,7 @@ const SearchDeepScan = () => {
               value={formData.frequencia}
               onChange={handleInputChange}
               required
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border border-gray-300 rounded-md"
             >
               <option value="Única">Única</option>
               <option value="Diária">Diária</option>
@@ -702,25 +424,12 @@ const SearchDeepScan = () => {
             </select>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Observações
-            </label>
-            <textarea
-              name="observacoes"
-              value={formData.observacoes}
-              onChange={handleInputChange}
-              rows="3"
-              placeholder="Observações adicionais sobre o monitoramento"
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            ></textarea>
-          </div>
-
-          {error && (
+        {/* Exibindo erro */}
+        {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-              {error}
+                {error}
             </div>
-          )}
+        )}
 
           <div className="flex justify-end">
             <button
@@ -737,7 +446,7 @@ const SearchDeepScan = () => {
       </div>
 
       {/* Estatísticas e Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">
             Agendamentos por Empresa
@@ -754,10 +463,10 @@ const SearchDeepScan = () => {
             <Pie data={agendamentosDiaData} options={pieOptions} />
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Filtros */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Filtros</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -790,219 +499,106 @@ const SearchDeepScan = () => {
             </select>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      {/* Tabela de Agendamentos */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+    {/* Tabela de Agendamentos */}
+    <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">
-          Agendamentos ({filteredAgendamentos.length} agendamentos)
+            Agendamentos ({filteredAgendamentos.length} agendamentos)
         </h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("id")}
-                >
-                  ID
-                  {sortConfig.key === "id" && (
-                    <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-                  )}
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("empresa")}
-                >
-                  Empresa
-                  {sortConfig.key === "empresa" && (
-                    <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-                  )}
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("dataAgendamento")}
-                >
-                  Data/Hora
-                  {sortConfig.key === "dataAgendamento" && (
-                    <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-                  )}
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Plataformas
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("frequencia")}
-                >
-                  Frequência
-                  {sortConfig.key === "frequencia" && (
-                    <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-                  )}
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("responsavel")}
-                >
-                  Responsável
-                  {sortConfig.key === "responsavel" && (
-                    <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-                  )}
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("status")}
-                >
-                  Status
-                  {sortConfig.key === "status" && (
-                    <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-                  )}
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAgendamentos.map((agendamento, index) => (
-                <tr
-                  key={index}
-                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {agendamento.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {agendamento.empresa}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(agendamento.dataAgendamento)}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    <div className="flex flex-wrap gap-1">
-                      {agendamento.redesSociais &&
-                        agendamento.redesSociais.map((rede, idx) => (
-                          <span
-                            key={idx}
-                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                          >
-                            {rede}
-                          </span>
-                        ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {agendamento.frequencia}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {agendamento.responsavel}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+            <tr>
+            <th
+                scope="col"
+                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+                ID
+            </th>
+            <th
+                scope="col"
+                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+                Data/Hora
+            </th>
+            <th
+                scope="col"
+                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+                Plataformas
+            </th>
+            <th
+                scope="col"
+                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+                Perfis
+            </th>
+            <th
+                scope="col"
+                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+                Keywords
+            </th>
+            <th
+                scope="col"
+                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+                Status
+            </th>
+            </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+            {filteredAgendamentos.map((agendamento, index) => (
+            <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
+                {agendamento.id}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {formatDate(agendamento.scheduledAt)}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-500">
+                <div className="flex flex-wrap gap-1">
+                    {agendamento.platforms.map((platform, idx) => (
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        agendamento.status === "Agendado"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : agendamento.status === "Em andamento"
-                          ? "bg-blue-100 text-blue-800"
-                          : agendamento.status === "Concluído"
-                          ? "bg-green-100 text-green-800"
-                          : agendamento.status === "Falhou"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
+                        key={idx}
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
                     >
-                      {agendamento.status}
+                        {platform}
                     </span>
+                    ))}
+                </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {agendamento.profiles.length > 0 ? agendamento.profiles.join(", ") : "-"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {agendamento.keywords.length > 0 ? agendamento.keywords.join(", ") : "-"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    agendamento.status === "scheduled"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : agendamento.status === "completed"
+                        ? "bg-green-100 text-green-800"
+                        : agendamento.status === "failed"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                >
+                    {agendamento.status}
+                </span>
+                </td>
+            </tr>
+            ))}
+        </tbody>
+        </table>
+    </div>
 
-                    {/* Mostrar progresso se estiver em andamento */}
-                    {progressMonitors[agendamento.scrapeId] && (
-                      <div className="mt-1">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div
-                            className="bg-blue-600 h-2.5 rounded-full"
-                            style={{
-                              width: `${
-                                progressMonitors[agendamento.scrapeId].progress
-                              }%`,
-                            }}
-                          ></div>
-                        </div>
-                        <p className="text-xs mt-1">
-                          {progressMonitors[agendamento.scrapeId].message}
-                        </p>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {agendamento.status === "Agendado" && (
-                      <>
-                        <button
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                          onClick={() => {
-                            // Iniciar monitoramento de progresso
-                            startProgressMonitoring(agendamento.scrapeId);
-                          }}
-                        >
-                          Monitorar
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900"
-                          onClick={() =>
-                            handleCancelSchedule(agendamento.scrapeId)
-                          }
-                        >
-                          Cancelar
-                        </button>
-                      </>
-                    )}
 
-                    {agendamento.status === "Em andamento" && (
-                      <button
-                        className="text-orange-600 hover:text-orange-900"
-                        onClick={() =>
-                          handleCancelSchedule(agendamento.scrapeId)
-                        }
-                      >
-                        Interromper
-                      </button>
-                    )}
-
-                    {(agendamento.status === "Concluído" ||
-                      agendamento.status === "Falhou") && (
-                      <button
-                        className="text-green-600 hover:text-green-900"
-                        onClick={() => {
-                          // Lógica para ver resultados
-                          alert(
-                            `Ver resultados do agendamento ${agendamento.id}`
-                          );
-                        }}
-                      >
-                        Ver Resultados
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       {/* Próximos Agendamentos */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Próximos Agendamentos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredAgendamentos
@@ -1084,10 +680,10 @@ const SearchDeepScan = () => {
             Não há agendamentos futuros.
           </p>
         )}
-      </div>
+      </div> */}
 
       {/* Ações em Lote */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Ações em Lote</h2>
         <div className="flex flex-wrap gap-4">
           <button
@@ -1176,10 +772,10 @@ const SearchDeepScan = () => {
             Cancelar Pendentes
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Histórico de Monitoramentos */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">
           Histórico de Monitoramentos Recentes
         </h2>
@@ -1309,7 +905,7 @@ const SearchDeepScan = () => {
             Ver histórico completo →
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Dicas e Melhores Práticas */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -1351,10 +947,10 @@ const SearchDeepScan = () => {
             </p>
           </div>
         </div>
-      </div>
+      </div> 
 
       {/* Status da API */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Status da API</h2>
         <div className="flex items-center mb-4">
           <div
@@ -1391,7 +987,7 @@ const SearchDeepScan = () => {
             <li>Filtragem de dados raspados</li>
           </ul>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
