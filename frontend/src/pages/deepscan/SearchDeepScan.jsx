@@ -13,6 +13,7 @@ import {
   ArcElement,
 } from "chart.js";
 import { useDeepScanStore } from "../../store/useDeepscanStore.js";
+import { FiEdit2, FiPause, FiTrash2 } from "react-icons/fi";
 
 // Registrar os componentes do Chart.js
 ChartJS.register(
@@ -44,6 +45,49 @@ const SearchDeepScan = () => {
     observacoes: "",
   });
   const [error, setError] = useState("");
+  // Adicione este estado no início do componente, junto com os outros useState
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [newProfile, setNewProfile] = useState({ name: "", platform: "" });
+  const handleViewResult = (agendamento) => {
+    // Implementar lógica para visualizar resultado
+    console.log("Visualizar resultado:", agendamento);
+    // Aqui você pode abrir um modal, navegar para outra página, etc.
+  };
+
+  // Adicione estas plataformas no início do componente
+  const profilePlatforms = [
+    "Instagram",
+    "Facebook",
+    "Google",
+    "X",
+    "LinkedIn",
+    "Youtube",
+    "Discord",
+    "Telegram",
+    "Deep/Dark",
+    "Tiktok",
+    "Reddit",
+    "Sites de Noticias",
+    "Blogs",
+  ];
+
+  const handleAddProfile = () => {
+    if (newProfile.name.trim() && newProfile.platform) {
+      const profileWithPlatform = `${newProfile.name} (${newProfile.platform})`;
+      setFormData({
+        ...formData,
+        profiles: [...formData.profiles, profileWithPlatform],
+      });
+      setNewProfile({ name: "", platform: "" });
+      setShowProfileModal(false);
+      setError("");
+    }
+  };
+
+  const handleRemoveProfile = (index) => {
+    const updatedProfiles = formData.profiles.filter((_, i) => i !== index);
+    setFormData({ ...formData, profiles: updatedProfiles });
+  };
 
   // Função para lidar com a mudança dos inputs do formulário
   const handleInputChange = (e) => {
@@ -91,108 +135,109 @@ const SearchDeepScan = () => {
   };
 
   // Função para fazer a requisição de agendamento
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  // Verificar se 'profiles' ou 'keywords' não estão vazios
-  if (formData.profiles.length === 0 && formData.keywords.length === 0) {
-    setError("Pelo menos um perfil ou palavra-chave deve ser fornecido.");
-    setIsLoading(false);
-    return;
-  }
-
-  // Verificar se os campos obrigatórios foram preenchidos
-  if (formData.platforms.length === 0) {
-    setError("Pelo menos uma plataforma deve ser selecionada.");
-    setIsLoading(false);
-    return;
-  }
-
-  if (formData.selectedDays.length === 0) {
-    setError("Pelo menos um dia do mês deve ser selecionado.");
-    setIsLoading(false);
-    return;
-  }
-
-  if (!formData.startHour) {
-    setError("O horário de início é obrigatório.");
-    setIsLoading(false);
-    return;
-  }
-
-  if (!formData.frequencia) {
-    setError("A frequência é obrigatória.");
-    setIsLoading(false);
-    return;
-  }
-
-  // Limpar o erro caso os campos estejam corretamente preenchidos
-  setError("");
-
-  const scrapingParams = {
-    searchPhrases: formData.searchPhrases,
-    platforms: formData.platforms,
-    format: formData.format,
-    selectedDays: formData.selectedDays,
-    startHour: formData.startHour,
-    afterDate: formData.afterDate || undefined,
-    beforeDate: formData.beforeDate || undefined,
-  };
-
-  const makeRequest = async (params, type) => {
-    try {
-      const response = await fetch("http://89.116.74.250:5001/api/v1/schedule", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          accept: "application/json",
-          "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b", // Substitua com sua chave de API
-          "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a", // Substitua com seu segredo de API
-        },
-        body: JSON.stringify(params),
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        alert(`${type} Agendado com sucesso!`);
-      } else {
-        setError(result.error || "Erro desconhecido");
-      }
-    } catch (err) {
-      setError(err.message || "Erro ao agendar");
+    // Verificar se 'profiles' ou 'keywords' não estão vazios
+    if (formData.profiles.length === 0 && formData.keywords.length === 0) {
+      setError("Pelo menos um perfil ou palavra-chave deve ser fornecido.");
+      setIsLoading(false);
+      return;
     }
+
+    // Verificar se os campos obrigatórios foram preenchidos
+    if (formData.platforms.length === 0) {
+      setError("Pelo menos uma plataforma deve ser selecionada.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.selectedDays.length === 0) {
+      setError("Pelo menos um dia do mês deve ser selecionado.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.startHour) {
+      setError("O horário de início é obrigatório.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.frequencia) {
+      setError("A frequência é obrigatória.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Limpar o erro caso os campos estejam corretamente preenchidos
+    setError("");
+
+    const scrapingParams = {
+      searchPhrases: formData.searchPhrases,
+      platforms: formData.platforms,
+      format: formData.format,
+      selectedDays: formData.selectedDays,
+      startHour: formData.startHour,
+      afterDate: formData.afterDate || undefined,
+      beforeDate: formData.beforeDate || undefined,
+    };
+
+    const makeRequest = async (params, type) => {
+      try {
+        const response = await fetch(
+          "http://89.116.74.250:5001/api/v1/schedule",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              accept: "application/json",
+              "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b", // Substitua com sua chave de API
+              "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a", // Substitua com seu segredo de API
+            },
+            body: JSON.stringify(params),
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          alert(`${type} Agendado com sucesso!`);
+        } else {
+          setError(result.error || "Erro desconhecido");
+        }
+      } catch (err) {
+        setError(err.message || "Erro ao agendar");
+      }
+    };
+
+    // Realizar a requisição para 'profiles' ou 'keywords' separadamente
+    const requests = [];
+
+    // Se houver 'profiles', fazer a requisição
+    if (formData.profiles.length > 0) {
+      const profilesParams = {
+        ...scrapingParams,
+        profiles: formData.profiles,
+      };
+      requests.push(makeRequest(profilesParams, "Perfis"));
+    }
+
+    // Se houver 'keywords', fazer a requisição
+    if (formData.keywords.length > 0) {
+      const keywordsParams = {
+        ...scrapingParams,
+        keywords: formData.keywords,
+      };
+      requests.push(makeRequest(keywordsParams, "Palavras-chave"));
+    }
+
+    // Esperar todas as requisições finalizarem
+    await Promise.all(requests);
+
+    setIsLoading(false);
   };
-
-  // Realizar a requisição para 'profiles' ou 'keywords' separadamente
-  const requests = [];
-
-  // Se houver 'profiles', fazer a requisição
-  if (formData.profiles.length > 0) {
-    const profilesParams = {
-      ...scrapingParams,
-      profiles: formData.profiles,
-    };
-    requests.push(makeRequest(profilesParams, "Perfis"));
-  }
-
-  // Se houver 'keywords', fazer a requisição
-  if (formData.keywords.length > 0) {
-    const keywordsParams = {
-      ...scrapingParams,
-      keywords: formData.keywords,
-    };
-    requests.push(makeRequest(keywordsParams, "Palavras-chave"));
-  }
-
-  // Esperar todas as requisições finalizarem
-  await Promise.all(requests);
-
-  setIsLoading(false);
-};
-
-
 
   // Exemplo de plataformas
   const platforms = ["Twitter", "Facebook", "Instagram", "Google"];
@@ -204,78 +249,93 @@ const handleSubmit = async (e) => {
   //************************************************************************* */
   //************************************************************************* */
 
-    const [agendamentos, setAgendamentos] = useState([]);
-    const [filteredAgendamentos, setFilteredAgendamentos] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [sortConfig, setSortConfig] = useState({
-        key: "id", // Coluna inicial para ordenação
-        direction: "asc", // Direção de ordenação inicial (crescente)
-    });
+  const [agendamentos, setAgendamentos] = useState([]);
+  const [filteredAgendamentos, setFilteredAgendamentos] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState({
+    key: "id", // Coluna inicial para ordenação
+    direction: "asc", // Direção de ordenação inicial (crescente)
+  });
 
-
-    const fetchAgendamentos = async () => {
+  const fetchAgendamentos = async () => {
     try {
-        const response = await fetch("http://89.116.74.250:5001/api/v1/scrapes?limit=100&offset=0", {
-        method: 'GET',
-        headers: {
-            'accept': 'application/json',
-            'X-API-Key': 'c9f93bcc-4369-43de-9a00-6af58446935b', 
-            'X-API-Secret': '74354ff0-2649-4af7-b71e-7086cc14978a' 
+      const response = await fetch(
+        "http://89.116.74.250:5001/api/v1/scrapes?limit=100&offset=0",
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+            "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b",
+            "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a",
+          },
         }
-        });
+      );
 
-        const data = await response.json();
-        // Processar os dados recebidos da API
-        const scrapes = data.scrapes.map((scrape) => {
+      const data = await response.json();
+      // Processar os dados recebidos da API
+      const scrapes = data.scrapes.map((scrape) => {
         const parameters = JSON.parse(scrape.parameters); // Parse do parâmetro JSON
 
         return {
-            id: scrape.id,
-            client_id: scrape.client_id,
-            status: scrape.status,
-            profiles: parameters.profiles || [],
-            keywords: parameters.keywords || [],
-            platforms: parameters.platforms || [],
-            scheduledAt: scrape.scheduled_at,
+          id: scrape.id,
+          client_id: scrape.client_id,
+          status: scrape.status,
+          profiles: parameters.profiles || [],
+          keywords: parameters.keywords || [],
+          platforms: parameters.platforms || [],
+          scheduledAt: scrape.scheduled_at,
         };
-        });
+      });
 
-        // Atualizar os estados com os dados processados
-        setAgendamentos(scrapes);
-        setFilteredAgendamentos(scrapes); // Inicializa com todos os dados
-        setIsLoading(false);
+      // Atualizar os estados com os dados processados
+      setAgendamentos(scrapes);
+      setFilteredAgendamentos(scrapes); // Inicializa com todos os dados
+      setIsLoading(false);
     } catch (error) {
-        console.error("Erro ao buscar agendamentos:", error);
-        setIsLoading(false);
+      console.error("Erro ao buscar agendamentos:", error);
+      setIsLoading(false);
     }
-    };
+  };
 
+  useEffect(() => {
+    fetchAgendamentos(); // Chama a função de fetch quando o componente é montado
+  }, []);
 
-    useEffect(() => {
-        fetchAgendamentos(); // Chama a função de fetch quando o componente é montado
-    }, []);
+  const requestSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    const sortedData = [...filteredAgendamentos].sort((a, b) => {
+      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
+      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
+      return 0;
+    });
+    setFilteredAgendamentos(sortedData);
+    setSortConfig({ key, direction });
+  };
 
-    const requestSort = (key) => {
-        let direction = "asc";
-        if (sortConfig.key === key && sortConfig.direction === "asc") {
-            direction = "desc";
-        }
-        const sortedData = [...filteredAgendamentos].sort((a, b) => {
-            if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-            if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
-            return 0;
-        });
-        setFilteredAgendamentos(sortedData);
-        setSortConfig({ key, direction });
-    };
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return `${d.getDate()}/${
+      d.getMonth() + 1
+    }/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+  };
 
+  const handleEdit = (agendamento) => {
+    // Implementar lógica de edição
+    console.log("Editar agendamento:", agendamento);
+  };
 
-    const formatDate = (date) => {
-        const d = new Date(date);
-        return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
-    };
+  const handlePause = (agendamento) => {
+    // Implementar lógica de pausar
+    console.log("Pausar agendamento:", agendamento);
+  };
 
-
+  const handleDelete = (agendamento) => {
+    // Implementar lógica de exclusão
+    console.log("Excluir agendamento:", agendamento);
+  };
 
   return (
     <div className="mx-auto px-4 py-8 flex flex-col">
@@ -287,31 +347,160 @@ const handleSubmit = async (e) => {
         <form onSubmit={handleSubmit}>
           {/* Perfis e Termos de Busca */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Perfis (separados por vírgula)
+            {/* Perfis */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Perfis para Monitoramento
               </label>
-              <input
-                type="text"
-                name="profiles"
-                value={formData.profiles.join(", ")}
-                onChange={handleProfilesChange}
-                placeholder="usuario1, usuario2, usuario3"
-                className="w-full p-2 border border-gray-300 rounded-md"
-              />
+              <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xs text-gray-600">
+                    {formData.profiles.length} perfil(s) adicionado(s)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileModal(true)}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    + Adicionar Perfil
+                  </button>
+                </div>
+
+                {formData.profiles.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {formData.profiles.map((profile, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center bg-white border border-gray-300 rounded-md px-3 py-1 text-sm"
+                      >
+                        <span className="mr-2">{profile}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveProfile(index)}
+                          className="text-red-500 hover:text-red-700 ml-1"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    Nenhum perfil adicionado ainda
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Modal para adicionar perfil */}
+            {showProfileModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                  <h3 className="text-lg font-semibold mb-4">
+                    Adicionar Novo Perfil
+                  </h3>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome do Perfil
+                    </label>
+                    <input
+                      type="text"
+                      value={newProfile.name}
+                      onChange={(e) =>
+                        setNewProfile({ ...newProfile, name: e.target.value })
+                      }
+                      placeholder="Ex: @usuario123"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Plataforma
+                    </label>
+                    <select
+                      value={newProfile.platform}
+                      onChange={(e) =>
+                        setNewProfile({
+                          ...newProfile,
+                          platform: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Selecione uma plataforma</option>
+                      {profilePlatforms.map((platform) => (
+                        <option key={platform} value={platform}>
+                          {platform}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileModal(false);
+                        setNewProfile({ name: "", platform: "" });
+                      }}
+                      className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddProfile}
+                      disabled={!newProfile.name.trim() || !newProfile.platform}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Palavras-chave */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Palavras-chave (separadas por vírgula)
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Palavras-chave para Monitoramento
               </label>
-              <input
-                type="text"
-                name="keywords"
-                value={formData.keywords.join(", ")}
-                onChange={handleKeywordsChange}
-                placeholder="palavra1, palavra2, palavra3"
-                className="w-full p-2 border border-gray-300 rounded-md"
-              />
+              <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xs text-gray-600">
+                    {formData.keywords.length} palavra(s) adicionada(s)
+                  </span>
+                </div>
+
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    name="keywords"
+                    value={formData.keywords.join(", ")}
+                    onChange={handleKeywordsChange}
+                    placeholder="palavra1, palavra2, palavra3"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {formData.keywords.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {formData.keywords.map((keyword, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center bg-white border border-gray-300 rounded-md px-3 py-1 text-sm"
+                      >
+                        <span className="mr-2">{keyword}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-2 text-gray-500 text-sm">
+                    Digite as palavras-chave separadas por vírgula
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -382,25 +571,59 @@ const handleSubmit = async (e) => {
 
           {/* Dias do mês */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Dias do Mês para Agendamento
             </label>
-            <div className="grid grid-cols-5 md:grid-cols-10 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
-              {diasDoMes.map((dia) => (
-                <div key={dia} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`dia-${dia}`}
-                    value={dia}
-                    checked={formData.selectedDays.includes(dia)}
-                    onChange={handleSelectedDaysChange}
-                    className="mr-1"
-                  />
-                  <label htmlFor={`dia-${dia}`} className="text-sm">
-                    {dia}
-                  </label>
+            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs text-gray-600">
+                  {formData.selectedDays.length} selecionado(s)
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, selectedDays: diasDoMes })
+                    }
+                    className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                  >
+                    Todos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, selectedDays: [] })
+                    }
+                    className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                  >
+                    Limpar
+                  </button>
                 </div>
-              ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {diasDoMes.map((dia) => (
+                  <label
+                    key={dia}
+                    className={`
+            flex items-center justify-center w-8 h-8 rounded border cursor-pointer transition-colors
+            ${
+              formData.selectedDays.includes(dia)
+                ? "border-blue-500 bg-blue-500 text-white"
+                : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+            }
+          `}
+                  >
+                    <input
+                      type="checkbox"
+                      value={dia}
+                      checked={formData.selectedDays.includes(dia)}
+                      onChange={handleSelectedDaysChange}
+                      className="sr-only"
+                    />
+                    <span className="text-xs font-medium">{dia}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -424,12 +647,12 @@ const handleSubmit = async (e) => {
             </select>
           </div>
 
-        {/* Exibindo erro */}
-        {error && (
+          {/* Exibindo erro */}
+          {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-                {error}
+              {error}
             </div>
-        )}
+          )}
 
           <div className="flex justify-end">
             <button
@@ -501,83 +724,96 @@ const handleSubmit = async (e) => {
         </div>
       </div> */}
 
-    {/* Tabela de Agendamentos */}
-    <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+      {/* Tabela de Agendamentos */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">
-            Agendamentos ({filteredAgendamentos.length} agendamentos)
+          Agendamentos ({filteredAgendamentos.length} agendamentos)
         </h2>
         <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+          <thead className="bg-gray-50">
             <tr>
-            <th
+              <th
                 scope="col"
                 className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
+              >
                 ID
-            </th>
-            <th
+              </th>
+              <th
                 scope="col"
                 className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
+              >
                 Data/Hora
-            </th>
-            <th
+              </th>
+              <th
                 scope="col"
                 className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
+              >
                 Plataformas
-            </th>
-            <th
+              </th>
+              <th
                 scope="col"
                 className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
+              >
                 Perfis
-            </th>
-            <th
+              </th>
+              <th
                 scope="col"
                 className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
+              >
                 Keywords
-            </th>
-            <th
+              </th>
+              <th
                 scope="col"
                 className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
+              >
                 Status
-            </th>
+              </th>
+              <th
+                scope="col"
+                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Ações
+              </th>
             </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
             {filteredAgendamentos.map((agendamento, index) => (
-            <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+              <tr
+                key={index}
+                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+              >
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
-                {agendamento.id}
+                  {agendamento.id}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {formatDate(agendamento.scheduledAt)}
+                  {formatDate(agendamento.scheduledAt)}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
-                <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1">
                     {agendamento.platforms.map((platform, idx) => (
-                    <span
+                      <span
                         key={idx}
                         className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                    >
+                      >
                         {platform}
-                    </span>
+                      </span>
                     ))}
-                </div>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {agendamento.profiles.length > 0 ? agendamento.profiles.join(", ") : "-"}
+                  {agendamento.profiles.length > 0
+                    ? agendamento.profiles.join(", ")
+                    : "-"}
+                </td>
+                <td className="px-6 py-4 w-full max-w-[400px] whitespace-nowrap text-sm text-gray-500">
+                  {agendamento.keywords.length > 0
+                    ? agendamento.keywords.join(", ")
+                    : "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {agendamento.keywords.length > 0 ? agendamento.keywords.join(", ") : "-"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <span
+                  <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    agendamento.status === "scheduled"
+                      agendamento.status === "scheduled"
                         ? "bg-yellow-100 text-yellow-800"
                         : agendamento.status === "completed"
                         ? "bg-green-100 text-green-800"
@@ -585,17 +821,56 @@ const handleSubmit = async (e) => {
                         ? "bg-red-100 text-red-800"
                         : "bg-gray-100 text-gray-800"
                     }`}
-                >
+                  >
                     {agendamento.status}
-                </span>
+                  </span>
                 </td>
-            </tr>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleEdit(agendamento)}
+                      className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                      title="Editar"
+                    >
+                      <FiEdit2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => handlePause(agendamento)}
+                      className="text-yellow-600 hover:text-yellow-800 transition-colors duration-200"
+                      title="Pausar"
+                    >
+                      <FiPause size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(agendamento)}
+                      className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                      title="Excluir"
+                    >
+                      <FiTrash2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleViewResult(agendamento)}
+                      disabled={agendamento.status !== "completed"}
+                      className={`px-2 py-1 text-xs rounded transition-colors duration-200 ${
+                        agendamento.status === "completed"
+                          ? "bg-green-100 text-green-700 hover:bg-green-200"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                      title={
+                        agendamento.status === "completed"
+                          ? "Visualizar Resultado"
+                          : "Resultado não disponível"
+                      }
+                    >
+                      Ver Resultado
+                    </button>
+                  </div>
+                </td>
+              </tr>
             ))}
-        </tbody>
+          </tbody>
         </table>
-    </div>
-
-
+      </div>
 
       {/* Próximos Agendamentos */}
       {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -947,7 +1222,7 @@ const handleSubmit = async (e) => {
             </p>
           </div>
         </div>
-      </div> 
+      </div>
 
       {/* Status da API */}
       {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
