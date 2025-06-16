@@ -48,11 +48,47 @@ const SearchDeepScan = () => {
   // Adicione este estado no início do componente, junto com os outros useState
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [newProfile, setNewProfile] = useState({ name: "", platform: "" });
-  const handleViewResult = (agendamento) => {
-    // Implementar lógica para visualizar resultado
-    console.log("Visualizar resultado:", agendamento);
-    // Aqui você pode abrir um modal, navegar para outra página, etc.
+
+
+  const handleViewResult = async (agendamento) => {
+    if (agendamento.status !== "completed") {
+      console.log("Resultado não disponível para visualização");
+      return;
+    }
+  
+    try {
+      console.log("Tentando visualizar resultado para o scrape com ID:", agendamento.id);
+  
+      // Construindo a URL para a requisição GET com o scrapeId
+      const url = `http://89.116.74.250:5001/api/v1/data/filter?scrapeId=${agendamento.id}&page=1&limit=100`;
+  
+      // Fazendo a requisição GET
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json',
+          'X-API-Key': 'c9f93bcc-4369-43de-9a00-6af58446935b',
+          'X-API-Secret': '74354ff0-2649-4af7-b71e-7086cc14978a'
+        }
+      });
+  
+      // Verificando a resposta
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Resultado obtido com sucesso:", result);
+  
+        // Aqui você pode manipular os dados recebidos, como exibi-los em um modal ou redirecionar para outra página
+        // Por exemplo, podemos abrir um modal ou exibir os dados diretamente:
+        // openModal(result); // Se estiver usando um modal
+      } else {
+        const error = await response.json();
+        console.error("Erro ao buscar o resultado:", error);
+      }
+    } catch (error) {
+      console.error("Erro desconhecido ao buscar o resultado:", error);
+    }
   };
+  
 
   // Adicione estas plataformas no início do componente
   const profilePlatforms = [
@@ -317,9 +353,8 @@ const SearchDeepScan = () => {
 
   const formatDate = (date) => {
     const d = new Date(date);
-    return `${d.getDate()}/${
-      d.getMonth() + 1
-    }/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+    return `${d.getDate()}/${d.getMonth() + 1
+      }/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
   };
 
   const handleEdit = (agendamento) => {
@@ -332,10 +367,43 @@ const SearchDeepScan = () => {
     console.log("Pausar agendamento:", agendamento);
   };
 
-  const handleDelete = (agendamento) => {
-    // Implementar lógica de exclusão
-    console.log("Excluir agendamento:", agendamento);
+  const handleDelete = async (scrapeId) => {
+    if (!isValidUuid(scrapeId)) {
+      console.error("ID inválido:", scrapeId);
+      return;
+    }
+  
+    // Fazendo a requisição DELETE
+    try {
+      console.log("Tentando cancelar agendamento com ID:", scrapeId);
+      const response = await fetch(`http://89.116.74.250:5001/api/v1/schedule/${scrapeId}`, {
+        method: 'DELETE',
+        headers: {
+          'accept': 'application/json',
+          'X-API-Key': 'c9f93bcc-4369-43de-9a00-6af58446935b',
+          'X-API-Secret': '74354ff0-2649-4af7-b71e-7086cc14978a'
+        }
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Agendamento cancelado com sucesso:", result.message);
+      } else {
+        const error = await response.json();
+        console.error("Erro ao cancelar o agendamento:", error);
+      }
+    } catch (error) {
+      console.error("Erro desconhecido ao cancelar o agendamento:", error);
+    }
   };
+  
+  // Função para validar o formato do UUID
+  const isValidUuid = (id) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+  
+  
 
   return (
     <div className="mx-auto px-4 py-8 flex flex-col">
@@ -606,11 +674,10 @@ const SearchDeepScan = () => {
                     key={dia}
                     className={`
             flex items-center justify-center w-8 h-8 rounded border cursor-pointer transition-colors
-            ${
-              formData.selectedDays.includes(dia)
-                ? "border-blue-500 bg-blue-500 text-white"
-                : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
-            }
+            ${formData.selectedDays.includes(dia)
+                        ? "border-blue-500 bg-blue-500 text-white"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+                      }
           `}
                   >
                     <input
@@ -658,9 +725,8 @@ const SearchDeepScan = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               {isLoading ? "Agendando..." : "Agendar Monitoramento"}
             </button>
@@ -812,15 +878,14 @@ const SearchDeepScan = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      agendamento.status === "scheduled"
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${agendamento.status === "scheduled"
                         ? "bg-yellow-100 text-yellow-800"
                         : agendamento.status === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : agendamento.status === "failed"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
+                          ? "bg-green-100 text-green-800"
+                          : agendamento.status === "failed"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                      }`}
                   >
                     {agendamento.status}
                   </span>
@@ -842,7 +907,7 @@ const SearchDeepScan = () => {
                       <FiPause size={16} />
                     </button>
                     <button
-                      onClick={() => handleDelete(agendamento)}
+                      onClick={() => handleDelete(agendamento.id)}
                       className="text-red-600 hover:text-red-800 transition-colors duration-200"
                       title="Excluir"
                     >
@@ -851,11 +916,10 @@ const SearchDeepScan = () => {
                     <button
                       onClick={() => handleViewResult(agendamento)}
                       disabled={agendamento.status !== "completed"}
-                      className={`px-2 py-1 text-xs rounded transition-colors duration-200 ${
-                        agendamento.status === "completed"
+                      className={`px-2 py-1 text-xs rounded transition-colors duration-200 ${agendamento.status === "completed"
                           ? "bg-green-100 text-green-700 hover:bg-green-200"
                           : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      }`}
+                        }`}
                       title={
                         agendamento.status === "completed"
                           ? "Visualizar Resultado"
