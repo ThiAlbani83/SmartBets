@@ -1,209 +1,3 @@
-/* export const verificationData = [
-  {
-    ID: "ID001",
-    Status: "Análise Manual",
-    Usuario: "usuario3",
-    IniciadoEm: "2024-05-31 00:00:00",
-    UltimaAtualizacao: "2024-08-29 00:00:00",
-    Integracao: "Bet4",
-  },
-  {
-    ID: "ID002",
-    Status: "Análise Manual",
-    Usuario: "usuario4",
-    IniciadoEm: "2024-08-14 00:00:00",
-    UltimaAtualizacao: "2024-12-19 00:00:00",
-    Integracao: "BetWarrior",
-  },
-  {
-    ID: "ID003",
-    Status: "Aprovado",
-    Usuario: "usuario3",
-    IniciadoEm: "2024-04-28 00:00:00",
-    UltimaAtualizacao: "2024-05-12 00:00:00",
-    Integracao: "BetBalanço",
-  },
-  {
-    ID: "ID004",
-    Status: "Reprovado",
-    Usuario: "usuario1",
-    IniciadoEm: "2024-12-02 00:00:00",
-    UltimaAtualizacao: "2024-12-11 00:00:00",
-    Integracao: "BetWarrior",
-  },
-  {
-    ID: "ID005",
-    Status: "Aprovado",
-    Usuario: "usuario4",
-    IniciadoEm: "2024-04-23 00:00:00",
-    UltimaAtualizacao: "2024-11-15 00:00:00",
-    Integracao: "BetWarrior",
-  },
-  {
-    ID: "ID006",
-    Status: "Reprovado",
-    Usuario: "usuario2",
-    IniciadoEm: "2024-01-01 00:00:00",
-    UltimaAtualizacao: "2024-01-21 00:00:00",
-    Integracao: "Bet4",
-  },
-  {
-    ID: "ID007",
-    Status: "Aprovado",
-    Usuario: "usuario3",
-    IniciadoEm: "2024-05-22 00:00:00",
-    UltimaAtualizacao: "2024-07-16 00:00:00",
-    Integracao: "Bet4",
-  },
-  {
-    ID: "ID008",
-    Status: "Reprovado",
-    Usuario: "usuario4",
-    IniciadoEm: "2024-05-23 00:00:00",
-    UltimaAtualizacao: "2024-09-27 00:00:00",
-    Integracao: "BetWarrior",
-  },
-  {
-    ID: "ID009",
-    Status: "Análise Manual",
-    Usuario: "usuario3",
-    IniciadoEm: "2024-05-20 00:00:00",
-    UltimaAtualizacao: "2024-07-25 00:00:00",
-    Integracao: "Bet4",
-  },
-  {
-    ID: "ID010",
-    Status: "Aprovado",
-    Usuario: "usuario1",
-    IniciadoEm: "2024-01-03 00:00:00",
-    UltimaAtualizacao: "2024-04-18 00:00:00",
-    Integracao: "BetBalanço",
-  },
-  {
-    ID: "ID011",
-    Status: "Análise Manual",
-    Usuario: "usuario3",
-    IniciadoEm: "2024-09-21 00:00:00",
-    UltimaAtualizacao: "2024-10-10 00:00:00",
-    Integracao: "BetWarrior",
-  },
-  {
-    ID: "ID012",
-    Status: "Inativo",
-    Usuario: "usuario2",
-    IniciadoEm: "2024-09-07 00:00:00",
-    UltimaAtualizacao: "2024-10-27 00:00:00",
-    Integracao: "Bet4",
-  },
-  {
-    ID: "ID013",
-    Status: "Ativo",
-    Usuario: "usuario1",
-    IniciadoEm: "2024-04-27 00:00:00",
-    UltimaAtualizacao: "2024-04-30 00:00:00",
-    Integracao: "Bet4",
-  },
-  {
-    ID: "ID014",
-    Status: "Reprovado",
-    Usuario: "usuario5",
-    IniciadoEm: "2024-09-26 00:00:00",
-    UltimaAtualizacao: "2024-10-07 00:00:00",
-    Integracao: "Bet4",
-  },
-  {
-    ID: "ID015",
-    Status: "Ativo",
-    Usuario: "usuario4",
-    IniciadoEm: "2024-11-21 00:00:00",
-    UltimaAtualizacao: "2024-11-25 00:00:00",
-    Integracao: "Bet4",
-  },
-  {
-    ID: "ID016",
-    Status: "Ativo",
-    Usuario: "usuario4",
-    IniciadoEm: "2024-05-24 00:00:00",
-    UltimaAtualizacao: "2024-09-09 00:00:00",
-    Integracao: "BetWarrior",
-  },
-  {
-    ID: "ID017",
-    Status: "Inativo",
-    Usuario: "usuario2",
-    IniciadoEm: "2024-11-04 00:00:00",
-    UltimaAtualizacao: "2024-11-09 00:00:00",
-    Integracao: "BetBalanço",
-  },
-  {
-    ID: "ID018",
-    Status: "Inativo",
-    Usuario: "usuario5",
-    IniciadoEm: "2024-07-18 00:00:00",
-    UltimaAtualizacao: "2024-11-19 00:00:00",
-    Integracao: "BetBalanço",
-  },
-  {
-    ID: "ID019",
-    Status: "Inativo",
-    Usuario: "usuario3",
-    IniciadoEm: "2024-07-14 00:00:00",
-    UltimaAtualizacao: "2024-12-05 00:00:00",
-    Integracao: "Bet4",
-  },
-  {
-    ID: "ID020",
-    Status: "Aprovado",
-    Usuario: "usuario1",
-    IniciadoEm: "2024-04-22 00:00:00",
-    UltimaAtualizacao: "2024-09-14 00:00:00",
-    Integracao: "Bet4",
-  },
-];
-
-export const deepScanResults = [
-  {
-    name: "Link 1:",
-    link: "https://linkparapostagem1/nomedoperfil",
-  },
-  {
-    name: "Link 2:",
-    link: "https://linkparapostagem2/nomedoperfil",
-  },
-  {
-    name: "Link 3:",
-    link: "https://linkparapostagem3/nomedoperfil",
-  },
-  {
-    name: "Link 4:",
-    link: "https://linkparapostagem4/nomedoperfil",
-  },
-  {
-    name: "Link 5:",
-    link: "https://linkparapostagem5/nomedoperfil",
-  },
-  {
-    name: "Link 6:",
-    link: "https://linkparapostagem6/nomedoperfil",
-  },
-  {
-    name: "Link 7:",
-    link: "https://linkparapostagem7/nomedoperfil",
-  },
-  {
-    name: "Link 8:",
-    link: "https://linkparapostagem8/nomedoperfil",
-  },
-  {
-    name: "Link 9:",
-    link: "https://linkparapostagem9/nomedoperfil",
-  },
-  {
-    name: "Link 10:",
-    link: "https://linkparapostagem10/nomedoperfil",
-  },
-]; */
-
 export const registerBet = [
   {
     empresa: "BetMax Brasil",
@@ -2199,3 +1993,350 @@ export const scheduledMonitorings = [
     proximaExecucao: "2024-06-21 10:00:00",
   },
 ];
+
+// Adicionar ao arquivo existente ou criar se não existir
+
+// KPIs das bases de dados
+export const databaseKPIs = {
+  connectedDatabases: 12,
+  totalRecords: 2847392,
+  breakdown: {
+    cpf: 1250000,
+    cnpj: 450000,
+    genderMale: 680000,
+    genderFemale: 570000,
+    ageRanges: {
+      "18-25": 320000,
+      "26-35": 450000,
+      "36-45": 380000,
+      "46-55": 290000,
+      "56-65": 180000,
+      "65+": 130000,
+    },
+    trafficViolations: 89000,
+    criminalRecords: 45000,
+    civilLawsuits: 120000,
+    properties: 890000,
+    vehicles: 1100000,
+    bankAccounts: 780000,
+    socialMedia: 1500000,
+  },
+};
+
+// Exemplos de busca com dicas
+export const searchExamples = [
+  {
+    id: 1,
+    title: "Violações de Trânsito",
+    description: "Busque por violações de trânsito no CPF",
+    example: "123.456.789-00",
+    category: "traffic",
+  },
+  {
+    id: 2,
+    title: "Processos Judiciais",
+    description: "Consulte processos em nome de",
+    example: "João Silva Santos",
+    category: "legal",
+  },
+  {
+    id: 3,
+    title: "Dados Empresariais",
+    description: "Informações da empresa CNPJ",
+    example: "12.345.678/0001-90",
+    category: "business",
+  },
+  {
+    id: 4,
+    title: "Propriedades Imobiliárias",
+    description: "Imóveis registrados em nome de",
+    example: "Maria Oliveira Costa",
+    category: "property",
+  },
+];
+
+// Função para gerar resultados baseados em diferentes tipos de consulta
+export const getIntelligentSearchResults = (searchTerm) => {
+  const lowerTerm = searchTerm.toLowerCase();
+
+  // Resultados para violações de trânsito
+  if (
+    lowerTerm.includes("violaç") ||
+    lowerTerm.includes("transito") ||
+    lowerTerm.includes("trânsito") ||
+    lowerTerm.includes("multa")
+  ) {
+    return [
+      {
+        id: 1,
+        category: "Violações de Trânsito",
+        source: "DETRAN-SP",
+        field: "Excesso de Velocidade",
+        value: "R$ 195,23 - Rodovia Anhanguera, KM 45 - 12/12/2023",
+        confidence: 98,
+        lastUpdate: "2023-12-13T09:15:00Z",
+        verified: true,
+      },
+      {
+        id: 2,
+        category: "Violações de Trânsito",
+        source: "DETRAN-RJ",
+        field: "Estacionamento Irregular",
+        value: "R$ 88,38 - Rua Copacabana, 150 - 05/11/2023",
+        confidence: 95,
+        lastUpdate: "2023-11-06T16:45:00Z",
+        verified: true,
+      },
+      {
+        id: 3,
+        category: "Violações de Trânsito",
+        source: "DETRAN-MG",
+        field: "Avanço de Sinal Vermelho",
+        value: "R$ 293,47 - Av. Afonso Pena - 28/10/2023",
+        confidence: 92,
+        lastUpdate: "2023-10-29T14:20:00Z",
+        verified: true,
+      },
+      {
+        id: 4,
+        category: "Dados Pessoais",
+        source: "DETRAN-SP",
+        field: "CNH Categoria B",
+        value: "Válida até 15/08/2027 - 8 pontos na carteira",
+        confidence: 99,
+        lastUpdate: "2024-01-15T10:30:00Z",
+        verified: true,
+      },
+      {
+        id: 5,
+        category: "Veículos",
+        source: "DETRAN-SP",
+        field: "Honda Civic 2020",
+        value: "Placa: ABC-1234 - Licenciado 2024",
+        confidence: 97,
+        lastUpdate: "2024-01-05T13:20:00Z",
+        verified: true,
+      },
+    ];
+  }
+
+  // Resultados para processos judiciais
+  if (
+    lowerTerm.includes("processo") ||
+    lowerTerm.includes("judicial") ||
+    lowerTerm.includes("tribunal")
+  ) {
+    return [
+      {
+        id: 6,
+        category: "Processos Judiciais",
+        source: "TJSP",
+        field: "Ação de Cobrança",
+        value: "Processo: 1234567-89.2023.8.26.0100 - Em andamento",
+        confidence: 94,
+        lastUpdate: "2023-09-20T15:10:00Z",
+        verified: true,
+      },
+      {
+        id: 7,
+        category: "Processos Judiciais",
+        source: "TJRJ",
+        field: "Ação Trabalhista",
+        value: "Processo: 9876543-21.2022.5.01.0001 - Arquivado",
+        confidence: 91,
+        lastUpdate: "2022-12-15T11:30:00Z",
+        verified: true,
+      },
+      {
+        id: 8,
+        category: "Dados Pessoais",
+        source: "TSE",
+        field: "Situação Eleitoral",
+        value: "Regular - Última votação: 02/10/2022",
+        confidence: 96,
+        lastUpdate: "2022-10-03T08:00:00Z",
+        verified: true,
+      },
+    ];
+  }
+
+  // Resultados para CNPJ/empresas
+  if (
+    lowerTerm.includes("cnpj") ||
+    lowerTerm.includes("empresa") ||
+    /\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/.test(searchTerm)
+  ) {
+    return [
+      {
+        id: 9,
+        category: "Dados Empresariais",
+        source: "Receita Federal",
+        field: "Razão Social",
+        value: "TECH SOLUTIONS LTDA",
+        confidence: 99,
+        lastUpdate: "2024-01-20T14:00:00Z",
+        verified: true,
+      },
+      {
+        id: 10,
+        category: "Dados Empresariais",
+        source: "Receita Federal",
+        field: "Situação Cadastral",
+        value: "ATIVA desde 15/03/2018",
+        confidence: 99,
+        lastUpdate: "2024-01-20T14:00:00Z",
+        verified: true,
+      },
+      {
+        id: 11,
+        category: "Dados Empresariais",
+        source: "Junta Comercial",
+        field: "Sócios",
+        value: "João Silva Santos (80%) - Maria Oliveira (20%)",
+        confidence: 95,
+        lastUpdate: "2023-11-10T16:30:00Z",
+        verified: true,
+      },
+      {
+        id: 12,
+        category: "Dados Financeiros",
+        source: "SERASA",
+        field: "Faturamento Estimado",
+        value: "R$ 2.500.000,00 anuais",
+        confidence: 78,
+        lastUpdate: "2023-12-01T12:00:00Z",
+        verified: false,
+      },
+    ];
+  }
+
+  // Resultados gerais para CPF/nome
+  return [
+    {
+      id: 13,
+      category: "Dados Pessoais",
+      source: "Receita Federal",
+      field: "Nome Completo",
+      value: "João Silva Santos",
+      confidence: 98,
+      lastUpdate: "2024-01-15T10:30:00Z",
+      verified: true,
+    },
+    {
+      id: 14,
+      category: "Dados Pessoais",
+      source: "TSE",
+      field: "Data de Nascimento",
+      value: "15/03/1985 (38 anos)",
+      confidence: 95,
+      lastUpdate: "2024-01-10T14:20:00Z",
+      verified: true,
+    },
+    {
+      id: 15,
+      category: "Dados Pessoais",
+      source: "IBGE",
+      field: "Endereço Residencial",
+      value: "Rua das Flores, 123 - Vila Madalena - São Paulo/SP",
+      confidence: 89,
+      lastUpdate: "2023-08-15T11:30:00Z",
+      verified: true,
+    },
+    {
+      id: 16,
+      category: "Dados Financeiros",
+      source: "SERASA",
+      field: "Score de Crédito",
+      value: "750 pontos - Baixo Risco",
+      confidence: 87,
+      lastUpdate: "2024-01-20T08:00:00Z",
+      verified: false,
+    },
+    {
+      id: 17,
+      category: "Redes Sociais",
+      source: "LinkedIn",
+      field: "Perfil Profissional",
+      value: "Analista de Sistemas Sênior na TechCorp - 500+ conexões",
+      confidence: 82,
+      lastUpdate: "2024-01-18T12:00:00Z",
+      verified: false,
+    },
+    {
+      id: 18,
+      category: "Propriedades",
+      source: "Cartório de Imóveis",
+      field: "Apartamento Residencial",
+      value: "Apartamento 45m² - Rua das Flores, 123 - Valor: R$ 450.000",
+      confidence: 94,
+      lastUpdate: "2023-08-15T11:30:00Z",
+      verified: true,
+    },
+    {
+      id: 19,
+      category: "Dados Familiares",
+      source: "Cartório Civil",
+      field: "Estado Civil",
+      value: "Casado com Maria Santos Silva desde 10/06/2015",
+      confidence: 93,
+      lastUpdate: "2022-06-10T10:00:00Z",
+      verified: true,
+    },
+    {
+      id: 20,
+      category: "Dados Acadêmicos",
+      source: "MEC",
+      field: "Formação Superior",
+      value: "Bacharel em Ciência da Computação - USP (2003-2007)",
+      confidence: 88,
+      lastUpdate: "2023-03-20T09:45:00Z",
+      verified: true,
+    },
+  ];
+};
+
+// Função para calcular estatísticas por categoria
+export const getCategoryStats = (results) => {
+  const categories = {};
+
+  results.forEach((result) => {
+    if (!categories[result.category]) {
+      categories[result.category] = {
+        count: 0,
+        totalConfidence: 0,
+        verified: 0,
+      };
+    }
+    categories[result.category].count++;
+    categories[result.category].totalConfidence += result.confidence;
+    if (result.verified) {
+      categories[result.category].verified++;
+    }
+  });
+
+  // Calcular médias
+  Object.keys(categories).forEach((cat) => {
+    categories[cat].avgConfidence = Math.round(
+      categories[cat].totalConfidence / categories[cat].count
+    );
+  });
+
+  return categories;
+};
+
+// Dados adicionais para relatórios
+export const getSearchMetrics = () => {
+  return {
+    totalSearches: 15420,
+    successRate: 94.2,
+    avgResponseTime: 1.8,
+    topCategories: [
+      { name: "Dados Pessoais", count: 5240 },
+      { name: "Violações de Trânsito", count: 3180 },
+      { name: "Dados Empresariais", count: 2890 },
+      { name: "Processos Judiciais", count: 2110 },
+      { name: "Propriedades", count: 1560 },
+      { name: "Dados Financeiros", count: 440 },
+    ],
+  };
+};

@@ -14,6 +14,7 @@ import {
 } from "chart.js";
 import { useDeepScanStore } from "../../store/useDeepscanStore.js";
 import { FiEdit2, FiPause, FiTrash2 } from "react-icons/fi";
+import ResultModal from "../../components/deepscan/ResultModal.jsx";
 
 // Registrar os componentes do Chart.js
 ChartJS.register(
@@ -49,46 +50,55 @@ const SearchDeepScan = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [newProfile, setNewProfile] = useState({ name: "", platform: "" });
 
+  // Estados para o modal de resultados
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [resultData, setResultData] = useState(null);
+  const [loadingResult, setLoadingResult] = useState(false);
 
   const handleViewResult = async (agendamento) => {
     if (agendamento.status !== "completed") {
       console.log("Resultado não disponível para visualização");
       return;
     }
-  
+
     try {
-      console.log("Tentando visualizar resultado para o scrape com ID:", agendamento.id);
-  
+      setLoadingResult(true);
+      setShowResultModal(true);
+      console.log(
+        "Tentando visualizar resultado para o scrape com ID:",
+        agendamento.id
+      );
+
       // Construindo a URL para a requisição GET com o scrapeId
       const url = `http://89.116.74.250:5001/api/v1/data/filter?scrapeId=${agendamento.id}&page=1&limit=100`;
-  
+
       // Fazendo a requisição GET
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'accept': 'application/json',
-          'X-API-Key': 'c9f93bcc-4369-43de-9a00-6af58446935b',
-          'X-API-Secret': '74354ff0-2649-4af7-b71e-7086cc14978a'
-        }
+          accept: "application/json",
+          "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b",
+          "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a",
+        },
       });
-  
+
       // Verificando a resposta
       if (response.ok) {
         const result = await response.json();
         console.log("Resultado obtido com sucesso:", result);
-  
-        // Aqui você pode manipular os dados recebidos, como exibi-los em um modal ou redirecionar para outra página
-        // Por exemplo, podemos abrir um modal ou exibir os dados diretamente:
-        // openModal(result); // Se estiver usando um modal
+        setResultData(result);
       } else {
         const error = await response.json();
         console.error("Erro ao buscar o resultado:", error);
+        setError("Erro ao carregar os resultados");
       }
     } catch (error) {
       console.error("Erro desconhecido ao buscar o resultado:", error);
+      setError("Erro desconhecido ao carregar os resultados");
+    } finally {
+      setLoadingResult(false);
     }
   };
-  
 
   // Adicione estas plataformas no início do componente
   const profilePlatforms = [
@@ -353,8 +363,9 @@ const SearchDeepScan = () => {
 
   const formatDate = (date) => {
     const d = new Date(date);
-    return `${d.getDate()}/${d.getMonth() + 1
-      }/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+    return `${d.getDate()}/${
+      d.getMonth() + 1
+    }/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
   };
 
   const handleEdit = (agendamento) => {
@@ -372,22 +383,27 @@ const SearchDeepScan = () => {
       console.error("ID inválido:", scrapeId);
       return;
     }
-  
+
     // Fazendo a requisição DELETE
     try {
       console.log("Tentando cancelar agendamento com ID:", scrapeId);
-      const response = await fetch(`http://89.116.74.250:5001/api/v1/schedule/${scrapeId}`, {
-        method: 'DELETE',
-        headers: {
-          'accept': 'application/json',
-          'X-API-Key': 'c9f93bcc-4369-43de-9a00-6af58446935b',
-          'X-API-Secret': '74354ff0-2649-4af7-b71e-7086cc14978a'
+      const response = await fetch(
+        `http://89.116.74.250:5001/api/v1/schedule/${scrapeId}`,
+        {
+          method: "DELETE",
+          headers: {
+            accept: "application/json",
+            "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b",
+            "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a",
+          },
         }
-      });
-  
+      );
+
       if (response.ok) {
         const result = await response.json();
         console.log("Agendamento cancelado com sucesso:", result.message);
+        // Atualizar a lista após deletar
+        fetchAgendamentos();
       } else {
         const error = await response.json();
         console.error("Erro ao cancelar o agendamento:", error);
@@ -396,14 +412,13 @@ const SearchDeepScan = () => {
       console.error("Erro desconhecido ao cancelar o agendamento:", error);
     }
   };
-  
+
   // Função para validar o formato do UUID
   const isValidUuid = (id) => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(id);
   };
-  
-  
 
   return (
     <div className="mx-auto px-4 py-8 flex flex-col">
@@ -674,10 +689,11 @@ const SearchDeepScan = () => {
                     key={dia}
                     className={`
             flex items-center justify-center w-8 h-8 rounded border cursor-pointer transition-colors
-            ${formData.selectedDays.includes(dia)
-                        ? "border-blue-500 bg-blue-500 text-white"
-                        : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
-                      }
+            ${
+              formData.selectedDays.includes(dia)
+                ? "border-blue-500 bg-blue-500 text-white"
+                : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+            }
           `}
                   >
                     <input
@@ -725,70 +741,15 @@ const SearchDeepScan = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               {isLoading ? "Agendando..." : "Agendar Monitoramento"}
             </button>
           </div>
         </form>
       </div>
-
-      {/* Estatísticas e Gráficos */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">
-            Agendamentos por Empresa
-          </h2>
-          <div className="h-80">
-            <Bar data={agendamentosEmpresaData} options={barOptions} />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">
-            Distribuição por Dia da Semana
-          </h2>
-          <div className="h-80">
-            <Pie data={agendamentosDiaData} options={pieOptions} />
-          </div>
-        </div>
-      </div> */}
-
-      {/* Filtros */}
-      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-semibold mb-4">Filtros</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Buscar
-            </label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por empresa ou responsável"
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Empresa
-            </label>
-            <select
-              value={selectedEmpresa}
-              onChange={(e) => setSelectedEmpresa(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todas as empresas</option>
-              {empresas.map((empresa, index) => (
-                <option key={index} value={empresa}>
-                  {empresa}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div> */}
 
       {/* Tabela de Agendamentos */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -878,14 +839,15 @@ const SearchDeepScan = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${agendamento.status === "scheduled"
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      agendamento.status === "scheduled"
                         ? "bg-yellow-100 text-yellow-800"
                         : agendamento.status === "completed"
-                          ? "bg-green-100 text-green-800"
-                          : agendamento.status === "failed"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
-                      }`}
+                        ? "bg-green-100 text-green-800"
+                        : agendamento.status === "failed"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
                   >
                     {agendamento.status}
                   </span>
@@ -916,10 +878,11 @@ const SearchDeepScan = () => {
                     <button
                       onClick={() => handleViewResult(agendamento)}
                       disabled={agendamento.status !== "completed"}
-                      className={`px-2 py-1 text-xs rounded transition-colors duration-200 ${agendamento.status === "completed"
+                      className={`px-2 py-1 text-xs rounded transition-colors duration-200 ${
+                        agendamento.status === "completed"
                           ? "bg-green-100 text-green-700 hover:bg-green-200"
                           : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        }`}
+                      }`}
                       title={
                         agendamento.status === "completed"
                           ? "Visualizar Resultado"
@@ -935,316 +898,6 @@ const SearchDeepScan = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Próximos Agendamentos */}
-      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-semibold mb-4">Próximos Agendamentos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredAgendamentos
-            .filter(
-              (item) =>
-                item.status === "Agendado" &&
-                new Date(item.dataAgendamento) > new Date()
-            )
-            .sort(
-              (a, b) =>
-                new Date(a.dataAgendamento) - new Date(b.dataAgendamento)
-            )
-            .slice(0, 6)
-            .map((agendamento, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium text-gray-900">
-                    {agendamento.empresa}
-                  </h3>
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      agendamento.status === "Agendado"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-blue-100 text-blue-800"
-                    }`}
-                  >
-                    {agendamento.status}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 mb-2">
-                  <span className="font-medium">Data/Hora:</span>{" "}
-                  {formatDate(agendamento.dataAgendamento)}
-                </p>
-                <p className="text-sm text-gray-500 mb-2">
-                  <span className="font-medium">Responsável:</span>{" "}
-                  {agendamento.responsavel}
-                </p>
-                <p className="text-sm text-gray-500 mb-2">
-                  <span className="font-medium">Plataformas:</span>
-                </p>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {agendamento.redesSociais &&
-                    agendamento.redesSociais.map((rede, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {rede}
-                      </span>
-                    ))}
-                </div>
-                <div className="flex justify-end mt-2">
-                  <button
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                    onClick={() => {
-                      // Iniciar monitoramento de progresso
-                      startProgressMonitoring(agendamento.scrapeId);
-                      alert(
-                        `Monitoramento iniciado para o agendamento ${agendamento.id}`
-                      );
-                    }}
-                  >
-                    Monitorar
-                  </button>
-                </div>
-              </div>
-            ))}
-        </div>
-
-        {filteredAgendamentos.filter(
-          (item) =>
-            item.status === "Agendado" &&
-            new Date(item.dataAgendamento) > new Date()
-        ).length === 0 && (
-          <p className="text-center text-gray-500 py-4">
-            Não há agendamentos futuros.
-          </p>
-        )}
-      </div> */}
-
-      {/* Ações em Lote */}
-      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-semibold mb-4">Ações em Lote</h2>
-        <div className="flex flex-wrap gap-4">
-          <button
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={() => {
-              // Exportar agendamentos como CSV
-              const headers = [
-                "ID",
-                "Empresa",
-                "Data/Hora",
-                "Plataformas",
-                "Frequência",
-                "Responsável",
-                "Status",
-              ];
-              const csvContent = [
-                headers.join(","),
-                ...filteredAgendamentos.map((item) =>
-                  [
-                    item.id,
-                    item.empresa,
-                    formatDate(item.dataAgendamento),
-                    item.redesSociais ? item.redesSociais.join(";") : "",
-                    item.frequencia,
-                    item.responsavel,
-                    item.status,
-                  ].join(",")
-                ),
-              ].join("\n");
-
-              const blob = new Blob([csvContent], {
-                type: "text/csv;charset=utf-8;",
-              });
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement("a");
-              link.href = url;
-              link.setAttribute(
-                "download",
-                `agendamentos_${new Date().toISOString().split("T")[0]}.csv`
-              );
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }}
-          >
-            Exportar Agendamentos
-          </button>
-          <button
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-            onClick={() => {
-              // Gerar relatório
-              alert("Gerando relatório de agendamentos...");
-              // Aqui você poderia implementar uma função para gerar um relatório mais detalhado
-            }}
-          >
-            Gerar Relatório
-          </button>
-          <button
-            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            onClick={() => {
-              // Agendar em lote
-              alert(
-                "Para agendar em lote, prepare um arquivo CSV com os dados e importe-o."
-              );
-              // Aqui você poderia implementar um modal para upload de CSV
-            }}
-          >
-            Agendar em Lote
-          </button>
-          <button
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-            onClick={() => {
-              // Cancelar todos os agendamentos pendentes
-              if (
-                window.confirm(
-                  "Tem certeza que deseja cancelar todos os agendamentos pendentes?"
-                )
-              ) {
-                // Implementar lógica para cancelar todos os agendamentos pendentes
-                alert(
-                  "Função de cancelamento em lote será implementada em breve."
-                );
-              }
-            }}
-          >
-            Cancelar Pendentes
-          </button>
-        </div>
-      </div> */}
-
-      {/* Histórico de Monitoramentos */}
-      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-semibold mb-4">
-          Histórico de Monitoramentos Recentes
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Empresa
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data/Hora
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Responsável
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Plataformas Monitoradas
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAgendamentos
-                .filter(
-                  (item) =>
-                    item.status === "Concluído" ||
-                    item.status === "Falhou" ||
-                    (item.status === "Cancelado" && item.ultimaExecucao)
-                )
-                .sort(
-                  (a, b) =>
-                    new Date(b.ultimaExecucao || b.dataAgendamento) -
-                    new Date(a.ultimaExecucao || a.dataAgendamento)
-                )
-                .slice(0, 5)
-                .map((agendamento, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {agendamento.empresa}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(
-                        agendamento.ultimaExecucao ||
-                          agendamento.dataAgendamento
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {agendamento.responsavel}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      <div className="flex flex-wrap gap-1">
-                        {agendamento.redesSociais &&
-                          agendamento.redesSociais.map((rede, idx) => (
-                            <span
-                              key={idx}
-                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                            >
-                              {rede}
-                            </span>
-                          ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          agendamento.status === "Concluído"
-                            ? "bg-green-100 text-green-800"
-                            : agendamento.status === "Falhou"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {agendamento.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button
-                        className="text-blue-600 hover:text-blue-900"
-                        onClick={() => {
-                          // Lógica para ver relatório/resultados
-                          alert(
-                            `Ver resultados do monitoramento ${agendamento.id}`
-                          );
-                        }}
-                      >
-                        Ver Resultados
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-              {filteredAgendamentos.filter(
-                (item) =>
-                  item.status === "Concluído" ||
-                  item.status === "Falhou" ||
-                  (item.status === "Cancelado" && item.ultimaExecucao)
-              ).length === 0 && (
-                <tr>
-                  <td
-                    colSpan="6"
-                    className="px-6 py-4 text-center text-sm text-gray-500"
-                  >
-                    Nenhum histórico de monitoramento disponível.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-4 flex justify-end">
-          <button
-            className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-            onClick={() => {
-              // Lógica para ver todos os históricos
-              alert("Ver histórico completo de monitoramentos");
-            }}
-          >
-            Ver histórico completo →
-          </button>
-        </div>
-      </div> */}
 
       {/* Dicas e Melhores Práticas */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -1288,45 +941,16 @@ const SearchDeepScan = () => {
         </div>
       </div>
 
-      {/* Status da API */}
-      {/* <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-semibold mb-4">Status da API</h2>
-        <div className="flex items-center mb-4">
-          <div
-            className={`w-3 h-3 rounded-full mr-2 ${
-              error ? "bg-red-500" : "bg-green-500"
-            }`}
-          ></div>
-          <span className="text-sm font-medium">
-            {error ? "API com problemas" : "API operacional"}
-          </span>
-        </div>
-
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-700">{error}</p>
-            <button
-              className="mt-2 text-xs text-blue-600 hover:text-blue-800"
-              onClick={() => getScheduledTasks()}
-            >
-              Tentar reconectar
-            </button>
-          </div>
-        )}
-
-        <div className="mt-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">
-            Endpoints disponíveis:
-          </h3>
-          <ul className="text-sm text-gray-600 space-y-1 ml-4 list-disc">
-            <li>Agendamento de monitoramentos</li>
-            <li>Validação de perfis</li>
-            <li>Busca de dados por perfil</li>
-            <li>Monitoramento de progresso em tempo real</li>
-            <li>Filtragem de dados raspados</li>
-          </ul>
-        </div>
-      </div> */}
+      {/* Modal de Resultados */}
+      <ResultModal
+        showResultModal={showResultModal}
+        setShowResultModal={setShowResultModal}
+        resultData={resultData}
+        setResultData={setResultData}
+        loadingResult={loadingResult}
+        error={error}
+        setError={setError}
+      />
     </div>
   );
 };

@@ -73,4 +73,12 @@ export const menuItemsDeepScan = [
   { name: "Raspagens", path: "/deepscan/verificacoes" },
   { name: "Agendamento", path: "/deepscan/agendamentos" },
   { name: "BetCrawler", path: "/deepscan/betcrawler" },
+  { name: "DataIntel", path: "/deepscan/data-intel" },
+];
+
+export const menuItemsDataIntel = [
+  {
+    name: "Dashboard",
+    path: "/data-intel/dashboard",
+  },
 ];
