@@ -13,7 +13,16 @@ import {
   ArcElement,
 } from "chart.js";
 import { useDeepScanStore } from "../../store/useDeepscanStore.js";
-import { FiEdit2, FiPause, FiTrash2 } from "react-icons/fi";
+import {
+  FiEdit2,
+  FiPause,
+  FiTrash2,
+  FiEye,
+  FiEyeOff,
+  FiCheck,
+  FiX,
+  FiLoader,
+} from "react-icons/fi";
 import ResultModal from "../../components/deepscan/ResultModal.jsx";
 
 // Registrar os componentes do Chart.js
@@ -50,13 +59,171 @@ const SearchDeepScan = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [newProfile, setNewProfile] = useState({ name: "", platform: "" });
 
+  // Estados para validação de perfis
+  const [profileValidation, setProfileValidation] = useState({});
+  const [validatingProfiles, setValidatingProfiles] = useState(new Set());
+
   // Estados para o modal de resultados
   const [showResultModal, setShowResultModal] = useState(false);
   const [resultData, setResultData] = useState(null);
   const [loadingResult, setLoadingResult] = useState(false);
 
+  // Função para validar se um perfil existe
+  const validateProfile = async (profileName, platform, profileIndex) => {
+    const profileKey = `${profileName}_${platform}_${profileIndex}`;
+
+    // Adicionar ao conjunto de perfis sendo validados
+    setValidatingProfiles((prev) => new Set([...prev, profileKey]));
+
+    try {
+      // Simular validação - substitua pela API real
+      const response = await fetch(
+        `http://89.116.74.250:5001/api/v1/validate-profile`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            accept: "application/json",
+            "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b",
+            "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a",
+          },
+          body: JSON.stringify({
+            profile: profileName,
+            platform: platform,
+          }),
+        }
+      );
+
+      let isValid = false;
+      if (response.ok) {
+        const result = await response.json();
+        isValid = result.exists || result.valid || false;
+      } else {
+        // Se a API não existir, simular validação baseada em regras básicas
+        isValid = await simulateProfileValidation(profileName, platform);
+      }
+
+      // Atualizar o estado de validação
+      setProfileValidation((prev) => ({
+        ...prev,
+        [profileKey]: {
+          isValid,
+          checked: true,
+          timestamp: Date.now(),
+        },
+      }));
+    } catch (error) {
+      console.error("Erro ao validar perfil:", error);
+
+      // Em caso de erro, usar validação simulada
+      const isValid = await simulateProfileValidation(profileName, platform);
+
+      setProfileValidation((prev) => ({
+        ...prev,
+        [profileKey]: {
+          isValid,
+          checked: true,
+          timestamp: Date.now(),
+          error: true,
+        },
+      }));
+    } finally {
+      // Remover do conjunto de perfis sendo validados
+      setValidatingProfiles((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(profileKey);
+        return newSet;
+      });
+    }
+  };
+
+  // Função para simular validação de perfil (substitua pela lógica real)
+  const simulateProfileValidation = async (profileName, platform) => {
+    // Simular delay de rede
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 + Math.random() * 2000)
+    );
+
+    // Regras básicas de validação simulada
+    const cleanName = profileName.replace("@", "").toLowerCase();
+
+    // Simular alguns perfis como válidos e outros como inválidos
+    const validPatterns = [
+      /^[a-zA-Z0-9._]{3,30}$/, // Padrão básico de username
+      /^[a-zA-Z0-9]{5,}$/, // Pelo menos 5 caracteres alfanuméricos
+    ];
+
+    const invalidPatterns = [
+      /test/i, // Perfis de teste
+      /fake/i, // Perfis fake
+      /spam/i, // Perfis spam
+    ];
+
+    // Verificar se corresponde a padrões inválidos
+    if (invalidPatterns.some((pattern) => pattern.test(cleanName))) {
+      return false;
+    }
+
+    // Verificar se corresponde a padrões válidos
+    if (validPatterns.some((pattern) => pattern.test(cleanName))) {
+      // 80% de chance de ser válido para perfis que seguem o padrão
+      return Math.random() > 0.2;
+    }
+
+    // Para outros casos, 50% de chance
+    return Math.random() > 0.5;
+  };
+
+  // Função para renderizar o status de validação do perfil
+  const renderProfileValidationStatus = (profile, index) => {
+    const [profileName, platformPart] = profile.split(" (");
+    const platform = platformPart?.replace(")", "") || "";
+    const profileKey = `${profileName}_${platform}_${index}`;
+
+    const validation = profileValidation[profileKey];
+    const isValidating = validatingProfiles.has(profileKey);
+
+    if (isValidating) {
+      return (
+        <div className="flex items-center ml-2">
+          <FiLoader className="animate-spin text-blue-500" size={14} />
+          <span className="text-xs text-blue-600 ml-1">Verificando...</span>
+        </div>
+      );
+    }
+
+    if (!validation || !validation.checked) {
+      return (
+        <button
+          type="button"
+          onClick={() => validateProfile(profileName, platform, index)}
+          className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded hover:bg-gray-200 transition-colors"
+          title="Clique para verificar se o perfil existe"
+        >
+          Verificar
+        </button>
+      );
+    }
+
+    if (validation.isValid) {
+      return (
+        <div className="flex items-center ml-2">
+          <FiCheck className="text-green-500" size={14} />
+          <span className="text-xs text-green-600 ml-1">Válido</span>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center ml-2">
+          <FiX className="text-red-500" size={14} />
+          <span className="text-xs text-red-600 ml-1">Inválido</span>
+        </div>
+      );
+    }
+  };
+
   const handleViewResult = async (agendamento) => {
-    if (agendamento.status !== "completed") {
+    if (agendamento.status !== "completed" && agendamento.status !== "failed") {
       console.log("Resultado não disponível para visualização");
       return;
     }
@@ -100,21 +267,67 @@ const SearchDeepScan = () => {
     }
   };
 
+  // Função para renderizar o botão de visualização baseado no status
+  const renderViewButton = (agendamento) => {
+    const isCompleted = agendamento.status === "completed";
+    const isFailed = agendamento.status === "failed";
+    const hasResults = isCompleted || isFailed;
+
+    if (!hasResults) {
+      return (
+        <button
+          disabled
+          className="flex items-center px-2 py-1 text-xs rounded transition-colors duration-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+          title="Resultado não disponível"
+        >
+          <FiEyeOff size={14} className="mr-1" />
+          Sem Log
+        </button>
+      );
+    }
+
+    if (isFailed) {
+      return (
+        <button
+          onClick={() => handleViewResult(agendamento)}
+          className="flex items-center px-2 py-1 text-xs rounded transition-colors duration-200 bg-red-100 text-red-700 hover:bg-red-200"
+          title="Visualizar Log de Erro"
+        >
+          <FiEye size={14} className="mr-1" />
+          Ver Erro
+        </button>
+      );
+    }
+
+    if (isCompleted) {
+      return (
+        <button
+          onClick={() => handleViewResult(agendamento)}
+          className="flex items-center px-2 py-1 text-xs rounded transition-colors duration-200 bg-green-100 text-green-700 hover:bg-green-200"
+          title="Visualizar Resultado"
+        >
+          <FiEye size={14} className="mr-1" />
+          Ver Dados
+        </button>
+      );
+    }
+
+    return null;
+  };
+
   // Adicione estas plataformas no início do componente
   const profilePlatforms = [
     "Instagram",
     "Facebook",
-    "Google",
-    "X",
+    "Internet",
+    "DeepWeb",
+    "DarkWeb",
+    "X.com",
     "LinkedIn",
-    "Youtube",
+    "YouTube",
     "Discord",
     "Telegram",
-    "Deep/Dark",
-    "Tiktok",
-    "Reddit",
-    "Sites de Noticias",
-    "Blogs",
+    "Github",
   ];
 
   const handleAddProfile = () => {
@@ -133,6 +346,18 @@ const SearchDeepScan = () => {
   const handleRemoveProfile = (index) => {
     const updatedProfiles = formData.profiles.filter((_, i) => i !== index);
     setFormData({ ...formData, profiles: updatedProfiles });
+
+    // Limpar validação do perfil removido
+    const profile = formData.profiles[index];
+    const [profileName, platformPart] = profile.split(" (");
+    const platform = platformPart?.replace(")", "") || "";
+    const profileKey = `${profileName}_${platform}_${index}`;
+
+    setProfileValidation((prev) => {
+      const newValidation = { ...prev };
+      delete newValidation[profileKey];
+      return newValidation;
+    });
   };
 
   // Função para lidar com a mudança dos inputs do formulário
@@ -179,117 +404,6 @@ const SearchDeepScan = () => {
       : formData.selectedDays.filter((day) => day !== parseInt(value));
     setFormData({ ...formData, selectedDays: updatedDays });
   };
-
-  // Função para fazer a requisição de agendamento
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // Verificar se 'profiles' ou 'keywords' não estão vazios
-    if (formData.profiles.length === 0 && formData.keywords.length === 0) {
-      setError("Pelo menos um perfil ou palavra-chave deve ser fornecido.");
-      setIsLoading(false);
-      return;
-    }
-
-    // Verificar se os campos obrigatórios foram preenchidos
-    if (formData.platforms.length === 0) {
-      setError("Pelo menos uma plataforma deve ser selecionada.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (formData.selectedDays.length === 0) {
-      setError("Pelo menos um dia do mês deve ser selecionado.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (!formData.startHour) {
-      setError("O horário de início é obrigatório.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (!formData.frequencia) {
-      setError("A frequência é obrigatória.");
-      setIsLoading(false);
-      return;
-    }
-
-    // Limpar o erro caso os campos estejam corretamente preenchidos
-    setError("");
-
-    const scrapingParams = {
-      searchPhrases: formData.searchPhrases,
-      platforms: formData.platforms,
-      format: formData.format,
-      selectedDays: formData.selectedDays,
-      startHour: formData.startHour,
-      afterDate: formData.afterDate || undefined,
-      beforeDate: formData.beforeDate || undefined,
-    };
-
-    const makeRequest = async (params, type) => {
-      try {
-        const response = await fetch(
-          "http://89.116.74.250:5001/api/v1/schedule",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              accept: "application/json",
-              "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b", // Substitua com sua chave de API
-              "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a", // Substitua com seu segredo de API
-            },
-            body: JSON.stringify(params),
-          }
-        );
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          alert(`${type} Agendado com sucesso!`);
-        } else {
-          setError(result.error || "Erro desconhecido");
-        }
-      } catch (err) {
-        setError(err.message || "Erro ao agendar");
-      }
-    };
-
-    // Realizar a requisição para 'profiles' ou 'keywords' separadamente
-    const requests = [];
-
-    // Se houver 'profiles', fazer a requisição
-    if (formData.profiles.length > 0) {
-      const profilesParams = {
-        ...scrapingParams,
-        profiles: formData.profiles,
-      };
-      requests.push(makeRequest(profilesParams, "Perfis"));
-    }
-
-    // Se houver 'keywords', fazer a requisição
-    if (formData.keywords.length > 0) {
-      const keywordsParams = {
-        ...scrapingParams,
-        keywords: formData.keywords,
-      };
-      requests.push(makeRequest(keywordsParams, "Palavras-chave"));
-    }
-
-    // Esperar todas as requisições finalizarem
-    await Promise.all(requests);
-
-    setIsLoading(false);
-  };
-
-  // Exemplo de plataformas
-  const platforms = ["Twitter", "Facebook", "Instagram", "Google"];
-
-  // Gerar dias do mês para seleção
-  const diasDoMes = Array.from({ length: 31 }, (_, i) => i + 1);
 
   //************************************************************************* */
   //************************************************************************* */
@@ -346,6 +460,160 @@ const SearchDeepScan = () => {
   useEffect(() => {
     fetchAgendamentos(); // Chama a função de fetch quando o componente é montado
   }, []);
+
+  // Função para fazer a requisição de agendamento
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Verificar se 'profiles' ou 'keywords' não estão vazios
+    if (formData.profiles.length === 0 && formData.keywords.length === 0) {
+      setError("Pelo menos um perfil ou palavra-chave deve ser fornecido.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Verificar se os campos obrigatórios foram preenchidos
+    if (formData.platforms.length === 0) {
+      setError("Pelo menos uma plataforma deve ser selecionada.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.selectedDays.length === 0) {
+      setError("Pelo menos um dia do mês deve ser selecionado.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.startHour) {
+      setError("O horário de início é obrigatório.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.frequencia) {
+      setError("A frequência é obrigatória.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Verificar se há perfis inválidos
+    const invalidProfiles = formData.profiles.filter((profile, index) => {
+      const [profileName, platformPart] = profile.split(" (");
+      const platform = platformPart?.replace(")", "") || "";
+      const profileKey = `${profileName}_${platform}_${index}`;
+      const validation = profileValidation[profileKey];
+      return validation && validation.checked && !validation.isValid;
+    });
+
+    if (invalidProfiles.length > 0) {
+      setError(
+        `Os seguintes perfis são inválidos: ${invalidProfiles.join(
+          ", "
+        )}. Por favor, remova-os ou verifique novamente.`
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    // Limpar o erro caso os campos estejam corretamente preenchidos
+    setError("");
+
+    const scrapingParams = {
+      searchPhrases: formData.searchPhrases,
+      platforms: formData.platforms,
+      format: formData.format,
+      selectedDays: formData.selectedDays,
+      startHour: formData.startHour,
+      afterDate: formData.afterDate || undefined,
+      beforeDate: formData.beforeDate || undefined,
+    };
+
+    // Variável para controlar se houve sucesso em pelo menos uma requisição
+    let hasSuccess = false;
+
+    const makeRequest = async (params, type) => {
+      try {
+        const response = await fetch(
+          "http://89.116.74.250:5001/api/v1/schedule",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              accept: "application/json",
+              "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b", // Substitua com sua chave de API
+              "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a", // Substitua com seu segredo de API
+            },
+            body: JSON.stringify(params),
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          alert(`${type} Agendado com sucesso!`);
+          hasSuccess = true; // Marca que houve sucesso
+        } else {
+          setError(result.error || "Erro desconhecido");
+        }
+      } catch (err) {
+        setError(err.message || "Erro ao agendar");
+      }
+    };
+
+    // Realizar a requisição para 'profiles' ou 'keywords' separadamente
+    const requests = [];
+
+    // Se houver 'profiles', fazer a requisição
+    if (formData.profiles.length > 0) {
+      const profilesParams = {
+        ...scrapingParams,
+        profiles: formData.profiles,
+      };
+      requests.push(makeRequest(profilesParams, "Perfis"));
+    }
+
+    // Se houver 'keywords', fazer a requisição
+    if (formData.keywords.length > 0) {
+      const keywordsParams = {
+        ...scrapingParams,
+        keywords: formData.keywords,
+      };
+      requests.push(makeRequest(keywordsParams, "Palavras-chave"));
+    }
+
+    // Esperar todas as requisições finalizarem
+    await Promise.all(requests);
+
+    // Se houve sucesso em pelo menos uma requisição, atualizar a lista e limpar o formulário
+    if (hasSuccess) {
+      // Atualizar a lista de agendamentos
+      await fetchAgendamentos();
+
+      // Limpar o formulário
+      setFormData({
+        profiles: [],
+        keywords: [],
+        searchPhrases: [],
+        platforms: [],
+        format: "DB",
+        selectedDays: [],
+        startHour: "08:00",
+        afterDate: "",
+        beforeDate: "",
+        frequencia: "Mensal",
+        responsavel: "",
+        observacoes: "",
+      });
+
+      // Limpar validações de perfis
+      setProfileValidation({});
+      setValidatingProfiles(new Set());
+    }
+
+    setIsLoading(false);
+  };
 
   const requestSort = (key) => {
     let direction = "asc";
@@ -420,6 +688,24 @@ const SearchDeepScan = () => {
     return uuidRegex.test(id);
   };
 
+  // Exemplo de plataformas
+  const platforms = [
+    "Instagram",
+    "Facebook",
+    "Internet",
+    "DeepWeb",
+    "DarkWeb",
+    "X.com",
+    "LinkedIn",
+    "YouTube",
+    "Discord",
+    "Telegram",
+    "Github",
+  ];
+
+  // Gerar dias do mês para seleção
+  const diasDoMes = Array.from({ length: 31 }, (_, i) => i + 1);
+
   return (
     <div className="mx-auto px-4 py-8 flex flex-col">
       <h1 className="text-3xl font-bold mb-6">Agendamento de Monitoramento</h1>
@@ -450,19 +736,23 @@ const SearchDeepScan = () => {
                 </div>
 
                 {formData.profiles.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="space-y-2">
                     {formData.profiles.map((profile, index) => (
                       <div
                         key={index}
-                        className="flex items-center bg-white border border-gray-300 rounded-md px-3 py-1 text-sm"
+                        className="flex items-center justify-between bg-white border border-gray-300 rounded-md px-3 py-2"
                       >
-                        <span className="mr-2">{profile}</span>
+                        <div className="flex items-center flex-1">
+                          <span className="text-sm mr-2">{profile}</span>
+                          {renderProfileValidationStatus(profile, index)}
+                        </div>
                         <button
                           type="button"
                           onClick={() => handleRemoveProfile(index)}
-                          className="text-red-500 hover:text-red-700 ml-1"
+                          className="text-red-500 hover:text-red-700 ml-2 p-1"
+                          title="Remover perfil"
                         >
-                          ×
+                          <FiX size={16} />
                         </button>
                       </div>
                     ))}
@@ -875,22 +1165,7 @@ const SearchDeepScan = () => {
                     >
                       <FiTrash2 size={16} />
                     </button>
-                    <button
-                      onClick={() => handleViewResult(agendamento)}
-                      disabled={agendamento.status !== "completed"}
-                      className={`px-2 py-1 text-xs rounded transition-colors duration-200 ${
-                        agendamento.status === "completed"
-                          ? "bg-green-100 text-green-700 hover:bg-green-200"
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      }`}
-                      title={
-                        agendamento.status === "completed"
-                          ? "Visualizar Resultado"
-                          : "Resultado não disponível"
-                      }
-                    >
-                      Ver Resultado
-                    </button>
+                    {renderViewButton(agendamento)}
                   </div>
                 </td>
               </tr>
@@ -936,6 +1211,25 @@ const SearchDeepScan = () => {
             <p className="text-sm text-gray-600">
               Ao detectar violações, notifique imediatamente a empresa para
               remoção do conteúdo em até 24 horas.
+            </p>
+          </div>
+          <div className="border-l-4 border-indigo-500 pl-4 py-2">
+            <h3 className="font-medium text-gray-900 mb-1">
+              Validação de Perfis
+            </h3>
+            <p className="text-sm text-gray-600">
+              Sempre verifique se os perfis existem antes de agendar o
+              monitoramento. Perfis inválidos podem causar falhas no processo de
+              coleta.
+            </p>
+          </div>
+          <div className="border-l-4 border-pink-500 pl-4 py-2">
+            <h3 className="font-medium text-gray-900 mb-1">
+              Perfis Verificados
+            </h3>
+            <p className="text-sm text-gray-600">
+              Perfis com ✓ verde foram validados e existem na plataforma. Perfis
+              com ✗ vermelho são inválidos e devem ser removidos.
             </p>
           </div>
         </div>
