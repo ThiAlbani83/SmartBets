@@ -146,7 +146,7 @@ const HomeDataIntel = () => {
         <h2 className="text-xl font-semibold mb-4">
           Distribuição dos Dados nas Bases
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
               {(databaseKPIs.breakdown.genderMale / 1000).toFixed(0)}K
@@ -182,6 +182,24 @@ const HomeDataIntel = () => {
               {(databaseKPIs.breakdown.vehicles / 1000).toFixed(0)}K
             </div>
             <div className="text-sm text-gray-600">Veículos</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-orange-600">
+              {(databaseKPIs.breakdown.adicto / 1000).toFixed(0)}K
+            </div>
+            <div className="text-sm text-gray-600">Adictos</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {(databaseKPIs.breakdown.dopaminado / 1000).toFixed(0)}K
+            </div>
+            <div className="text-sm text-gray-600">Dopaminados</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-teal-600">
+              {(databaseKPIs.breakdown.ludopata / 1000).toFixed(0)}K
+            </div>
+            <div className="text-sm text-gray-600">Ludópatas</div>
           </div>
         </div>
       </div>
