@@ -201,6 +201,30 @@ const HomeDataIntel = () => {
             </div>
             <div className="text-sm text-gray-600">Ludópatas</div>
           </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-teal-600">
+              {(databaseKPIs.breakdown.peps / 1000).toFixed(0)}K
+            </div>
+            <div className="text-sm text-gray-600">PEPs</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-teal-600">
+              {(databaseKPIs.breakdown.sancionados / 1000).toFixed(0)}K
+            </div>
+            <div className="text-sm text-gray-600">Sancionados</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-teal-600">
+              {(databaseKPIs.breakdown.obitos / 1000).toFixed(0)}K
+            </div>
+            <div className="text-sm text-gray-600">Óbitos</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-teal-600">
+              {(databaseKPIs.breakdown.redesSociais / 1000).toFixed(0)}K
+            </div>
+            <div className="text-sm text-gray-600">Redes Sociais</div>
+          </div>
         </div>
       </div>
 

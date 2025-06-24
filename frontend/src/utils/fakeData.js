@@ -2023,6 +2023,10 @@ export const databaseKPIs = {
     ludopata: 28000,
     bankAccounts: 780000,
     socialMedia: 1500000,
+    peps: 8500,
+    sancionados: 2900,
+    obitos: 4300000,
+    redesSociais: 1200000,
   },
 };
 
