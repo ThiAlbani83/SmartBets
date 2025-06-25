@@ -78,7 +78,7 @@ const SearchDeepScan = () => {
     try {
       // Simular validação - substitua pela API real
       const response = await fetch(
-        `http://89.116.74.250:5001/api/v1/validate-profile`,
+        `http://89.116.74.250:5001/api/v1/validate/profile`,
         {
           method: "POST",
           headers: {
@@ -322,7 +322,7 @@ const SearchDeepScan = () => {
     "Internet",
     "DeepWeb",
     "DarkWeb",
-    "X.com",
+    "Twitter",
     "LinkedIn",
     "YouTube",
     "Discord",
@@ -615,6 +615,58 @@ const SearchDeepScan = () => {
     setIsLoading(false);
   };
 
+  const handleMonitorNow = async () => {
+    setIsLoading(true);  // Inicia o estado de carregamento
+    const monitorParams = {
+      profiles: formData.profiles,
+      platforms: formData.platforms,
+      searchPhrases: formData.searchPhrases,
+      format: "DB",
+    };
+    try {
+      // Fazendo a requisição POST para monitoramento imediato
+      const response = await fetch(
+        "http://89.116.74.250:5001/api/v1/scrape/profiles",
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b",
+            "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(monitorParams),
+        }
+      );
+      const result = await response.json();
+      
+      if (response.ok) {
+        alert(`Monitoramento iniciado! Scrape ID: ${result.scrapeId}`);
+        setError("");
+        await fetchAgendamentos();
+      } else {
+              // Verificar se 'profiles' ou 'keywords' não estão vazios
+          if (formData.profiles.length === 0 && formData.keywords.length === 0) {
+            setError("Pelo menos um perfil ou palavra-chave deve ser fornecido.");
+            setIsLoading(false);
+            return;
+          }
+
+          // Verificar se os campos obrigatórios foram preenchidos
+          if (formData.platforms.length === 0) {
+            setError("Pelo menos uma plataforma deve ser selecionada.");
+            setIsLoading(false);
+            return;
+          } else setError(result.message || "Erro desconhecido ao iniciar monitoramento.");
+      }
+    } catch (error) {
+      console.error("Erro ao iniciar monitoramento:", error);
+      setError("Erro ao iniciar monitoramento.");
+    } finally {
+      setIsLoading(false);  // Finaliza o carregamento
+    }
+  };
+
   const requestSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -631,9 +683,8 @@ const SearchDeepScan = () => {
 
   const formatDate = (date) => {
     const d = new Date(date);
-    return `${d.getDate()}/${
-      d.getMonth() + 1
-    }/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+    return `${d.getDate()}/${d.getMonth() + 1
+      }/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
   };
 
   const handleEdit = (agendamento) => {
@@ -695,7 +746,7 @@ const SearchDeepScan = () => {
     "Internet",
     "DeepWeb",
     "DarkWeb",
-    "X.com",
+    "Twitter",
     "LinkedIn",
     "YouTube",
     "Discord",
@@ -979,11 +1030,10 @@ const SearchDeepScan = () => {
                     key={dia}
                     className={`
             flex items-center justify-center w-8 h-8 rounded border cursor-pointer transition-colors
-            ${
-              formData.selectedDays.includes(dia)
-                ? "border-blue-500 bg-blue-500 text-white"
-                : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
-            }
+            ${formData.selectedDays.includes(dia)
+                        ? "border-blue-500 bg-blue-500 text-white"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+                      }
           `}
                   >
                     <input
@@ -1027,17 +1077,27 @@ const SearchDeepScan = () => {
             </div>
           )}
 
-          <div className="flex justify-end">
+
+          <div className="flex justify-between">
+            <button
+              type="button"
+              onClick={handleMonitorNow}
+              disabled={isLoading}
+              className={`px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+            >
+              {isLoading ? "Monitorando..." : "Monitorar Agora"}
+            </button>
             <button
               type="submit"
               disabled={isLoading}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               {isLoading ? "Agendando..." : "Agendar Monitoramento"}
             </button>
           </div>
+
         </form>
       </div>
 
@@ -1129,15 +1189,14 @@ const SearchDeepScan = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      agendamento.status === "scheduled"
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${agendamento.status === "scheduled"
                         ? "bg-yellow-100 text-yellow-800"
                         : agendamento.status === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : agendamento.status === "failed"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
+                          ? "bg-green-100 text-green-800"
+                          : agendamento.status === "failed"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                      }`}
                   >
                     {agendamento.status}
                   </span>
