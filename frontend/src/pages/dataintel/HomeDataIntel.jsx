@@ -133,7 +133,7 @@ const HomeDataIntel = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">CNPJs Ativos</p>
               <p className="text-3xl font-bold text-orange-600">
-                {(databaseKPIs.breakdown.cnpj / 1000).toFixed(0)}K
+                {(databaseKPIs.breakdown.cnpj / 100000).toFixed(0)}M
               </p>
             </div>
             <PiBuildingOffice className="text-orange-600" size={32} />
@@ -149,49 +149,55 @@ const HomeDataIntel = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {(databaseKPIs.breakdown.genderMale / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.genderMale / 1000000).toFixed(1)}M
             </div>
             <div className="text-sm text-gray-600">Gênero Masculino</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-pink-600">
-              {(databaseKPIs.breakdown.genderFemale / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.genderFemale / 1000000).toFixed(1)}M
             </div>
             <div className="text-sm text-gray-600">Gênero Feminino</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-red-600">
-              {(databaseKPIs.breakdown.trafficViolations / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.cellphones / 1000000).toFixed(0)}M
             </div>
-            <div className="text-sm text-gray-600">Violações Trânsito</div>
+            <div className="text-sm text-gray-600">Celulares</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-600">
+              {(databaseKPIs.breakdown.emails / 1000000).toFixed(0)}M
+            </div>
+            <div className="text-sm text-gray-600">Emails</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-yellow-600">
-              {(databaseKPIs.breakdown.criminalRecords / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.criminalRecords / 1000000).toFixed(1)}M
             </div>
             <div className="text-sm text-gray-600">Registros Criminais</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
-              {(databaseKPIs.breakdown.properties / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.properties / 1000000).toFixed(1)}M
             </div>
             <div className="text-sm text-gray-600">Propriedades</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-indigo-600">
-              {(databaseKPIs.breakdown.vehicles / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.vehicles / 1000000).toFixed(1)}M
             </div>
             <div className="text-sm text-gray-600">Veículos</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-600">
-              {(databaseKPIs.breakdown.adicto / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.adicto / 1000000).toFixed(1)}M
             </div>
             <div className="text-sm text-gray-600">Adictos</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {(databaseKPIs.breakdown.dopaminado / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.dopaminado / 1000000).toFixed(1)}M
             </div>
             <div className="text-sm text-gray-600">Dopaminados</div>
           </div>
@@ -203,25 +209,25 @@ const HomeDataIntel = () => {
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-teal-600">
-              {(databaseKPIs.breakdown.peps / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.peps / 1000).toFixed(1)}K
             </div>
             <div className="text-sm text-gray-600">PEPs</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-teal-600">
-              {(databaseKPIs.breakdown.sancionados / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.sancionados / 1000).toFixed(1)}K
             </div>
             <div className="text-sm text-gray-600">Sancionados</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-teal-600">
-              {(databaseKPIs.breakdown.obitos / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.obitos / 1000000).toFixed(1)}M
             </div>
             <div className="text-sm text-gray-600">Óbitos</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-teal-600">
-              {(databaseKPIs.breakdown.redesSociais / 1000).toFixed(0)}K
+              {(databaseKPIs.breakdown.redesSociais / 1000000).toFixed(1)}M
             </div>
             <div className="text-sm text-gray-600">Redes Sociais</div>
           </div>
