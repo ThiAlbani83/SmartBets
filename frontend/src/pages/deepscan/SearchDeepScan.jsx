@@ -22,6 +22,7 @@ import {
   FiCheck,
   FiX,
   FiLoader,
+  FiPlay,
 } from "react-icons/fi";
 import ResultModal from "../../components/deepscan/ResultModal.jsx";
 
@@ -59,6 +60,10 @@ const SearchDeepScan = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [newProfile, setNewProfile] = useState({ name: "", platform: "" });
 
+  // Estados para modal de palavras-chave
+  const [showKeywordModal, setShowKeywordModal] = useState(false);
+  const [newKeyword, setNewKeyword] = useState("");
+
   // Estados para validação de perfis
   const [profileValidation, setProfileValidation] = useState({});
   const [validatingProfiles, setValidatingProfiles] = useState(new Set());
@@ -67,6 +72,15 @@ const SearchDeepScan = () => {
   const [showResultModal, setShowResultModal] = useState(false);
   const [resultData, setResultData] = useState(null);
   const [loadingResult, setLoadingResult] = useState(false);
+
+  // Estados para controle de exibição dos campos de agendamento
+  const [showScheduleFields, setShowScheduleFields] = useState(false);
+
+  // Estados para o modal de progresso do scraping
+  const [showScrapeModal, setShowScrapeModal] = useState(false);
+  const [scrapeProgress, setScrapeProgress] = useState(0);
+  const [scrapeStatus, setScrapeStatus] = useState("");
+  const [isScraping, setIsScraping] = useState(false);
 
   // Função para validar se um perfil existe
   const validateProfile = async (profileName, platform, profileIndex) => {
@@ -319,7 +333,7 @@ const SearchDeepScan = () => {
   const profilePlatforms = [
     "Instagram",
     "Facebook",
-    "Internet",
+    "Google",
     "DeepWeb",
     "DarkWeb",
     "X.com",
@@ -360,26 +374,37 @@ const SearchDeepScan = () => {
     });
   };
 
+  // Funções para gerenciar palavras-chave
+  const handleAddKeyword = () => {
+    if (newKeyword.trim()) {
+      // Split by comma and clean up each keyword
+      const keywordsToAdd = newKeyword
+        .split(",")
+        .map((keyword) => keyword.trim())
+        .filter((keyword) => keyword.length > 0)
+        .filter((keyword) => !formData.keywords.includes(keyword)); // Avoid duplicates
+
+      if (keywordsToAdd.length > 0) {
+        setFormData({
+          ...formData,
+          keywords: [...formData.keywords, ...keywordsToAdd],
+        });
+        setNewKeyword("");
+        setShowKeywordModal(false);
+        setError("");
+      }
+    }
+  };
+
+  const handleRemoveKeyword = (index) => {
+    const updatedKeywords = formData.keywords.filter((_, i) => i !== index);
+    setFormData({ ...formData, keywords: updatedKeywords });
+  };
+
   // Função para lidar com a mudança dos inputs do formulário
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-  };
-
-  const handleProfilesChange = (e) => {
-    setFormData({
-      ...formData,
-      profiles: e.target.value.split(",").map((profile) => profile.trim()),
-    });
-    setError(""); // Limpar erro
-  };
-
-  const handleKeywordsChange = (e) => {
-    setFormData({
-      ...formData,
-      keywords: e.target.value.split(",").map((keyword) => keyword.trim()),
-    });
-    setError(""); // Limpar erro
   };
 
   const handleSearchPhrasesChange = (e) => {
@@ -389,20 +414,101 @@ const SearchDeepScan = () => {
     });
   };
 
-  const handlePlatformsChange = (e) => {
-    const { value, checked } = e.target;
-    const updatedPlatforms = checked
-      ? [...formData.platforms, value]
-      : formData.platforms.filter((platform) => platform !== value);
-    setFormData({ ...formData, platforms: updatedPlatforms });
-  };
-
   const handleSelectedDaysChange = (e) => {
     const { value, checked } = e.target;
     const updatedDays = checked
       ? [...formData.selectedDays, parseInt(value)]
       : formData.selectedDays.filter((day) => day !== parseInt(value));
     setFormData({ ...formData, selectedDays: updatedDays });
+  };
+
+  // Função para executar scraping imediato
+  const handleScrapeNow = async () => {
+    // Verificar se 'profiles' ou 'keywords' não estão vazios
+    if (formData.profiles.length === 0 && formData.keywords.length === 0) {
+      setError("Pelo menos um perfil ou palavra-chave deve ser fornecido.");
+      return;
+    }
+
+    // Verificar se há perfis inválidos
+    const invalidProfiles = formData.profiles.filter((profile, index) => {
+      const [profileName, platformPart] = profile.split(" (");
+      const platform = platformPart?.replace(")", "") || "";
+      const profileKey = `${profileName}_${platform}_${index}`;
+      const validation = profileValidation[profileKey];
+      return validation && validation.checked && !validation.isValid;
+    });
+
+    if (invalidProfiles.length > 0) {
+      setError(
+        `Os seguintes perfis são inválidos: ${invalidProfiles.join(
+          ", "
+        )}. Por favor, remova-os ou verifique novamente.`
+      );
+      return;
+    }
+
+    // Limpar o erro
+    setError("");
+
+    // Abrir modal de progresso
+    setShowScrapeModal(true);
+    setIsScraping(true);
+    setScrapeProgress(0);
+    setScrapeStatus("Iniciando scraping...");
+
+    try {
+      // Simular progresso de scraping
+      const progressSteps = [
+        { progress: 10, status: "Validando dados..." },
+        { progress: 25, status: "Conectando com APIs..." },
+        { progress: 40, status: "Coletando dados dos perfis..." },
+        { progress: 60, status: "Processando palavras-chave..." },
+        { progress: 80, status: "Analisando resultados..." },
+        { progress: 95, status: "Finalizando..." },
+        { progress: 100, status: "Concluído!" },
+      ];
+
+      for (const step of progressSteps) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setScrapeProgress(step.progress);
+        setScrapeStatus(step.status);
+      }
+
+      // Simular criação de um novo agendamento com status completed
+      const newScrapeResult = {
+        id: `scrape-${Date.now()}`,
+        client_id: "immediate-scrape",
+        status: "completed",
+        profiles: formData.profiles,
+        keywords: formData.keywords,
+        platforms: ["Instagram", "Facebook", "X.com"], // Plataformas padrão para scraping imediato
+        scheduledAt: new Date().toISOString(),
+      };
+
+      // Adicionar à lista de agendamentos
+      setAgendamentos((prev) => [newScrapeResult, ...prev]);
+      setFilteredAgendamentos((prev) => [newScrapeResult, ...prev]);
+
+      // Fechar modal após 2 segundos
+      setTimeout(() => {
+        setShowScrapeModal(false);
+        setIsScraping(false);
+        setScrapeProgress(0);
+        setScrapeStatus("");
+      }, 2000);
+    } catch (error) {
+      console.error("Erro durante o scraping:", error);
+      setScrapeStatus("Erro durante o scraping");
+      setError("Erro ao executar scraping imediato");
+
+      setTimeout(() => {
+        setShowScrapeModal(false);
+        setIsScraping(false);
+        setScrapeProgress(0);
+        setScrapeStatus("");
+      }, 3000);
+    }
   };
 
   //************************************************************************* */
@@ -473,13 +579,6 @@ const SearchDeepScan = () => {
       return;
     }
 
-    // Verificar se os campos obrigatórios foram preenchidos
-    if (formData.platforms.length === 0) {
-      setError("Pelo menos uma plataforma deve ser selecionada.");
-      setIsLoading(false);
-      return;
-    }
-
     if (formData.selectedDays.length === 0) {
       setError("Pelo menos um dia do mês deve ser selecionado.");
       setIsLoading(false);
@@ -522,7 +621,7 @@ const SearchDeepScan = () => {
 
     const scrapingParams = {
       searchPhrases: formData.searchPhrases,
-      platforms: formData.platforms,
+      platforms: ["Instagram", "Facebook", "X.com"], // Plataformas padrão
       format: formData.format,
       selectedDays: formData.selectedDays,
       startHour: formData.startHour,
@@ -610,6 +709,9 @@ const SearchDeepScan = () => {
       // Limpar validações de perfis
       setProfileValidation({});
       setValidatingProfiles(new Set());
+
+      // Ocultar campos de agendamento novamente
+      setShowScheduleFields(false);
     }
 
     setIsLoading(false);
@@ -688,21 +790,6 @@ const SearchDeepScan = () => {
     return uuidRegex.test(id);
   };
 
-  // Exemplo de plataformas
-  const platforms = [
-    "Instagram",
-    "Facebook",
-    "Internet",
-    "DeepWeb",
-    "DarkWeb",
-    "X.com",
-    "LinkedIn",
-    "YouTube",
-    "Discord",
-    "Telegram",
-    "Github",
-  ];
-
   // Gerar dias do mês para seleção
   const diasDoMes = Array.from({ length: 31 }, (_, i) => i + 1);
 
@@ -714,7 +801,7 @@ const SearchDeepScan = () => {
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Novo Agendamento</h2>
         <form onSubmit={handleSubmit}>
-          {/* Perfis e Termos de Busca */}
+          {/* Perfis e Palavras-chave */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* Perfis */}
             <div className="mb-4">
@@ -765,77 +852,8 @@ const SearchDeepScan = () => {
               </div>
             </div>
 
-            {/* Modal para adicionar perfil */}
-            {showProfileModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Adicionar Novo Perfil
-                  </h3>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nome do Perfil
-                    </label>
-                    <input
-                      type="text"
-                      value={newProfile.name}
-                      onChange={(e) =>
-                        setNewProfile({ ...newProfile, name: e.target.value })
-                      }
-                      placeholder="Ex: @usuario123"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Plataforma
-                    </label>
-                    <select
-                      value={newProfile.platform}
-                      onChange={(e) =>
-                        setNewProfile({
-                          ...newProfile,
-                          platform: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Selecione uma plataforma</option>
-                      {profilePlatforms.map((platform) => (
-                        <option key={platform} value={platform}>
-                          {platform}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowProfileModal(false);
-                        setNewProfile({ name: "", platform: "" });
-                      }}
-                      className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAddProfile}
-                      disabled={!newProfile.name.trim() || !newProfile.platform}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Adicionar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
             {/* Palavras-chave */}
-            <div>
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Palavras-chave para Monitoramento
               </label>
@@ -844,181 +862,346 @@ const SearchDeepScan = () => {
                   <span className="text-xs text-gray-600">
                     {formData.keywords.length} palavra(s) adicionada(s)
                   </span>
-                </div>
-
-                <div className="mb-2">
-                  <input
-                    type="text"
-                    name="keywords"
-                    value={formData.keywords.join(", ")}
-                    onChange={handleKeywordsChange}
-                    placeholder="palavra1, palavra2, palavra3"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKeywordModal(true)}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    + Adicionar Palavra-chave
+                  </button>
                 </div>
 
                 {formData.keywords.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="space-y-2">
                     {formData.keywords.map((keyword, index) => (
                       <div
                         key={index}
-                        className="flex items-center bg-white border border-gray-300 rounded-md px-3 py-1 text-sm"
+                        className="flex items-center justify-between bg-white border border-gray-300 rounded-md px-3 py-2"
                       >
-                        <span className="mr-2">{keyword}</span>
+                        <div className="flex items-center flex-1">
+                          <span className="text-sm mr-2">{keyword}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveKeyword(index)}
+                          className="text-red-500 hover:text-red-700 ml-2 p-1"
+                          title="Remover palavra-chave"
+                        >
+                          <FiX size={16} />
+                        </button>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-2 text-gray-500 text-sm">
-                    Digite as palavras-chave separadas por vírgula
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    Nenhuma palavra-chave adicionada ainda
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Data e Horário */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Horário de Início
-              </label>
-              <input
-                type="time"
-                name="startHour"
-                value={formData.startHour}
-                onChange={handleInputChange}
-                required
-                className="w-full p-2 border border-gray-300 rounded-md"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data Inicial (opcional)
-              </label>
-              <input
-                type="date"
-                name="afterDate"
-                value={formData.afterDate}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data Final (opcional)
-              </label>
-              <input
-                type="date"
-                name="beforeDate"
-                value={formData.beforeDate}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              />
-            </div>
-          </div>
+          {/* Modal para adicionar perfil */}
+          {showProfileModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                <h3 className="text-lg font-semibold mb-4">
+                  Adicionar Novo Perfil
+                </h3>
 
-          {/* Plataformas */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Plataformas
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-              {platforms.map((rede, index) => (
-                <div key={index} className="flex items-center">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome do Perfil
+                  </label>
                   <input
-                    type="checkbox"
-                    id={`platform-${rede}`}
-                    value={rede}
-                    checked={formData.platforms.includes(rede)}
-                    onChange={handlePlatformsChange}
-                    className="mr-2"
+                    type="text"
+                    value={newProfile.name}
+                    onChange={(e) =>
+                      setNewProfile({ ...newProfile, name: e.target.value })
+                    }
+                    placeholder="Ex: @usuario123"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  <label htmlFor={`platform-${rede}`} className="text-sm">
-                    {rede}
-                  </label>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Dias do mês */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Dias do Mês para Agendamento
-            </label>
-            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-gray-600">
-                  {formData.selectedDays.length} selecionado(s)
-                </span>
-                <div className="flex gap-1">
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Plataforma
+                  </label>
+                  <select
+                    value={newProfile.platform}
+                    onChange={(e) =>
+                      setNewProfile({
+                        ...newProfile,
+                        platform: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Selecione uma plataforma</option>
+                    {profilePlatforms.map((platform) => (
+                      <option key={platform} value={platform}>
+                        {platform}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-2">
                   <button
                     type="button"
-                    onClick={() =>
-                      setFormData({ ...formData, selectedDays: diasDoMes })
-                    }
-                    className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                    onClick={() => {
+                      setShowProfileModal(false);
+                      setNewProfile({ name: "", platform: "" });
+                    }}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
                   >
-                    Todos
+                    Cancelar
                   </button>
                   <button
                     type="button"
-                    onClick={() =>
-                      setFormData({ ...formData, selectedDays: [] })
-                    }
-                    className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                    onClick={handleAddProfile}
+                    disabled={!newProfile.name.trim() || !newProfile.platform}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Limpar
+                    Adicionar
                   </button>
                 </div>
               </div>
-              <div className="grid grid-cols-7 gap-1">
-                {diasDoMes.map((dia) => (
-                  <label
-                    key={dia}
-                    className={`
-            flex items-center justify-center w-8 h-8 rounded border cursor-pointer transition-colors
-            ${
-              formData.selectedDays.includes(dia)
-                ? "border-blue-500 bg-blue-500 text-white"
-                : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
-            }
-          `}
-                  >
-                    <input
-                      type="checkbox"
-                      value={dia}
-                      checked={formData.selectedDays.includes(dia)}
-                      onChange={handleSelectedDaysChange}
-                      className="sr-only"
-                    />
-                    <span className="text-xs font-medium">{dia}</span>
+            </div>
+          )}
+
+          {/* Modal para adicionar palavra-chave */}
+          {showKeywordModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                <h3 className="text-lg font-semibold mb-4">
+                  Adicionar Palavras-chave
+                </h3>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Palavras-chave
                   </label>
-                ))}
+                  <textarea
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    placeholder="Ex: aposta garantida, ganhe dinheiro fácil, renda extra certa"
+                    rows={3}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Separe múltiplas palavras-chave com vírgulas
+                  </p>
+                </div>
+
+                {/* Preview das palavras-chave que serão adicionadas */}
+                {newKeyword.trim() && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Palavras-chave a serem adicionadas:
+                    </label>
+                    <div className="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-md border">
+                      {newKeyword
+                        .split(",")
+                        .map((keyword) => keyword.trim())
+                        .filter((keyword) => keyword.length > 0)
+                        .map((keyword, index) => (
+                          <span
+                            key={index}
+                            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                              formData.keywords.includes(keyword)
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
+                            {keyword}
+                            {formData.keywords.includes(keyword) && (
+                              <span
+                                className="ml-1 text-yellow-600"
+                                title="Já existe"
+                              >
+                                ⚠️
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                    </div>
+                    {newKeyword
+                      .split(",")
+                      .map((keyword) => keyword.trim())
+                      .filter((keyword) => keyword.length > 0)
+                      .some((keyword) =>
+                        formData.keywords.includes(keyword)
+                      ) && (
+                      <p className="text-xs text-yellow-600 mt-1">
+                        ⚠️ Palavras-chave marcadas já existem e serão ignoradas
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowKeywordModal(false);
+                      setNewKeyword("");
+                    }}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddKeyword}
+                    disabled={!newKeyword.trim()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={
+                      newKeyword.trim()
+                        ? `Adicionar ${
+                            newKeyword
+                              .split(",")
+                              .filter((k) => k.trim().length > 0).length
+                          } palavra(s)-chave`
+                        : "Digite pelo menos uma palavra-chave"
+                    }
+                  >
+                    Adicionar{" "}
+                    {newKeyword.trim() &&
+                      `(${
+                        newKeyword.split(",").filter((k) => k.trim().length > 0)
+                          .length
+                      })`}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Frequência */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Frequência
-            </label>
-            <select
-              name="frequencia"
-              value={formData.frequencia}
-              onChange={handleInputChange}
-              required
-              className="w-full p-2 border border-gray-300 rounded-md"
-            >
-              <option value="Única">Única</option>
-              <option value="Diária">Diária</option>
-              <option value="Semanal">Semanal</option>
-              <option value="Quinzenal">Quinzenal</option>
-              <option value="Mensal">Mensal</option>
-            </select>
-          </div>
+          {/* Campos de Agendamento - Mostrar apenas quando solicitado */}
+          {showScheduleFields && (
+            <>
+              {/* Data e Horário */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Horário de Início
+                  </label>
+                  <input
+                    type="time"
+                    name="startHour"
+                    value={formData.startHour}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Data Inicial (opcional)
+                  </label>
+                  <input
+                    type="date"
+                    name="afterDate"
+                    value={formData.afterDate}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Data Final (opcional)
+                  </label>
+                  <input
+                    type="date"
+                    name="beforeDate"
+                    value={formData.beforeDate}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+              </div>
+
+              {/* Dias do mês */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dias do Mês para Agendamento
+                </label>
+                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-gray-600">
+                      {formData.selectedDays.length} selecionado(s)
+                    </span>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({ ...formData, selectedDays: diasDoMes })
+                        }
+                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                      >
+                        Todos
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({ ...formData, selectedDays: [] })
+                        }
+                        className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                      >
+                        Limpar
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {diasDoMes.map((dia) => (
+                      <label
+                        key={dia}
+                        className={`
+                          flex items-center justify-center w-8 h-8 rounded border cursor-pointer transition-colors
+                          ${
+                            formData.selectedDays.includes(dia)
+                              ? "border-blue-500 bg-blue-500 text-white"
+                              : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+                          }
+                        `}
+                      >
+                        <input
+                          type="checkbox"
+                          value={dia}
+                          checked={formData.selectedDays.includes(dia)}
+                          onChange={handleSelectedDaysChange}
+                          className="sr-only"
+                        />
+                        <span className="text-xs font-medium">{dia}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Frequência */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Frequência
+                </label>
+                <select
+                  name="frequencia"
+                  value={formData.frequencia}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="Única">Única</option>
+                  <option value="Diária">Diária</option>
+                  <option value="Semanal">Semanal</option>
+                  <option value="Quinzenal">Quinzenal</option>
+                  <option value="Mensal">Mensal</option>
+                </select>
+              </div>
+            </>
+          )}
 
           {/* Exibindo erro */}
           {error && (
@@ -1027,151 +1210,231 @@ const SearchDeepScan = () => {
             </div>
           )}
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
             <button
-              type="submit"
-              disabled={isLoading}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              type="button"
+              onClick={handleScrapeNow}
+              disabled={isScraping}
+              className={`flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                isScraping ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {isLoading ? "Agendando..." : "Agendar Monitoramento"}
+              <FiPlay className="mr-2" size={16} />
+              {isScraping ? "Raspando..." : "Raspar Agora"}
             </button>
+
+            {!showScheduleFields ? (
+              <button
+                type="button"
+                onClick={() => setShowScheduleFields(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Agendar Monitoramento
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleFields(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  Cancelar Agendamento
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isLoading ? "Agendando..." : "Confirmar Agendamento"}
+                </button>
+              </div>
+            )}
           </div>
         </form>
       </div>
+
+      {/* Modal de Progresso do Scraping */}
+      {showScrapeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-center">
+              Raspagem em Progresso
+            </h3>
+
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-600">{scrapeStatus}</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {scrapeProgress}%
+                </span>
+              </div>
+
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${scrapeProgress}%` }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center">
+              <FiLoader className="animate-spin text-blue-500 mr-2" size={20} />
+              <span className="text-sm text-gray-600">
+                Processando dados...
+              </span>
+            </div>
+
+            {scrapeProgress === 100 && (
+              <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
+                <FiCheck className="inline mr-2" size={16} />
+                Scraping concluído com sucesso!
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Tabela de Agendamentos */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">
           Agendamentos ({filteredAgendamentos.length} agendamentos)
         </h2>
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                ID
-              </th>
-              <th
-                scope="col"
-                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Data/Hora
-              </th>
-              <th
-                scope="col"
-                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Plataformas
-              </th>
-              <th
-                scope="col"
-                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Perfis
-              </th>
-              <th
-                scope="col"
-                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Keywords
-              </th>
-              <th
-                scope="col"
-                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Ações
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAgendamentos.map((agendamento, index) => (
-              <tr
-                key={index}
-                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-              >
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
-                  {agendamento.id}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(agendamento.scheduledAt)}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  <div className="flex flex-wrap gap-1">
-                    {agendamento.platforms.map((platform, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {platform}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {agendamento.profiles.length > 0
-                    ? agendamento.profiles.join(", ")
-                    : "-"}
-                </td>
-                <td className="px-6 py-4 w-full max-w-[400px] whitespace-nowrap text-sm text-gray-500">
-                  {agendamento.keywords.length > 0
-                    ? agendamento.keywords.join(", ")
-                    : "-"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      agendamento.status === "scheduled"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : agendamento.status === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : agendamento.status === "failed"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {agendamento.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleEdit(agendamento)}
-                      className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
-                      title="Editar"
-                    >
-                      <FiEdit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => handlePause(agendamento)}
-                      className="text-yellow-600 hover:text-yellow-800 transition-colors duration-200"
-                      title="Pausar"
-                    >
-                      <FiPause size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(agendamento.id)}
-                      className="text-red-600 hover:text-red-800 transition-colors duration-200"
-                      title="Excluir"
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
-                    {renderViewButton(agendamento)}
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  ID
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Data/Hora
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Plataformas
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Perfis
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Keywords
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Status
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Ações
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredAgendamentos.map((agendamento, index) => (
+                <tr
+                  key={index}
+                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
+                    {agendamento.id.length > 20
+                      ? `${agendamento.id.substring(0, 20)}...`
+                      : agendamento.id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(agendamento.scheduledAt)}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    <div className="flex flex-wrap gap-1">
+                      {agendamento.platforms.map((platform, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {platform}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                    <div className="truncate">
+                      {agendamento.profiles.length > 0
+                        ? agendamento.profiles.join(", ")
+                        : "-"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                    <div className="truncate">
+                      {agendamento.keywords.length > 0
+                        ? agendamento.keywords.join(", ")
+                        : "-"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        agendamento.status === "scheduled"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : agendamento.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : agendamento.status === "failed"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {agendamento.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(agendamento)}
+                        className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                        title="Editar"
+                      >
+                        <FiEdit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handlePause(agendamento)}
+                        className="text-yellow-600 hover:text-yellow-800 transition-colors duration-200"
+                        title="Pausar"
+                      >
+                        <FiPause size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(agendamento.id)}
+                        className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                        title="Excluir"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                      {renderViewButton(agendamento)}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Dicas e Melhores Práticas */}
@@ -1181,11 +1444,12 @@ const SearchDeepScan = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="border-l-4 border-blue-500 pl-4 py-2">
-            <h3 className="font-medium text-gray-900 mb-1">Frequência Ideal</h3>
+            <h3 className="font-medium text-gray-900 mb-1">
+              Raspagem Imediata
+            </h3>
             <p className="text-sm text-gray-600">
-              Para empresas com alto volume de postagens, recomenda-se
-              monitoramento diário. Para as demais, 2-3 vezes por semana é
-              suficiente.
+              Use "Raspar Agora" para obter resultados instantâneos. Ideal para
+              verificações pontuais e análises urgentes.
             </p>
           </div>
           <div className="border-l-4 border-green-500 pl-4 py-2">
@@ -1202,8 +1466,8 @@ const SearchDeepScan = () => {
               Monitoramento Completo
             </h3>
             <p className="text-sm text-gray-600">
-              Inclua todas as plataformas da empresa para garantir uma cobertura
-              completa e evitar violações não detectadas.
+              Combine perfis específicos com palavras-chave relevantes para
+              garantir uma cobertura completa de monitoramento.
             </p>
           </div>
           <div className="border-l-4 border-yellow-500 pl-4 py-2">
@@ -1218,18 +1482,17 @@ const SearchDeepScan = () => {
               Validação de Perfis
             </h3>
             <p className="text-sm text-gray-600">
-              Sempre verifique se os perfis existem antes de agendar o
-              monitoramento. Perfis inválidos podem causar falhas no processo de
-              coleta.
+              Sempre verifique se os perfis existem antes de iniciar o
+              monitoramento. Perfis inválidos podem causar falhas no processo.
             </p>
           </div>
           <div className="border-l-4 border-pink-500 pl-4 py-2">
             <h3 className="font-medium text-gray-900 mb-1">
-              Perfis Verificados
+              Palavras-chave Eficazes
             </h3>
             <p className="text-sm text-gray-600">
-              Perfis com ✓ verde foram validados e existem na plataforma. Perfis
-              com ✗ vermelho são inválidos e devem ser removidos.
+              Use termos específicos e variações comuns. Palavras muito
+              genéricas podem gerar muitos falsos positivos.
             </p>
           </div>
         </div>
