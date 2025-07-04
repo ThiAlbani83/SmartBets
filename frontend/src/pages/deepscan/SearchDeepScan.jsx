@@ -92,7 +92,7 @@ const SearchDeepScan = () => {
     try {
       // Simular validação - substitua pela API real
       const response = await fetch(
-        `http://89.116.74.250:5001/api/v1/validate-profile`,
+        `http://89.116.74.250:5001/api/v1/validate/profile`,
         {
           method: "POST",
           headers: {
@@ -336,7 +336,7 @@ const SearchDeepScan = () => {
     "Google",
     "DeepWeb",
     "DarkWeb",
-    "X.com",
+    "Twitter",
     "LinkedIn",
     "YouTube",
     "Discord",
@@ -715,6 +715,61 @@ const SearchDeepScan = () => {
     }
 
     setIsLoading(false);
+  };
+
+  const handleMonitorNow = async () => {
+    setIsLoading(true); // Inicia o estado de carregamento
+    const monitorParams = {
+      profiles: formData.profiles,
+      platforms: formData.platforms,
+      searchPhrases: formData.searchPhrases,
+      format: "DB",
+    };
+    try {
+      // Fazendo a requisição POST para monitoramento imediato
+      const response = await fetch(
+        "http://89.116.74.250:5001/api/v1/scrape/profiles",
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "X-API-Key": "c9f93bcc-4369-43de-9a00-6af58446935b",
+            "X-API-Secret": "74354ff0-2649-4af7-b71e-7086cc14978a",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(monitorParams),
+        }
+      );
+      const result = await response.json();
+
+      if (response.ok) {
+        alert(`Monitoramento iniciado! Scrape ID: ${result.scrapeId}`);
+        setError("");
+        await fetchAgendamentos();
+      } else {
+        // Verificar se 'profiles' ou 'keywords' não estão vazios
+        if (formData.profiles.length === 0 && formData.keywords.length === 0) {
+          setError("Pelo menos um perfil ou palavra-chave deve ser fornecido.");
+          setIsLoading(false);
+          return;
+        }
+
+        // Verificar se os campos obrigatórios foram preenchidos
+        if (formData.platforms.length === 0) {
+          setError("Pelo menos uma plataforma deve ser selecionada.");
+          setIsLoading(false);
+          return;
+        } else
+          setError(
+            result.message || "Erro desconhecido ao iniciar monitoramento."
+          );
+      }
+    } catch (error) {
+      console.error("Erro ao iniciar monitoramento:", error);
+      setError("Erro ao iniciar monitoramento.");
+    } finally {
+      setIsLoading(false); // Finaliza o carregamento
+    }
   };
 
   const requestSort = (key) => {
