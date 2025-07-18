@@ -26,6 +26,7 @@ import {
 } from "react-icons/fi";
 import ResultModal from "../../components/deepscan/ResultModal.jsx";
 import { rootUrl } from "./utils/url.js";
+import { key, secret } from "./utils/secret.js";
 
 // Registrar os componentes do Chart.js
 ChartJS.register(
@@ -41,9 +42,8 @@ ChartJS.register(
     ArcElement
 );
 
-
-const X_API_Key = "bbcc2ed2-3d95-42ea-a3d4-8006975f2f63";
-const X_API_Secret = "7e0b9539-4fa3-4411-a234-e781dc125c72";
+const X_API_Key = key;
+const X_API_Secret = secret;
 
 
 const SearchDeepScan = () => {
@@ -87,6 +87,14 @@ const SearchDeepScan = () => {
     const [scrapeProgress, setScrapeProgress] = useState(0);
     const [scrapeStatus, setScrapeStatus] = useState("");
     const [isScraping, setIsScraping] = useState(false);
+
+    const [agendamentos, setAgendamentos] = useState([]);
+    const [filteredAgendamentos, setFilteredAgendamentos] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [sortConfig, setSortConfig] = useState({
+        key: "id", // Coluna inicial para ordenação
+        direction: "asc", // Direção de ordenação inicial (crescente)
+    });
 
     // Função para validar se um perfil existe
     const validateProfile = async (profileName, platform, profileIndex) => {
@@ -251,10 +259,10 @@ const SearchDeepScan = () => {
         try {
             setLoadingResult(true);
             setShowResultModal(true);
-            console.log(
-                "Tentando visualizar resultado para o scrape com ID:",
-                agendamento.id
-            );
+            // console.log(
+            //     "Tentando visualizar resultado para o scrape com ID:",
+            //     agendamento.id
+            // );
 
             // Fazendo a requisição GET
             const response = await fetch(`${rootUrl}/data/filter?scrapeId=${agendamento.id}&page=1&limit=100`, {
@@ -269,8 +277,8 @@ const SearchDeepScan = () => {
             // Verificando a resposta
             if (response.ok) {
                 const result = await response.json();
-                console.log("Resultado obtido com sucesso:", result);
-                setResultData(result);
+                // console.log("Resultado obtido com sucesso:", result);
+                setResultData({ ...result, scrapeId: agendamento.id });
             } else {
                 const error = await response.json();
                 console.error("Erro ao buscar o resultado:", error);
@@ -427,106 +435,6 @@ const SearchDeepScan = () => {
             : formData.selectedDays.filter((day) => day !== parseInt(value));
         setFormData({ ...formData, selectedDays: updatedDays });
     };
-
-    // Função para executar scraping imediato
-    const handleScrapeNow = async () => {
-        // Verificar se 'profiles' ou 'keywords' não estão vazios
-        if (formData.profiles.length === 0 && formData.keywords.length === 0) {
-            setError("Pelo menos um perfil ou palavra-chave deve ser fornecido.");
-            return;
-        }
-
-        // Verificar se há perfis inválidos
-        const invalidProfiles = formData.profiles.filter((profile, index) => {
-            const [profileName, platformPart] = profile.split(" (");
-            const platform = platformPart?.replace(")", "") || "";
-            const profileKey = `${profileName}_${platform}_${index}`;
-            const validation = profileValidation[profileKey];
-            return validation && validation.checked && !validation.isValid;
-        });
-
-        if (invalidProfiles.length > 0) {
-            setError(
-                `Os seguintes perfis são inválidos: ${invalidProfiles.join(
-                    ", "
-                )}. Por favor, remova-os ou verifique novamente.`
-            );
-            return;
-        }
-
-        // Limpar o erro
-        setError("");
-
-        // Abrir modal de progresso
-        setShowScrapeModal(true);
-        setIsScraping(true);
-        setScrapeProgress(0);
-        setScrapeStatus("Iniciando scraping...");
-
-        try {
-            // Simular progresso de scraping
-            const progressSteps = [
-                { progress: 10, status: "Validando dados..." },
-                { progress: 25, status: "Conectando com APIs..." },
-                { progress: 40, status: "Coletando dados dos perfis..." },
-                { progress: 60, status: "Processando palavras-chave..." },
-                { progress: 80, status: "Analisando resultados..." },
-                { progress: 95, status: "Finalizando..." },
-                { progress: 100, status: "Concluído!" },
-            ];
-
-            for (const step of progressSteps) {
-                setScrapeProgress(step.progress);
-                setScrapeStatus(step.status);
-            }
-
-            // Simular criação de um novo agendamento com status completed
-            const newScrapeResult = {
-                id: `scrape-${Date.now()}`,
-                client_id: "immediate-scrape",
-                status: "completed",
-                profiles: formData.profiles,
-                keywords: formData.keywords,
-                platforms: ["Instagram", "Facebook", "X.com"], // Plataformas padrão para scraping imediato
-                scheduledAt: new Date().toISOString(),
-            };
-
-            // Adicionar à lista de agendamentos
-            setAgendamentos((prev) => [newScrapeResult, ...prev]);
-            setFilteredAgendamentos((prev) => [newScrapeResult, ...prev]);
-
-            // Fechar modal após 2 segundos
-            setTimeout(() => {
-                setShowScrapeModal(false);
-                setIsScraping(false);
-                setScrapeProgress(0);
-                setScrapeStatus("");
-            }, 2000);
-        } catch (error) {
-            console.error("Erro durante o scraping:", error);
-            setScrapeStatus("Erro durante o scraping");
-            setError("Erro ao executar scraping imediato");
-
-            setTimeout(() => {
-                setShowScrapeModal(false);
-                setIsScraping(false);
-                setScrapeProgress(0);
-                setScrapeStatus("");
-            }, 3000);
-        }
-    };
-
-    //************************************************************************* */
-    //************************************************************************* */
-    //************************************************************************* */
-
-    const [agendamentos, setAgendamentos] = useState([]);
-    const [filteredAgendamentos, setFilteredAgendamentos] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [sortConfig, setSortConfig] = useState({
-        key: "id", // Coluna inicial para ordenação
-        direction: "asc", // Direção de ordenação inicial (crescente)
-    });
 
     const fetchAgendamentos = async () => {
         try {
@@ -747,7 +655,7 @@ const SearchDeepScan = () => {
             const result = await response.json();
 
             if (response.ok) {
-                alert(`Monitoramento iniciado! Scrape ID: ${result.scrapeId}`);
+                // alert(`Monitoramento iniciado! Scrape ID: ${result.scrapeId}`);
                 setError("");
                 setIsScraping(true);
             } else {
@@ -777,10 +685,10 @@ const SearchDeepScan = () => {
         }
     };
 
-    // useEffect(() => {
-    //     const intervalId = setInterval(fetchAgendamentos, 15000);
-    //     return () => clearInterval(intervalId);
-    // }, [agendamentos]);
+    useEffect(() => {
+        const intervalId = setInterval(fetchAgendamentos, 15000);
+        return () => clearInterval(intervalId);
+    }, [agendamentos]);
 
     const requestSort = (key) => {
         let direction = "asc";
@@ -1559,9 +1467,10 @@ const SearchDeepScan = () => {
             <ResultModal
                 showResultModal={showResultModal}
                 setShowResultModal={setShowResultModal}
-                resultData={resultData}
                 setResultData={setResultData}
+                resultData={resultData}
                 loadingResult={loadingResult}
+                setLoadingResult={setLoadingResult}
                 error={error}
                 setError={setError}
             />

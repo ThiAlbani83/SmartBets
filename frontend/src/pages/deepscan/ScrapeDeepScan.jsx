@@ -17,6 +17,7 @@ import {
 import { Bar, Pie, Line } from "react-chartjs-2";
 import { FiCalendar, FiUser } from "react-icons/fi";
 import { rootUrl } from "./utils/url.js";
+import { key, secret } from "./utils/secret.js";
 
 // Registrar os componentes do Chart.js
 ChartJS.register(
@@ -32,10 +33,10 @@ ChartJS.register(
     ArcElement
 );
 
-const ScrapeDeepScan = () => {
+const X_API_Key = key;
+const X_API_Secret = secret;
 
-    const X_API_Key = "bbcc2ed2-3d95-42ea-a3d4-8006975f2f63";
-    const X_API_Secret = "7e0b9539-4fa3-4411-a234-e781dc125c72";
+const ScrapeDeepScan = () => {
 
 
     const navigate = useNavigate();
@@ -45,7 +46,7 @@ const ScrapeDeepScan = () => {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
     // Extrair redes sociais únicas para o filtro
-    const redesSociais = ["Todas", "Twitter", "Instagram", "Google"];
+    const redesSociais = ["Todas", "Twitter", "Instagram", "Google", "Youtube"];
 
     const [sentimentoDistribution, setSentimentoDistribution] = useState({});
 
@@ -251,14 +252,18 @@ const ScrapeDeepScan = () => {
                     </h2>
                     <div className="h-80 flex justify-center">
                         <div className="w-1/3">
-                            <Pie data={sentimentoData} options={pieOptions} />
+                            <Pie
+                                key={JSON.stringify(sentimentoDistribution)}
+                                data={sentimentoData} 
+                                options={pieOptions} 
+                                redraw/>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Tabela de Resultados */}
-            {searchTerm && (
+            {(searchTerm || selectedRedeSocial) && (
                 <div className="bg-white p-6 rounded-lg shadow-md mb-8">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">
