@@ -86,9 +86,24 @@ const ResultModal = ({
     };
 
     useEffect(() => {
-        if (showResultModal) {
+        let intervalId;
+
+        if (showResultModal && resultData?.scrapeId) {
+            // chamada imediata
             fetchResults(page);
+
+            // chama novamente a cada 30s
+            intervalId = setInterval(() => {
+                fetchResults(page);
+            }, 30_000);
         }
+
+        return () => {
+            // limpa o intervalo ao desmontar ou quando deps mudarem
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
     }, [page, showResultModal]);
 
     const handlePrevPage = () => {
@@ -111,6 +126,7 @@ const ResultModal = ({
     };
 
     const handleClose = () => {
+        setResultData(null)
         setShowResultModal(false);
         setPage(1);
         setError("");

@@ -91,10 +91,6 @@ const SearchDeepScan = () => {
     const [agendamentos, setAgendamentos] = useState([]);
     const [filteredAgendamentos, setFilteredAgendamentos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [sortConfig, setSortConfig] = useState({
-        key: "id", // Coluna inicial para ordenação
-        direction: "asc", // Direção de ordenação inicial (crescente)
-    });
 
     // Função para validar se um perfil existe
     const validateProfile = async (profileName, platform, profileIndex) => {
@@ -165,42 +161,6 @@ const SearchDeepScan = () => {
         }
     };
 
-    // Função para simular validação de perfil (substitua pela lógica real)
-    const simulateProfileValidation = async (profileName, platform) => {
-        // Simular delay de rede
-        await new Promise((resolve) =>
-            setTimeout(resolve, 1000 + Math.random() * 2000)
-        );
-
-        // Regras básicas de validação simulada
-        const cleanName = profileName.replace("@", "").toLowerCase();
-
-        // Simular alguns perfis como válidos e outros como inválidos
-        const validPatterns = [
-            /^[a-zA-Z0-9._]{3,30}$/, // Padrão básico de username
-            /^[a-zA-Z0-9]{5,}$/, // Pelo menos 5 caracteres alfanuméricos
-        ];
-
-        const invalidPatterns = [
-            /test/i, // Perfis de teste
-            /fake/i, // Perfis fake
-            /spam/i, // Perfis spam
-        ];
-
-        // Verificar se corresponde a padrões inválidos
-        if (invalidPatterns.some((pattern) => pattern.test(cleanName))) {
-            return false;
-        }
-
-        // Verificar se corresponde a padrões válidos
-        if (validPatterns.some((pattern) => pattern.test(cleanName))) {
-            // 80% de chance de ser válido para perfis que seguem o padrão
-            return Math.random() > 0.2;
-        }
-
-        // Para outros casos, 50% de chance
-        return Math.random() > 0.5;
-    };
 
     // Função para renderizar o status de validação do perfil
     const renderProfileValidationStatus = (profile, index) => {
@@ -257,8 +217,9 @@ const SearchDeepScan = () => {
         }
 
         try {
-            setLoadingResult(true);
             setShowResultModal(true);
+            setLoadingResult(true);
+            setResultData(null);
             // console.log(
             //     "Tentando visualizar resultado para o scrape com ID:",
             //     agendamento.id
@@ -288,7 +249,7 @@ const SearchDeepScan = () => {
             console.error("Erro desconhecido ao buscar o resultado:", error);
             setError("Erro desconhecido ao carregar os resultados");
         } finally {
-            setLoadingResult(false);
+            //
         }
     };
 
@@ -436,7 +397,7 @@ const SearchDeepScan = () => {
         setFormData({ ...formData, selectedDays: updatedDays });
     };
 
-    const fetchAgendamentos = async () => {
+    const fetchAgendamentos = async () => { 
         try {
             const response = await fetch(
                 `${rootUrl}/scrapes?limit=100&offset=0`,
@@ -688,21 +649,7 @@ const SearchDeepScan = () => {
     useEffect(() => {
         const intervalId = setInterval(fetchAgendamentos, 15000);
         return () => clearInterval(intervalId);
-    }, [agendamentos]);
-
-    const requestSort = (key) => {
-        let direction = "asc";
-        if (sortConfig.key === key && sortConfig.direction === "asc") {
-            direction = "desc";
-        }
-        const sortedData = [...filteredAgendamentos].sort((a, b) => {
-            if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-            if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
-            return 0;
-        });
-        setFilteredAgendamentos(sortedData);
-        setSortConfig({ key, direction });
-    };
+    }, [agendamentos, isScraping]);
 
     const formatDate = (date) => {
         const d = new Date(date);
@@ -755,7 +702,6 @@ const SearchDeepScan = () => {
         }
     };
 
-    // Função para validar o formato do UUID
     const isValidUuid = (id) => {
         const uuidRegex =
             /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -1465,6 +1411,7 @@ const SearchDeepScan = () => {
 
             {/* Modal de Resultados */}
             <ResultModal
+                key={resultData?.scrapeId ?? "empty"}
                 showResultModal={showResultModal}
                 setShowResultModal={setShowResultModal}
                 setResultData={setResultData}

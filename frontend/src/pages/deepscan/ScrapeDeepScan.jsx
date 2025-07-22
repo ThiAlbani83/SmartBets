@@ -40,8 +40,8 @@ const ScrapeDeepScan = () => {
 
 
     const navigate = useNavigate();
-    const [filteredResults, setFilteredResults] = useState(scrapingResults);
-    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredResults, setFilteredResults] = useState([]);
+    const [profile, setProfile] = useState("");
     const [selectedRedeSocial, setSelectedRedeSocial] = useState("Todas");
     const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
@@ -64,7 +64,7 @@ const ScrapeDeepScan = () => {
         const fetchSentimentData = async () => {
             try {
                 // Verificar se o perfil é fornecido, se sim, incluir na URL da requisição
-                const perfilParam = searchTerm ? `&perfil=${searchTerm}` : "";
+                const perfilParam = profile ? `&perfil=${profile}` : "";
                 const platformParam =
                     selectedRedeSocial !== "Todas"
                         ? `platform=${selectedRedeSocial}`
@@ -93,14 +93,14 @@ const ScrapeDeepScan = () => {
         };
 
         fetchSentimentData();
-    }, [selectedRedeSocial, searchTerm]);
+    }, [selectedRedeSocial, profile]);
 
     useEffect(() => {
         const fetchTableData = async () => {
             try {
+                const platform = selectedRedeSocial !== "Todas" ? selectedRedeSocial : ""
                 const response = await fetch(
-                    `${rootUrl}/data/filter?page=1&limit=1000&platform=${selectedRedeSocial !== "Todas" ? selectedRedeSocial : ""
-                    }&perfil=${searchTerm}`,
+                    `${rootUrl}/data/filter?page=1&limit=1000&platform=${platform}&perfil=${profile}`,
                     {
                         method: "GET",
                         headers: {
@@ -111,7 +111,6 @@ const ScrapeDeepScan = () => {
                     }
                 );
                 const data = await response.json();
-                console.log(data)
                 setFilteredResults(data.data); // Atualizar a tabela com os dados retornados
             } catch (error) {
                 console.error("Erro ao buscar dados da tabela:", error);
@@ -119,23 +118,14 @@ const ScrapeDeepScan = () => {
         };
 
         fetchTableData();
-    }, [selectedRedeSocial, searchTerm]); // Recarregar sempre que o filtro de rede social ou perfil mudar
-
-    // Função para ordenar resultados
-    const requestSort = (key) => {
-        let direction = "asc";
-        if (sortConfig.key === key && sortConfig.direction === "asc") {
-            direction = "desc";
-        }
-        setSortConfig({ key, direction });
-    };
+    }, [selectedRedeSocial, profile]); // Recarregar sempre que o filtro de rede social ou perfil mudar
 
     // Calculate the actual filtered results that will be displayed
     const displayedResults = filteredResults.filter(
         (result) =>
-            !searchTerm ||
+            !profile ||
             (result.perfil &&
-                result.perfil.toLowerCase().includes(searchTerm.toLowerCase()))
+                result.perfil.toLowerCase().includes(profile.toLowerCase()))
     );
 
     // Preparar dados para o gráfico de distribuição de sentimentos
@@ -145,14 +135,16 @@ const ScrapeDeepScan = () => {
             {
                 data: Object.values(sentimentoDistribution),
                 backgroundColor: [
-                    "rgba(75, 192, 192, 0.6)",
-                    "rgba(255, 206, 86, 0.6)",
                     "rgba(255, 99, 132, 0.6)",
+                    "rgba(255, 206, 86, 0.6)",
+                    "rgba(75, 192, 192, 0.6)",
+                    "rgba(36, 228, 36, 0.6)",
                 ],
                 borderColor: [
-                    "rgba(75, 192, 192, 1)",
-                    "rgba(255, 206, 86, 1)",
                     "rgba(255, 99, 132, 1)",
+                    "rgba(255, 206, 86, 1)",
+                    "rgba(75, 192, 192, 1)",
+                    "rgba(36, 228, 36, 1)",
                 ],
                 borderWidth: 1,
             },
@@ -185,8 +177,8 @@ const ScrapeDeepScan = () => {
                         </label>
                         <input
                             type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)} // Atualiza o 'searchTerm', que agora serve para o filtro de perfil
+                            value={profile}
+                            onChange={(e) => setProfile(e.target.value)} // Atualiza o 'profile', que agora serve para o filtro de perfil
                             placeholder="Buscar por perfil"
                             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
@@ -211,14 +203,14 @@ const ScrapeDeepScan = () => {
                 </div>
 
                 {/* Botão de Agendar Monitoramento - Aparece quando há um perfil pesquisado */}
-                {searchTerm && (
+                {profile && (
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center">
                                 <FiUser className="text-blue-600 mr-2" size={20} />
                                 <div>
                                     <h3 className="text-sm font-medium text-blue-900">
-                                        Monitorar perfil "{searchTerm}"
+                                        Monitorar perfil "{profile}"
                                     </h3>
                                     <p className="text-xs text-blue-700">
                                         Configure um monitoramento automático para este perfil
@@ -228,7 +220,7 @@ const ScrapeDeepScan = () => {
                             <button
                                 onClick={() =>
                                     handleScheduleMonitoring(
-                                        searchTerm,
+                                        profile,
                                         selectedRedeSocial !== "Todas"
                                             ? selectedRedeSocial
                                             : "Instagram"
@@ -254,16 +246,16 @@ const ScrapeDeepScan = () => {
                         <div className="w-1/3">
                             <Pie
                                 key={JSON.stringify(sentimentoDistribution)}
-                                data={sentimentoData} 
-                                options={pieOptions} 
-                                redraw/>
+                                data={sentimentoData}
+                                options={pieOptions}
+                                redraw />
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Tabela de Resultados */}
-            {(searchTerm || selectedRedeSocial) && (
+            {(profile || selectedRedeSocial) && (
                 <div className="bg-white p-6 rounded-lg shadow-md mb-8">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">
@@ -275,7 +267,7 @@ const ScrapeDeepScan = () => {
                             <button
                                 onClick={() =>
                                     handleScheduleMonitoring(
-                                        searchTerm,
+                                        profile,
                                         selectedRedeSocial !== "Todas"
                                             ? selectedRedeSocial
                                             : "Instagram"
@@ -349,7 +341,7 @@ const ScrapeDeepScan = () => {
                                             <span
                                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${result.sentimento === "positivo"
                                                     ? "bg-green-100 text-green-800"
-                                                    : result.sentimento === "negativo"
+                                                    : result.sentimento === "NEGATIVO"
                                                         ? "bg-red-100 text-red-800"
                                                         : "bg-yellow-100 text-yellow-800"
                                                     }`}
@@ -391,6 +383,11 @@ const ScrapeDeepScan = () => {
                                                 Monitorar
                                             </button>
                                         </td>
+                                        {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <div className="flex items-center space-x-2">
+                                                {renderViewButton(result)}
+                                            </div>
+                                        </td> */}
                                     </tr>
                                 ))}
                             </tbody>
