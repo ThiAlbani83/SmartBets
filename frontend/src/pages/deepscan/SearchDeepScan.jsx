@@ -100,9 +100,9 @@ const SearchDeepScan = () => {
         setValidatingProfiles((prev) => new Set([...prev, profileKey]));
 
         try {
-            // Simular validação - substitua pela API real
+            const url = `${rootUrl}/validate/profile`; 
             const response = await fetch(
-                `${rootUrl}/validate/profile`,
+                url,
                 {
                     method: "POST",
                     headers: {
@@ -118,13 +118,12 @@ const SearchDeepScan = () => {
                 }
             );
 
-            let isValid = false;
+            let isValid = null;
             if (response.ok) {
                 const result = await response.json();
                 isValid = result.exists || result.valid || false;
             } else {
-                // Se a API não existir, simular validação baseada em regras básicas
-                isValid = await simulateProfileValidation(profileName, platform);
+                setError(`Não foi possível fazer a requisição para ${url}`)
             }
 
             // Atualizar o estado de validação
@@ -138,19 +137,6 @@ const SearchDeepScan = () => {
             }));
         } catch (error) {
             console.error("Erro ao validar perfil:", error);
-
-            // Em caso de erro, usar validação simulada
-            const isValid = await simulateProfileValidation(profileName, platform);
-
-            setProfileValidation((prev) => ({
-                ...prev,
-                [profileKey]: {
-                    isValid,
-                    checked: true,
-                    timestamp: Date.now(),
-                    error: true,
-                },
-            }));
         } finally {
             // Remover do conjunto de perfis sendo validados
             setValidatingProfiles((prev) => {
