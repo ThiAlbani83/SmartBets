@@ -100,7 +100,7 @@ const SearchDeepScan = () => {
         setValidatingProfiles((prev) => new Set([...prev, profileKey]));
 
         try {
-            const url = `${rootUrl}/validate/profile`; 
+            const url = `${rootUrl}/validate/profile`;
             const response = await fetch(
                 url,
                 {
@@ -304,7 +304,6 @@ const SearchDeepScan = () => {
 
     const handleAddProfile = () => {
         if (newProfile.name.trim() && newProfile.platform) {
-            const profileWithPlatform = `${newProfile.name} (${newProfile.platform})`;
             const profile = `${newProfile.name}`;
             const platformProfile = `${newProfile.platform}`
             setFormData({
@@ -319,21 +318,33 @@ const SearchDeepScan = () => {
     };
 
     const handleRemoveProfile = (index) => {
+        // Log do estado antes de realizar a atualização
+
+        // Atualizar o array de perfis removendo o perfil pelo índice
         const updatedProfiles = formData.profiles.filter((_, i) => i !== index);
-        setFormData({ ...formData, profiles: updatedProfiles });
+        // Atualizar o array de plataformas removendo a plataforma correspondente ao índice
+        const updatedPlatforms = formData.platforms.filter((_, i) => i !== index);
+
+        // Atualizar o estado de formData com as mudanças nos perfis e plataformas
+        setFormData({
+            ...formData,
+            profiles: updatedProfiles,
+            platforms: updatedPlatforms,
+        });
 
         // Limpar validação do perfil removido
         const profile = formData.profiles[index];
-        const [profileName, platformPart] = profile.split(" (");
-        const platform = platformPart?.replace(")", "") || "";
-        const profileKey = `${profileName}_${platform}_${index}`;
-
+        const platform = formData.platforms[index];
+        const profileKey = `${profile}_${platform}_${index}`;
         setProfileValidation((prev) => {
             const newValidation = { ...prev };
-            delete newValidation[profileKey];
+            delete newValidation[profileKey]; // Remove a chave da validação
             return newValidation;
         });
+
+        // Log do estado após a remoção
     };
+
 
     // Funções para gerenciar palavras-chave
     const handleAddKeyword = () => {
@@ -383,7 +394,7 @@ const SearchDeepScan = () => {
         setFormData({ ...formData, selectedDays: updatedDays });
     };
 
-    const fetchAgendamentos = async () => { 
+    const fetchAgendamentos = async () => {
         try {
             const response = await fetch(
                 `${rootUrl}/scrapes?limit=100&offset=0`,
@@ -481,7 +492,7 @@ const SearchDeepScan = () => {
 
         const scrapingParams = {
             searchPhrases: formData.searchPhrases,
-            platforms: ["Instagram", "Facebook", "X.com"], // Plataformas padrão
+            platforms: formData.platforms,
             format: formData.format,
             selectedDays: formData.selectedDays,
             startHour: formData.startHour,
@@ -706,7 +717,7 @@ const SearchDeepScan = () => {
                 <h2 className="text-xl font-semibold mb-4">Novo Agendamento</h2>
                 <form onSubmit={handleSubmit}>
                     {/* Perfis e Palavras-chave */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
                         {/* Perfis */}
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -734,7 +745,8 @@ const SearchDeepScan = () => {
                                                 className="flex items-center justify-between bg-white border border-gray-300 rounded-md px-3 py-2"
                                             >
                                                 <div className="flex items-center flex-1">
-                                                    <span className="text-sm mr-2">{profile}</span>
+                                                    <span className="text-sm mr-2">{`${profile}`}</span>
+                                                    <span className="text-sm mr-2">{`(${formData.platforms[index]})`}</span>
                                                     {renderProfileValidationStatus(profile, index)}
                                                 </div>
                                                 <button
@@ -757,7 +769,7 @@ const SearchDeepScan = () => {
                         </div>
 
                         {/* Palavras-chave */}
-                        <div className="mb-4">
+                        {/* <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Palavras-chave para Monitoramento
                             </label>
@@ -802,7 +814,7 @@ const SearchDeepScan = () => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Modal para adicionar perfil */}
@@ -1059,9 +1071,7 @@ const SearchDeepScan = () => {
                                         {diasDoMes.map((dia) => (
                                             <label
                                                 key={dia}
-                                                className={`
-                          flex items-center justify-center w-8 h-8 rounded border cursor-pointer transition-colors
-                          ${formData.selectedDays.includes(dia)
+                                                className={`flex items-center justify-center w-8 h-8 rounded border cursor-pointer transition-colors${formData.selectedDays.includes(dia)
                                                         ? "border-blue-500 bg-blue-500 text-white"
                                                         : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
                                                     }
@@ -1263,14 +1273,16 @@ const SearchDeepScan = () => {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-500">
                                         <div className="flex flex-wrap gap-1">
-                                            {agendamento.platforms.map((platform, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                                                >
-                                                    {platform}
-                                                </span>
-                                            ))}
+                                            {agendamento.platforms
+                                                .filter((platform, index, self) => self.indexOf(platform) === index) // Filtra duplicatas
+                                                .map((platform, idx) => (
+                                                    <span
+                                                        key={idx}
+                                                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                                                    >
+                                                        {platform}
+                                                    </span>
+                                                ))}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">

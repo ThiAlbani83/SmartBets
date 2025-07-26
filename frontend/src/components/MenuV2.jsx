@@ -242,16 +242,18 @@ const MenuV2 = ({ expanded, setExpanded }) => {
             </div>
 
             <div className="space-y-3">
-              {user?.modules?.map((module, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleModuleSelect(module.name)}
-                  className="w-full p-3 bg-gray-700 hover:bg-blue-600 transition-colors duration-200 rounded-lg text-white font-medium flex items-center justify-between"
-                >
-                  <span>{module.name}</span>
-                  <FaChevronDown className="text-gray-400" />
-                </button>
-              ))}
+              {user?.modules?.map((module, index) =>
+              module.name === "DEEPSCAN"? (
+                  <button
+                    key={index}
+                    onClick={() => handleModuleSelect(module.name)}
+                    className="w-full p-3 bg-gray-700 hover:bg-blue-600 transition-colors duration-200 rounded-lg text-white font-medium flex items-center justify-between"
+                  >
+                    <span>{module.name}</span>
+                    <FaChevronDown className="text-gray-400" />
+                  </button>
+              ) : <></>
+              )}
             </div>
           </>
         ) : (
