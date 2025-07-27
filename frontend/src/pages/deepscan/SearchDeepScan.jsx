@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -12,7 +12,6 @@ import {
     Filler,
     ArcElement,
 } from "chart.js";
-import { useDeepScanStore } from "../../store/useDeepscanStore.js";
 import {
     FiEdit2,
     FiPause,

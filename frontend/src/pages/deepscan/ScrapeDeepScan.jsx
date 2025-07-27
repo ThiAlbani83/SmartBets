@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { scrapingResults } from "../../utils/fakeData.js";
 import {
     Chart as ChartJS,
     CategoryScale,
