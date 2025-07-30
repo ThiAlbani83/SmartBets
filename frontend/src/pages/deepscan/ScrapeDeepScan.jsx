@@ -36,6 +36,7 @@ ChartJS.register(
 
 const X_API_Key = key;
 const X_API_Secret = secret;
+const client_id = 2;
 
 const ScrapeDeepScan = () => {
 
@@ -66,8 +67,6 @@ const ScrapeDeepScan = () => {
 
     const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
-    // Extrair redes sociais únicas para o filtro
-    const redesSociais = ["Todas", "Twitter", "Instagram", "Google", "Youtube"];
 
     const [sentimentoDistribution, setSentimentoDistribution] = useState({});
 
@@ -79,7 +78,6 @@ const ScrapeDeepScan = () => {
         str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     function HighlightedText({ text, keywords }) {
-        // memoriza a regex e o split para não recalcular em cada render
         const parts = useMemo(() => {
             if (!keywords.length) return [text];
 
@@ -168,12 +166,15 @@ const ScrapeDeepScan = () => {
         });
     };
 
-    const fetchTableData = async (page = 1, limit = 1000) => {
+    const fetchTableData = async (page = 1, limit = 100) => {
         try {
             const params = new URLSearchParams();
 
-            // backend: buildWhereClause({ platform, username, keywords, scrapeId })
-            if (platforms.length) params.append("platform", platforms.join(","));
+            const updatedPlatforms = platforms.map((platform) =>
+                platform === "Google" ? "search_engine" : platform
+            );
+            params.append("client_id", client_id);
+            if (updatedPlatforms.length) params.append("platform", updatedPlatforms.join(","));
             if (profiles.length) params.append("username", profiles.join(","));
             if (keyWords.length) params.append("keywords", keyWords.join(","));
 
@@ -227,7 +228,11 @@ const ScrapeDeepScan = () => {
     const fetchSentimentData = async () => {
         try {
             const params = new URLSearchParams();
-            if (platforms.length) params.append("platform", platforms.join(","));
+            const updatedPlatforms = platforms.map((platform) =>
+                platform === "Google" ? "search_engine" : platform
+            );
+            params.append("client_id", client_id);
+            if (updatedPlatforms.length) params.append("platform", updatedPlatforms.join(","));
             if (profiles.length) params.append("username", profiles.join(","));
             if (keyWords.length) params.append("keywords", keyWords.join(","));
 
@@ -258,7 +263,7 @@ const ScrapeDeepScan = () => {
 
 
     // Calculate the actual filtered results that will be displayed
-    const displayedResults = filteredResults.filter(
+    const displayedResults = (filteredResults || []).filter(
         (result) =>
             !profile ||
             (result.perfil &&
@@ -549,10 +554,16 @@ const ScrapeDeepScan = () => {
                                     className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                                 >
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {result.perfil}
+                                        {result.plataforma && result.plataforma.toLowerCase() === "search_engine" ?
+                                            "Google"
+                                            : result.perfil}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {result.plataforma}
+                                        <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                            {result.plataforma && result.plataforma.toLowerCase() === "search_engine" ?
+                                                "Google"
+                                                : result.perfil}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <span

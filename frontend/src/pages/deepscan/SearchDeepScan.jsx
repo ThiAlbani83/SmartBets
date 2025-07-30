@@ -43,6 +43,7 @@ ChartJS.register(
 
 const X_API_Key = key;
 const X_API_Secret = secret;
+const client_id = 2;
 
 
 const SearchDeepScan = () => {
@@ -111,8 +112,8 @@ const SearchDeepScan = () => {
                         "X-API-Secret": X_API_Secret,
                     },
                     body: JSON.stringify({
-                        profile: profileName,
-                        platform: platform,
+                        profile_identifier: profileName,
+                        platform: platform.toLowerCase(),
                     }),
                 }
             );
@@ -211,7 +212,7 @@ const SearchDeepScan = () => {
             // );
 
             // Fazendo a requisição GET
-            const response = await fetch(`${rootUrl}/data/filter?scrapeId=${agendamento.id}&page=1&limit=100`, {
+            const response = await fetch(`${rootUrl}/data/filter?client_id=${client_id}&scrapeId=${agendamento.id}&page=1&limit=100`, {
                 method: "GET",
                 headers: {
                     accept: "application/json",
@@ -396,7 +397,7 @@ const SearchDeepScan = () => {
     const fetchAgendamentos = async () => {
         try {
             const response = await fetch(
-                `${rootUrl}/scrapes?limit=100&offset=0`,
+                `${rootUrl}/scrapes?client_id=${client_id}&limit=100&offset=0`,
                 {
                     method: "GET",
                     headers: {
@@ -410,18 +411,20 @@ const SearchDeepScan = () => {
             const data = await response.json();
             // Processar os dados recebidos da API
             const scrapes = data.scrapes.map((scrape) => {
-                const parameters = scrape.parameters; // No need to parse
+                const parameters = scrape.parameters || {};
 
                 return {
                     id: scrape.id,
+                    scrape_id: scrape.scrape_id,
+                    scrap_id: scrape.scrape_id,
                     client_id: scrape.client_id,
                     status: scrape.status,
-                    profiles: parameters.profiles || [],
-                    keywords: parameters.keywords || [],
-                    platforms: parameters.platforms || [],
+                    profiles: Array.isArray(parameters.target) ? parameters.target : [parameters.target],
+                    platforms: Array.isArray(parameters.platform) ? parameters.platform : [parameters.platform],
                     scheduledAt: scrape.scheduled_at,
                 };
             });
+
 
             // Atualizar os estados com os dados processados
             setAgendamentos(scrapes);
@@ -505,7 +508,7 @@ const SearchDeepScan = () => {
         const makeRequest = async (params, type) => {
             try {
                 const response = await fetch(
-                    `${rootUrl}/schedule`,
+                    `${rootUrl}/schedule?client_id=${client_id}`,
                     {
                         method: "POST",
                         headers: {
@@ -588,9 +591,15 @@ const SearchDeepScan = () => {
     };
 
     const handleMonitorNow = async () => {
+
+        const updatedPlatforms = formData.platforms.map((platform) =>
+            platform === "Google" ? "search_engine" : platform
+        );
+
         const monitorParams = {
+            client_id: client_id,
             profiles: formData.profiles,
-            platforms: formData.platforms,
+            platforms: updatedPlatforms,
             searchPhrases: formData.searchPhrases,
             format: "DB",
         };
@@ -1071,8 +1080,8 @@ const SearchDeepScan = () => {
                                             <label
                                                 key={dia}
                                                 className={`flex items-center justify-center w-8 h-8 rounded border cursor-pointer transition-colors${formData.selectedDays.includes(dia)
-                                                        ? "border-blue-500 bg-blue-500 text-white"
-                                                        : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+                                                    ? "border-blue-500 bg-blue-500 text-white"
+                                                    : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
                                                     }
                         `}
                                             >
@@ -1206,7 +1215,7 @@ const SearchDeepScan = () => {
             {/* Tabela de Agendamentos */}
             <div className="bg-white p-6 rounded-lg shadow-md mb-8">
                 <h2 className="text-xl font-semibold mb-4">
-                    Agendamentos ({filteredAgendamentos.length} agendamentos)
+                    Agendamentos ({Array.isArray(filteredAgendamentos) ? filteredAgendamentos.length : 0} agendamentos)
                 </h2>
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
@@ -1272,29 +1281,32 @@ const SearchDeepScan = () => {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-500">
                                         <div className="flex flex-wrap gap-1">
-                                            {agendamento.platforms
+                                            {agendamento.platforms // Aqui é correto acessar diretamente agendamento.platforms
                                                 .filter((platform, index, self) => self.indexOf(platform) === index) // Filtra duplicatas
                                                 .map((platform, idx) => (
                                                     <span
                                                         key={idx}
                                                         className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
                                                     >
-                                                        {platform}
+                                                        {platform && platform.toLowerCase() === "search_engine" ?
+                                                            "Google"
+                                                            : platform
+                                                        }
                                                     </span>
                                                 ))}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
                                         <div className="truncate">
-                                            {agendamento.profiles.length > 0
+                                            {Array.isArray(agendamento.profiles) && agendamento.profiles.length > 0 && agendamento.platforms[index] && agendamento.platforms[index].toLowerCase() !== "search_engine"
                                                 ? agendamento.profiles.join(", ")
                                                 : "-"}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
                                         <div className="truncate">
-                                            {agendamento.keywords.length > 0
-                                                ? agendamento.keywords.join(", ")
+                                            {Array.isArray(agendamento.profiles) && agendamento.profiles.length > 0 && agendamento.platforms[index] && agendamento.platforms[index].toLowerCase() === "search_engine"
+                                                ? agendamento.profiles.join(", ")
                                                 : "-"}
                                         </div>
                                     </td>
@@ -1335,7 +1347,7 @@ const SearchDeepScan = () => {
                                             >
                                                 <FiTrash2 size={16} />
                                             </button>
-                                            {renderViewButton(agendamento)}
+                                            {/* {renderViewButton(agendamento)} */}
                                         </div>
                                     </td>
                                 </tr>
