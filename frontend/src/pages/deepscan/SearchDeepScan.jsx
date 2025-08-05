@@ -26,6 +26,7 @@ import {
 import ResultModal from "../../components/deepscan/ResultModal.jsx";
 import { rootUrl } from "./utils/url.js";
 import { key, secret } from "./utils/secret.js";
+import { FaInstagram, FaPlay } from "react-icons/fa";
 
 // Registrar os componentes do Chart.js
 ChartJS.register(
@@ -64,7 +65,7 @@ const SearchDeepScan = () => {
     const [error, setError] = useState("");
     // Adicione este estado no início do componente, junto com os outros useState
     const [showProfileModal, setShowProfileModal] = useState(false);
-    const [newProfile, setNewProfile] = useState({ name: "", platform: "" });
+    const [newProfile, setNewProfile] = useState({ name: "", platform: "", keyword: "" });
 
     // Estados para modal de palavras-chave
     const [showKeywordModal, setShowKeywordModal] = useState(false);
@@ -239,7 +240,6 @@ const SearchDeepScan = () => {
         }
     };
 
-    // Função para renderizar o botão de visualização baseado no status
     const renderViewButton = (agendamento) => {
         const isCompleted = agendamento.status === "completed";
         const isFailed = agendamento.status === "failed";
@@ -287,34 +287,56 @@ const SearchDeepScan = () => {
         return null;
     };
 
-    // Adicione estas plataformas no início do componente
     const profilePlatforms = [
-        "Instagram",
-        "Facebook",
-        "Google",
-        "DeepWeb",
-        "DarkWeb",
-        "Twitter",
-        "LinkedIn",
-        "Youtube",
-        "Discord",
-        "Telegram",
-        "Github",
+        {
+            "plataforma": "Instagram",
+            "tipo": 1
+        },
+        {
+            "plataforma": "Twitter",
+            "tipo": 1
+        },
+        {
+            "plataforma": "LinkedIn",
+            "tipo": 1
+        },
+        {
+            "plataforma": "Google",
+            "tipo": 2
+        },
+        {
+            "plataforma": "Telegram",
+            "tipo": 3
+        },
     ];
 
     const handleAddProfile = () => {
-        if (newProfile.name.trim() && newProfile.platform) {
-            const profile = `${newProfile.name}`;
-            const platformProfile = `${newProfile.platform}`
-            setFormData({
-                ...formData,
-                profiles: [...formData.profiles, profile],
-                platforms: [...formData.platforms, platformProfile]
-            });
-            setNewProfile({ name: "", platform: "" });
-            setShowProfileModal(false);
-            setError("");
-        }
+        // 1) Só avança se houver plataforma selecionada
+        if (!newProfile.platform) return;
+
+        // 2) Prepara o perfil (string vazia se não informado)
+        const profileEntry = newProfile.name.trim() || "";
+
+        // 3) Prepara o batch de keywords (array vazio se não informado)
+        const keywordBatch = newProfile.keyword.trim()
+            ? newProfile.keyword
+                .split(",")
+                .map(k => k.trim())
+                .filter(k => k.length > 0)
+            : [];
+
+        // 4) Atualiza os três arrays em um único setFormData
+        setFormData(prev => ({
+            ...prev,
+            profiles: [...prev.profiles, profileEntry],
+            platforms: [...prev.platforms, newProfile.platform],
+            keywords: [...prev.keywords, keywordBatch],
+        }));
+
+        // 5) Limpa o formulário e fecha o modal
+        setNewProfile({ name: "", platform: "", keyword: "" });
+        setError("");
+        setShowProfileModal(false);
     };
 
     const handleRemoveProfile = (index) => {
@@ -338,52 +360,133 @@ const SearchDeepScan = () => {
         const profileKey = `${profile}_${platform}_${index}`;
         setProfileValidation((prev) => {
             const newValidation = { ...prev };
-            delete newValidation[profileKey]; // Remove a chave da validação
+            delete newValidation[profileKey];
             return newValidation;
         });
 
         // Log do estado após a remoção
     };
 
-
-    // Funções para gerenciar palavras-chave
     const handleAddKeyword = () => {
-        if (newKeyword.trim()) {
-            // Split by comma and clean up each keyword
-            const keywordsToAdd = newKeyword
-                .split(",")
-                .map((keyword) => keyword.trim())
-                .filter((keyword) => keyword.length > 0)
-                .filter((keyword) => !formData.keywords.includes(keyword)); // Avoid duplicates
+        // 1) não faz nada se a string estiver vazia
+        if (!newKeyword.trim() && newProfile.platform) return;
 
-            if (keywordsToAdd.length > 0) {
-                setFormData({
-                    ...formData,
-                    keywords: [...formData.keywords, ...keywordsToAdd],
-                });
-                setNewKeyword("");
-                setShowKeywordModal(false);
-                setError("");
-            }
-        }
+        // 2) quebra em lista de palavras, remove espaços e itens vazios
+        const keywordsBatch = newKeyword
+            .split(",")
+            .map(k => k.trim())
+            .filter(k => k.length > 0);
+
+        const platformKeyword = `${newProfile.platform}`
+
+        // 3) se não sobrar nada, sai
+        if (keywordsBatch.length === 0) return;
+
+        // 4) atualiza o estado empurrando o batch inteiro
+        setFormData(prev => ({
+            ...prev,
+            keywords: [...prev.keywords, keywordsBatch],
+            platforms: [...formData.platforms, platformKeyword]
+        }));
+
+        // 5) limpa tudo e fecha o modal
+        setNewKeyword("");
+        setError("");
+        setShowProfileModal(false);
     };
 
     const handleRemoveKeyword = (index) => {
-        const updatedKeywords = formData.keywords.filter((_, i) => i !== index);
-        setFormData({ ...formData, keywords: updatedKeywords });
+        setFormData(prev => ({
+            ...prev,
+            // remove o batch na posição `index`
+            keywords: prev.keywords.filter((_, i) => i !== index),
+        }));
+
+        // Se você mantiver validações por keyword, remova todas do batch
+        setKeywordValidation(prev => {
+            const next = { ...prev };
+            const removedBatch = formData.keywords[index] || [];
+            removedBatch.forEach(keyword => {
+                const key = `${keyword}_${index}`;
+                delete next[key];
+            });
+            return next;
+        });
     };
 
-    // Função para lidar com a mudança dos inputs do formulário
+    const handleAddProfileAndKeyword = () => {
+        // 1) Validações
+        if (!newProfile.name.trim() || !newProfile.platform) return;
+
+        // 2) Prepara profile/platform
+        const profile = newProfile.name;
+        const platformProfile = newProfile.platform;
+
+        // 3) Quebra em lista (batch) de palavras
+        const keywordsToAdd = newKeyword
+            .split(",")
+            .map((k) => k.trim())
+            .filter((k) => k.length > 0);
+
+        if (keywordsToAdd.length === 0) {
+            // mesmo sem keywords, podemos adicionar só o profile
+            setFormData((prev) => ({
+                ...prev,
+                profiles: [...prev.profiles, profile],
+                platforms: [...prev.platforms, platformProfile],
+            }));
+        } else {
+            // 4) Faz um único setFormData, empurrando o batch inteiro
+            setFormData((prev) => ({
+                ...prev,
+                profiles: [...prev.profiles, profile],
+                platforms: [...prev.platforms, platformProfile],
+                keywords: [...prev.keywords, keywordsToAdd],  // <- aqui!
+            }));
+        }
+
+        // 5) Limpa tudo e fecha
+        setNewProfile({ name: "", platform: "" });
+        setNewKeyword("");
+        setError("");
+        setShowProfileModal(false);
+    };
+
+    const handleRemoveProfileAndKeyword = (index) => {
+        // 1) Remove dos três arrays de uma só vez
+        setFormData(prev => ({
+            ...prev,
+            profiles: prev.profiles.filter((_, i) => i !== index),
+            platforms: prev.platforms.filter((_, i) => i !== index),
+            keywords: prev.keywords.filter((_, i) => i !== index),
+        }));
+
+        // 2) Limpa validação de perfil/plataforma
+        setProfileValidation(prev => {
+            const next = { ...prev };
+            // reconstruímos antes de remover porque prev já tem os valores antigos
+            const profile = formData.profiles[index];
+            const platform = formData.platforms[index];
+            const key = `${profile}_${platform}_${index}`;
+            delete next[key];
+            return next;
+        });
+
+        // 3) Limpa validação de keywords (caso tenha)
+        setKeywordValidation(prev => {
+            const next = { ...prev };
+            const batch = formData.keywords[index] || [];
+            batch.forEach(keyword => {
+                const key = `${keyword}_${index}`;
+                delete next[key];
+            });
+            return next;
+        });
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
-    };
-
-    const handleSearchPhrasesChange = (e) => {
-        setFormData({
-            ...formData,
-            searchPhrases: e.target.value.split(",").map((phrase) => phrase.trim()),
-        });
     };
 
     const handleSelectedDaysChange = (e) => {
@@ -440,7 +543,6 @@ const SearchDeepScan = () => {
         fetchAgendamentos();
     }, []);
 
-    // Função para fazer a requisição de agendamento
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -716,32 +818,34 @@ const SearchDeepScan = () => {
     // Gerar dias do mês para seleção
     const diasDoMes = Array.from({ length: 31 }, (_, i) => i + 1);
 
+    const selectedPlatform = profilePlatforms.find(platform => platform.plataforma === newProfile.platform);
+
     return (
         <div className="mx-auto px-4 py-8 flex flex-col">
-            <h1 className="text-3xl font-bold mb-6">Agendamento de Monitoramento</h1>
+            <h1 className="text-3xl font-bold mb-6">Monitoramento</h1>
 
             {/* Formulário de Agendamento */}
             <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h2 className="text-xl font-semibold mb-4">Novo Agendamento</h2>
+                <h2 className="text-xl font-semibold mb-4">Novo Monitoramento</h2>
                 <form onSubmit={handleSubmit}>
                     {/* Perfis e Palavras-chave */}
                     <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
                         {/* Perfis */}
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Perfis para Monitoramento
+                                Dados para Monitoramento
                             </label>
                             <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                                 <div className="flex justify-between items-center mb-3">
                                     <span className="text-xs text-gray-600">
-                                        {formData.profiles.length} perfil(s) adicionado(s)
+                                        {formData.profiles.length} dados(s) adicionado(s)
                                     </span>
                                     <button
                                         type="button"
                                         onClick={() => setShowProfileModal(true)}
                                         className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
                                     >
-                                        + Adicionar Perfil
+                                        + Adicionar Dados
                                     </button>
                                 </div>
 
@@ -753,8 +857,12 @@ const SearchDeepScan = () => {
                                                 className="flex items-center justify-between bg-white border border-gray-300 rounded-md px-3 py-2"
                                             >
                                                 <div className="flex items-center flex-1">
-                                                    <span className="text-sm mr-2">{`${profile}`}</span>
+                                                    <span className="text-sm mr-2">{`${profile}`} | </span>
                                                     <span className="text-sm mr-2">{`(${formData.platforms[index]})`}</span>
+                                                    {formData.keywords.length > 0 ?
+                                                        <span className="text-sm mr-2">{`| palavras-chave: [${formData.keywords[index]}]`}</span>
+                                                        : null
+                                                    }
                                                     {renderProfileValidationStatus(profile, index)}
                                                 </div>
                                                 <button
@@ -770,7 +878,7 @@ const SearchDeepScan = () => {
                                     </div>
                                 ) : (
                                     <div className="text-center py-4 text-gray-500 text-sm">
-                                        Nenhum perfil adicionado ainda
+                                        Nenhum dado adicionado ainda
                                     </div>
                                 )}
                             </div>
@@ -830,24 +938,10 @@ const SearchDeepScan = () => {
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                             <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
                                 <h3 className="text-lg font-semibold mb-4">
-                                    Adicionar Novo Perfil
+                                    Adicionar Informações
                                 </h3>
 
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Nome do Perfil
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newProfile.name}
-                                        onChange={(e) =>
-                                            setNewProfile({ ...newProfile, name: e.target.value })
-                                        }
-                                        placeholder="Ex: @usuario123"
-                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                </div>
-
+                                {/* plataforma */}
                                 <div className="mb-6">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Plataforma
@@ -864,33 +958,156 @@ const SearchDeepScan = () => {
                                     >
                                         <option value="">Selecione uma plataforma</option>
                                         {profilePlatforms.map((platform) => (
-                                            <option key={platform} value={platform}>
-                                                {platform}
+                                            <option key={platform.plataforma} value={platform.plataforma}>
+                                                {platform.plataforma}
                                             </option>
                                         ))}
                                     </select>
                                 </div>
 
-                                <div className="flex justify-end gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setShowProfileModal(false);
-                                            setNewProfile({ name: "", platform: "" });
-                                        }}
-                                        className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleAddProfile}
-                                        disabled={!newProfile.name.trim() || !newProfile.platform}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Adicionar
-                                    </button>
-                                </div>
+                                {newProfile.platform && (
+
+                                    <>
+                                        {/* Condições baseadas no tipo da plataforma */}
+                                        {selectedPlatform && selectedPlatform.tipo === 1 && (
+                                            <>
+                                                <div className="mb-4">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Nome do Perfil
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={newProfile.name}
+                                                        onChange={(e) =>
+                                                            setNewProfile({ ...newProfile, name: e.target.value })
+                                                        }
+                                                        placeholder="Ex: @usuario123"
+                                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setShowProfileModal(false);
+                                                            setNewProfile({ name: "", platform: "", keyword: "" });
+                                                        }}
+                                                        className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleAddProfile}
+                                                        disabled={!newProfile.name.trim() || !newProfile.platform}
+                                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        Adicionar
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {selectedPlatform && selectedPlatform.tipo === 2 && (
+                                            <>
+                                                <div className="mb-4">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Palavra-chave
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={newProfile.keyword}
+                                                        onChange={(e) =>
+                                                            setNewProfile({ ...newProfile, keyword: e.target.value })
+                                                        }
+                                                        placeholder="Ex: aposta, bet"
+                                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setShowProfileModal(false);
+                                                            setNewProfile({ name: "", platform: "", keyword: "" });
+                                                            setNewKeyword("");
+                                                        }}
+                                                        className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleAddProfile}
+                                                        disabled={!newProfile.keyword.trim() || !newProfile.platform}
+                                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        Adicionar
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {selectedPlatform && selectedPlatform.tipo === 3 && (
+                                            // Mostrar "Perfil", "Palavra-chave" e "Canal" se o tipo for 3
+                                            <>
+                                                <div className="mb-4">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Perfil ou Canal Alvo
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={newProfile.name}
+                                                        onChange={(e) =>
+                                                            setNewProfile({ ...newProfile, name: e.target.value })
+                                                        }
+                                                        placeholder="Ex: @usuario123"
+                                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+
+                                                <div className="mb-4">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Palavra-chave
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={newProfile.keyword}
+                                                        onChange={(e) =>
+                                                            setNewProfile({ ...newProfile, keyword: e.target.value })
+                                                        }
+                                                        placeholder="Ex: aposta, bet"
+                                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setShowProfileModal(false);
+                                                            setNewProfile({ name: "", platform: "", keyword: "" });
+                                                            setNewKeyword("");
+                                                        }}
+                                                        className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleAddProfile}
+                                                        disabled={!newProfile.keyword.trim() || !newProfile.name.trim() || !newProfile.platform}
+                                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        Adicionar
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}
@@ -1137,7 +1354,7 @@ const SearchDeepScan = () => {
                                 }`}
                         >
                             <FiPlay className="mr-2" size={16} />
-                            {isScraping ? "Raspando..." : "Raspar Agora"}
+                            {isScraping ? "Monitorando..." : "Monitorar Agora"}
                         </button>
 
                         {!showScheduleFields ? (
@@ -1212,12 +1429,12 @@ const SearchDeepScan = () => {
                 </div>
             )}
 
-            {/* Tabela de Agendamentos */}
+            {/* Tabela de Monitoramento */}
             <div className="bg-white p-6 rounded-lg shadow-md mb-8">
                 <h2 className="text-xl font-semibold mb-4">
-                    Agendamentos ({Array.isArray(filteredAgendamentos) ? filteredAgendamentos.length : 0} agendamentos)
+                    Monitoramentos ({Array.isArray(filteredAgendamentos) ? filteredAgendamentos.length : 0} monitoramentos)
                 </h2>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto overflow-y-auto" style={{ maxHeight: '80vh' }}>
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>

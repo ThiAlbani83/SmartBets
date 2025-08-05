@@ -9,7 +9,7 @@ import {
   menuItemsSigap,
   menuItemsDeepScan,
 } from "../utils/menuData";
-import { FaArrowLeft, FaChevronDown } from "react-icons/fa";
+import { FaArrowLeft, FaChevronDown, FaPlay, FaPlayCircle, FaPlaystation, FaRunning, FaStar, FaWatchmanMonitoring } from "react-icons/fa";
 import {
   FaHome,
   FaChartBar,
@@ -64,7 +64,8 @@ const MenuV2 = ({ expanded, setExpanded }) => {
     Departamentos: <FaBuilding className="w-5 h-5" />,
     Produtos: <FaBoxes className="w-5 h-5" />,
     Contatos: <FaAddressBook className="w-5 h-5" />,
-    Raspagens: <FaSearchengin className="w-5 h-5" />, // ou FaSearchengin
+    Monitorar: <FaPlay className="w-5 h-5" />, // ou FaSearchengin
+    Consultar: <FaSearchengin className="w-5 h-5" />, // ou FaSearchengin
     Agendamento: <FaCalendarAlt className="w-5 h-5" />,
     Tarefas: <FaTasks className="w-5 h-5" />,
     Sair: <FaSignOutAlt className="w-5 h-5" />,

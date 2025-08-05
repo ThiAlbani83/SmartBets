@@ -70,8 +70,8 @@ export const menuItemsResponsible = [
 
 export const menuItemsDeepScan = [
   { name: "Dashboard", path: "/deepscan/dashboard" },
-  { name: "Raspagens", path: "/deepscan/verificacoes" },
-  { name: "Agendamento", path: "/deepscan/agendamentos" },
+  { name: "Consultar", path: "/deepscan/verificacoes" },
+  { name: "Monitorar", path: "/deepscan/agendamentos" },
   { name: "BetCrawler", path: "/deepscan/betcrawler" },
   { name: "DataIntel", path: "/deepscan/data-intel" },
 ];

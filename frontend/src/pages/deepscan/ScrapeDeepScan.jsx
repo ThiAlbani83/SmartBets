@@ -14,7 +14,7 @@ import {
     Filler,
     ArcElement,
 } from "chart.js";
-import { Bar, Pie, Line } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
 import { FiCalendar, FiExternalLink, FiEye, FiLink, FiPlay, FiUser } from "react-icons/fi";
 import { rootUrl } from "./utils/url.js";
 import { key, secret } from "./utils/secret.js";
@@ -60,6 +60,10 @@ const ScrapeDeepScan = () => {
     const [newPlatform, setNewPlatform] = useState("");
     const [showPlatformModal, setShowPlatformModal] = useState(false);
 
+    const [channels, setChannels] = useState([]);
+    const [newChannel, setNewChannel] = useState("");
+    const [showChannelModal, setShowChannelModal] = useState(false);
+
 
     const [selectedRedeSocial, setSelectedRedeSocial] = useState("Todas");
 
@@ -74,8 +78,9 @@ const ScrapeDeepScan = () => {
     const [selectedItem, setSelectedItem] = useState(null);
 
 
-    const escapeRegExp = (str) =>
+    const escapeRegExp = (str) => {
         str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
 
     function HighlightedText({ text, keywords }) {
         const parts = useMemo(() => {
@@ -101,7 +106,6 @@ const ScrapeDeepScan = () => {
         );
     }
 
-
     const handleAddProfile = () => {
         const name = newProfile.name.trim();
         if (!name) return;
@@ -112,12 +116,9 @@ const ScrapeDeepScan = () => {
         setShowProfileModal(false);
     };
 
-    // Handler para remover perfil
     const handleRemoveProfile = index => {
         setProfiles(prev => prev.filter((_, i) => i !== index));
     };
-
-
 
     const handleAddKeyword = () => {
         if (!newKeyword.trim()) return;
@@ -140,8 +141,6 @@ const ScrapeDeepScan = () => {
         setKeyWords(prev => prev.filter((_, i) => i !== index));
     };
 
-
-
     const handleAddPlatform = () => {
         if (newPlatform && !platforms.includes(newPlatform)) {
             setPlatforms(prev => [...prev, newPlatform]);
@@ -154,9 +153,19 @@ const ScrapeDeepScan = () => {
         setPlatforms(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleAddChannel = () => {
+        if (newChannel && !channels.includes(newChannel)) {
+            setChannels(prev => [...prev, newChannel]);
+        }
+        setNewChannel("");
+        setShowChannelModal(false);
+    };
+
+    const handleRemoveChannel = index => {
+        setChannels(prev => prev.filter((_, i) => i !== index));
+    };
 
 
-    // Função para navegar para a tela de agendamento com perfil pré-preenchido
     const handleScheduleMonitoring = (profileName, platform = "Instagram") => {
         navigate("/deepscan/agendamentos", {
             state: {
@@ -203,28 +212,6 @@ const ScrapeDeepScan = () => {
     };
 
 
-    const sentimentoData = useMemo(() => ({
-        labels: Object.keys(sentimentoDistribution),
-        datasets: [
-            {
-                data: Object.values(sentimentoDistribution),
-                backgroundColor: [
-                    "rgba(255, 99, 132, 0.6)",
-                    "rgba(255, 206, 86, 0.6)",
-                    "rgba(75, 192, 192, 0.6)",
-                    "rgba(36, 228, 36, 0.6)",
-                ],
-                borderColor: [
-                    "rgba(255, 99, 132, 1)",
-                    "rgba(255, 206, 86, 1)",
-                    "rgba(75, 192, 192, 1)",
-                    "rgba(36, 228, 36, 1)",
-                ],
-                borderWidth: 1,
-            },
-        ],
-    }), [sentimentoDistribution]);
-
     const fetchSentimentData = async () => {
         try {
             const params = new URLSearchParams();
@@ -269,6 +256,31 @@ const ScrapeDeepScan = () => {
             (result.perfil &&
                 result.perfil.toLowerCase().includes(profile.toLowerCase()))
     );
+
+    const sentimentoData = useMemo(() => ({
+        labels: Object.keys(sentimentoDistribution),
+        datasets: [
+            {
+                data: Object.values(sentimentoDistribution),
+                backgroundColor: [
+                    "rgba(255, 99, 132, 0.6)",
+                    "rgba(255, 206, 86, 0.6)",
+                    "rgba(75, 192, 192, 0.6)",
+                    "rgba(36, 228, 36, 0.6)",
+                ],
+                borderColor: [
+                    "rgba(255, 99, 132, 1)",
+                    "rgba(255, 206, 86, 1)",
+                    "rgba(75, 192, 192, 1)",
+                    "rgba(36, 228, 36, 1)",
+                ],
+                borderWidth: 1,
+            },
+        ],
+    }), [sentimentoDistribution]);
+
+    console.log(sentimentoDistribution)
+
 
     const pieOptions = {
         responsive: true,
@@ -467,11 +479,12 @@ const ScrapeDeepScan = () => {
                         Distribuição de Sentimentos
                     </h2>
                     <div className="h-80 flex justify-center">
-                        <div className="w-1/3">
+                        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
                             <Pie
                                 data={sentimentoData}
                                 options={pieOptions}
-                                redraw />
+                                redraw
+                            />
                         </div>
                     </div>
                 </div>
