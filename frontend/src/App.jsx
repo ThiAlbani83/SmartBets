@@ -51,9 +51,7 @@ function App() {
         <Route
           path="/*"
           element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
+            <HomePage />
           }
         />
         <Route path="/register/:token" element={<InvitedUserRegistration />} />
