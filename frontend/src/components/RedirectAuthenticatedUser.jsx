@@ -5,7 +5,7 @@ const RedirectAuthenticatedUser = ({ children }) => {
   const { isAuthenticated, isCheckingAuth } = useAuthStore();
 
   if (isCheckingAuth) {
-    return <div>Loading...</div>; // Ou qualquer tela de carregamento
+    return <div>Loading...</div>;
   }
 
   if (isAuthenticated) {

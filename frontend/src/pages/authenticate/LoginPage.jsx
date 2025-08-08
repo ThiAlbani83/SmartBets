@@ -20,16 +20,14 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const userResponse = await login(email, password);
-      if (!userResponse.active) {
-        alert("Usuário Inativo. Contate a administração.");
-        localStorage.removeItem("user");
-        logout();
-      } else {
-        navigate("/");
-      }
+      // Realiza o login
+      await login(email, password);
+      
+      // Se o login for bem-sucedido, navega para a página inicial
+      navigate("/");
     } catch (err) {
       setIsLoading(false);
+      // Se houver erro, exibe a mensagem de erro
       setTimeout(() => {
         clearError();
       }, 3000);
@@ -61,14 +59,14 @@ const LoginPage = () => {
             <form onSubmit={handleSubmit}>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
+                  Username
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiMail className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

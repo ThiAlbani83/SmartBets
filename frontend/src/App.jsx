@@ -7,20 +7,27 @@ import RedirectAuthenticatedUser from "./components/RedirectAuthenticatedUser";
 import HomePage from "./pages/HomePage";
 import InvitedUserRegistration from "./pages/authenticate/InvitedUserRegistration";
 import { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+
 
 function App() {
-  const { checkAuth } = useAuthStore();
+  const { checkAuth, isAuthenticated } = useAuthStore();
   const location = useLocation();
+  const navigate = useNavigate();  // O hook useNavigate deve ser chamado aqui no corpo do componente
 
   useEffect(() => {
     console.log("Verificando autenticação...");
-    checkAuth();
-    if (localStorage.getItem("user")) {
+    checkAuth();  // Verifica a autenticação
+
+    if (isAuthenticated) {
       console.log("Usuário autenticado");
     } else {
       console.log("Usuário não autenticado");
+      if (location.pathname !== "/login") {
+        navigate("/login");  // Correto: use navigate dentro do hook useEffect
+      }
     }
-  }, [checkAuth]);
+  }, [checkAuth, isAuthenticated, location, navigate]);
 
   const getBackgroundClass = () => {
     if (location.pathname.includes("/register/") && window.innerWidth < 768) {

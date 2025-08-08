@@ -42,9 +42,8 @@ ChartJS.register(
     ArcElement
 );
 
-const X_API_Key = key;
-const X_API_Secret = secret;
-const client_id = 2;
+const client_id = 1;
+const token = localStorage.getItem("access_token");
 
 
 const SearchDeepScan = () => {
@@ -109,8 +108,7 @@ const SearchDeepScan = () => {
                     headers: {
                         "Content-Type": "application/json",
                         accept: "application/json",
-                        "X-API-Key": X_API_Key,
-                        "X-API-Secret": X_API_Secret,
+                        "Authorization": `Bearer ${token}`,
                     },
                     body: JSON.stringify({
                         profile_identifier: profileName,
@@ -217,8 +215,7 @@ const SearchDeepScan = () => {
                 method: "GET",
                 headers: {
                     accept: "application/json",
-                    "X-API-Key": X_API_Key,
-                    "X-API-Secret": X_API_Secret,
+                    "Authorization": `Bearer ${token}`,
                 },
             });
 
@@ -505,8 +502,7 @@ const SearchDeepScan = () => {
                     method: "GET",
                     headers: {
                         accept: "application/json",
-                        "X-API-Key": X_API_Key,
-                        "X-API-Secret": X_API_Secret,
+                        "Authorization": `Bearer ${token}`,
                     },
                 }
             );
@@ -616,8 +612,7 @@ const SearchDeepScan = () => {
                         headers: {
                             "Content-Type": "application/json",
                             accept: "application/json",
-                            "X-API-Key": X_API_Key, // Substitua com sua chave de API
-                            "X-API-Secret": X_API_Secret, // Substitua com seu segredo de API
+                            "Authorization": `Bearer ${token}`,
                         },
                         body: JSON.stringify(params),
                     }
@@ -713,9 +708,8 @@ const SearchDeepScan = () => {
                     method: "POST",
                     headers: {
                         accept: "application/json",
-                        "X-API-Key": X_API_Key,
-                        "X-API-Secret": X_API_Secret,
                         "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`,
                     },
                     body: JSON.stringify(monitorParams),
                 }
@@ -789,8 +783,7 @@ const SearchDeepScan = () => {
                     method: "DELETE",
                     headers: {
                         accept: "application/json",
-                        "X-API-Key": X_API_Key,
-                        "X-API-Secret": X_API_Secret,
+                        "Authorization": `Bearer ${token}`,
                     },
                 }
             );

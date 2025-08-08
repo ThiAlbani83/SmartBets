@@ -46,7 +46,7 @@ import { MdAdminPanelSettings } from "react-icons/md";
 
 const MenuV2 = ({ expanded, setExpanded }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { logout } = useAuthStore();
   const location = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
@@ -138,6 +138,7 @@ const MenuV2 = ({ expanded, setExpanded }) => {
             </Link>
             <button
               className="w-full text-left flex items-center gap-2 p-3 text-gray-300 hover:bg-gray-600 transition-colors duration-200"
+              onClick={logout}
             >
               <FaSignOutAlt className="text-blue-400" />
               <span className="text-sm">Sair</span>

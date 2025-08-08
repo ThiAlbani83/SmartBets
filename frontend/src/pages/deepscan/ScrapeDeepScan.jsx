@@ -17,7 +17,6 @@ import {
 import { Bar, Pie } from "react-chartjs-2";
 import { FiCalendar, FiExternalLink, FiEye, FiLink, FiPlay, FiUser } from "react-icons/fi";
 import { rootUrl } from "./utils/url.js";
-import { key, secret } from "./utils/secret.js";
 import { FiX } from "react-icons/fi";
 
 // Registrar os componentes do Chart.js
@@ -34,9 +33,8 @@ ChartJS.register(
     ArcElement
 );
 
-const X_API_Key = key;
-const X_API_Secret = secret;
-const client_id = 2;
+const client_id = 1;
+const token = localStorage.getItem("access_token");
 
 const ScrapeDeepScan = () => {
 
@@ -78,17 +76,15 @@ const ScrapeDeepScan = () => {
     const [selectedItem, setSelectedItem] = useState(null);
 
 
-    const escapeRegExp = (str) => {
-        str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
     function HighlightedText({ text, keywords }) {
         const parts = useMemo(() => {
             if (!keywords.length) return [text];
 
-            const pattern = keywords.map(escapeRegExp).join("|");
-            const regex = new RegExp(`(${pattern})`, "gi");
-            return text.split(regex);
+            // Escapar as palavras-chave para regex
+            const pattern = keywords.map(kw => escapeRegExp(kw)).join("|");
+            const regex = new RegExp(`(${pattern})`, "gi");  // Tornar a regex global e insensível a maiúsculas/minúsculas
+
+            return text.split(regex);  // Divide o texto em partes
         }, [text, keywords]);
 
         return (
@@ -104,6 +100,10 @@ const ScrapeDeepScan = () => {
                 )}
             </>
         );
+    }
+
+    function escapeRegExp(str) {
+        return str.replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&");  // Corrige o escape dos caracteres especiais
     }
 
     const handleAddProfile = () => {
@@ -195,8 +195,7 @@ const ScrapeDeepScan = () => {
             const resp = await fetch(url, {
                 headers: {
                     accept: "application/json",
-                    "X-API-Key": X_API_Key,
-                    "X-API-Secret": X_API_Secret,
+                    "Authorization": `Bearer ${token}`,
                 },
             });
             const json = await resp.json();
@@ -228,8 +227,7 @@ const ScrapeDeepScan = () => {
             const resp = await fetch(url, {
                 headers: {
                     accept: "application/json",
-                    "X-API-Key": X_API_Key,
-                    "X-API-Secret": X_API_Secret,
+                    "Authorization": `Bearer ${token}`,
                 },
             });
             const data = await resp.json();
@@ -278,8 +276,6 @@ const ScrapeDeepScan = () => {
             },
         ],
     }), [sentimentoDistribution]);
-
-    console.log(sentimentoDistribution)
 
 
     const pieOptions = {
@@ -568,14 +564,15 @@ const ScrapeDeepScan = () => {
                                 >
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {result.plataforma && result.plataforma.toLowerCase() === "search_engine" ?
-                                            "Google"
-                                            : result.perfil}
+                                            "Google" :
+                                            result.perfil.length > 30 ? `${result.perfil.slice(0, 50)}...` : result.perfil
+                                        }
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                             {result.plataforma && result.plataforma.toLowerCase() === "search_engine" ?
                                                 "Google"
-                                                : result.perfil}
+                                                : result.plataforma}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -795,16 +792,17 @@ const ScrapeDeepScan = () => {
                                 <option value="">Selecione uma plataforma</option>
                                 {[
                                     "Instagram",
-                                    "Facebook",
-                                    "Twitter",
-                                    "LinkedIn",
-                                    "Youtube",
-                                    "Discord",
                                     "Telegram",
-                                    "Github",
-                                    "DeepWeb",
-                                    "DarkWeb",
+                                    "LinkedIn",
+                                    "Twitter",
+                                    "Reddit",
+                                    "Youtube",
                                     "Google",
+                                    // "Discord",
+                                    // "Facebook",
+                                    // "Github",
+                                    // "DeepWeb",
+                                    // "DarkWeb",
                                 ].map(plat => (
                                     <option key={plat} value={plat}>
                                         {plat}
