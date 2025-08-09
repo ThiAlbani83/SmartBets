@@ -43,6 +43,7 @@ import ScrapeDeepScan from "./deepscan/ScrapeDeepScan";
 import BetCrawlerDeepScan from "./deepscan/BetCrawlerDeepScan";
 import Antifraude from "./sigap/Antifraude";
 import HomeDataIntel from "./dataintel/HomeDataIntel";
+import FraudIntel from "./deepscan/FraudIntel";
 // import ClientRegistration from "./deepscan/ClientRegistration";
 
 const HomePage = () => {
@@ -172,6 +173,9 @@ const HomePage = () => {
               {/* ROTA PARA PAINEL DO DATA INTEL */}
               <Route path="/deepscan/data-intel" element={<HomeDataIntel />} />
               {/* FIM DA ROTA PARA PAINEL DO DATA INTEL */}
+              {/* ROTA PARA PAINEL DO FRAUD INTEL */}
+              <Route path="/deepscan/fraud-intel" element={<FraudIntel />} />
+              {/* FIM DA ROTA PARA PAINEL DO FRAUD INTEL */}
             </Routes>
           </div>
         </div>
