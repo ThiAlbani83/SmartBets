@@ -74,6 +74,7 @@ export const menuItemsDeepScan = [
   { name: "Monitorar", path: "/deepscan/agendamentos" },
   { name: "BetCrawler", path: "/deepscan/betcrawler" },
   { name: "DataIntel", path: "/deepscan/data-intel" },
+  { name: "FraudIntel", path: "/deepscan/fraud-intel" },
 ];
 
 export const menuItemsDataIntel = [

@@ -46,7 +46,7 @@ import { MdAdminPanelSettings } from "react-icons/md";
 
 const MenuV2 = ({ expanded, setExpanded }) => {
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const location = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
@@ -85,7 +85,6 @@ const MenuV2 = ({ expanded, setExpanded }) => {
     BetCrawler: <FaRobot className="w-5 h-5" />,
   };
 
-
   const toggleUserMenu = () => {
     setUserMenuOpen(!userMenuOpen);
   };
@@ -108,21 +107,16 @@ const MenuV2 = ({ expanded, setExpanded }) => {
           onClick={toggleUserMenu}
         >
           <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-            <p className="text-sm font-medium text-white truncate">
-              U
-            </p>
+            <p className="text-sm font-medium text-white truncate">U</p>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">
-              usuário
-            </p>
-            <p className="text-xs text-gray-400 truncate">
-              Nível de Acesso
-            </p>
+            <p className="text-sm font-medium text-white truncate">usuário</p>
+            <p className="text-xs text-gray-400 truncate">Nível de Acesso</p>
           </div>
           <FaChevronDown
-            className={`text-gray-400 transition-transform duration-200 ${userMenuOpen ? "transform rotate-180" : ""
-              }`}
+            className={`text-gray-400 transition-transform duration-200 ${
+              userMenuOpen ? "transform rotate-180" : ""
+            }`}
           />
         </div>
 
@@ -136,10 +130,7 @@ const MenuV2 = ({ expanded, setExpanded }) => {
               <MdAdminPanelSettings className="text-blue-400" />
               <span className="text-sm">Painel Admin</span>
             </Link>
-            <button
-              className="w-full text-left flex items-center gap-2 p-3 text-gray-300 hover:bg-gray-600 transition-colors duration-200"
-              onClick={logout}
-            >
+            <button className="w-full text-left flex items-center gap-2 p-3 text-gray-300 hover:bg-gray-600 transition-colors duration-200">
               <FaSignOutAlt className="text-blue-400" />
               <span className="text-sm">Sair</span>
             </button>
@@ -153,7 +144,7 @@ const MenuV2 = ({ expanded, setExpanded }) => {
           <ul className="space-y-2">
             <li className="items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200">
               <Link
-                to='/deepscan/dashboard'
+                to="/deepscan/dashboard"
                 className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white"
               >
                 <div className="w-6 h-6 flex items-center justify-center text-blue-400">
@@ -164,7 +155,7 @@ const MenuV2 = ({ expanded, setExpanded }) => {
             </li>
             <li className="items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200">
               <Link
-                to='/deepscan/verificacoes'
+                to="/deepscan/verificacoes"
                 className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white"
               >
                 <div className="w-6 h-6 flex items-center justify-center text-blue-400">
@@ -175,7 +166,7 @@ const MenuV2 = ({ expanded, setExpanded }) => {
             </li>
             <li className="items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200">
               <Link
-                to='/deepscan/agendamentos'
+                to="/deepscan/agendamentos"
                 className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white"
               >
                 <div className="w-6 h-6 flex items-center justify-center text-blue-400">
@@ -186,7 +177,7 @@ const MenuV2 = ({ expanded, setExpanded }) => {
             </li>
             <li className="items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200">
               <Link
-                to='/deepscan/betcrawler'
+                to="/deepscan/betcrawler"
                 className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white"
               >
                 <div className="w-6 h-6 flex items-center justify-center text-blue-400">
@@ -197,13 +188,24 @@ const MenuV2 = ({ expanded, setExpanded }) => {
             </li>
             <li className="items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200">
               <Link
-                to='/deepscan/data-intel'
+                to="/deepscan/data-intel"
                 className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white"
               >
                 <div className="w-6 h-6 flex items-center justify-center text-blue-400">
                   <FaDatabase className="w-5 h-5" />
                 </div>
                 <span className="text-sm font-medium">DataIntel</span>
+              </Link>
+            </li>
+            <li className="items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200">
+              <Link
+                to="/deepscan/fraud-intel"
+                className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white"
+              >
+                <div className="w-6 h-6 flex items-center justify-center text-blue-400">
+                  <FaShieldAlt className="w-5 h-5" />
+                </div>
+                <span className="text-sm font-medium">FraudIntel</span>
               </Link>
             </li>
           </ul>
