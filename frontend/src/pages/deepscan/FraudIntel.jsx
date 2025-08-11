@@ -403,6 +403,7 @@ const FraudIntel = () => {
   // Opções dos gráficos
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top",
@@ -421,15 +422,117 @@ const FraudIntel = () => {
 
   const doughnutOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "right",
+        labels: {
+          font: {
+            size: 12,
+          },
+          padding: 20,
+          generateLabels: function (chart) {
+            const data = chart.data;
+            if (data.labels.length && data.datasets.length) {
+              const dataset = data.datasets[0];
+              const total = dataset.data.reduce((a, b) => a + b, 0);
+              return data.labels.map(function (label, index) {
+                const value = dataset.data[index];
+                const percentage = ((value / total) * 100).toFixed(1);
+                return {
+                  text: `${label}: ${percentage}%`,
+                  fillStyle: dataset.backgroundColor[index],
+                  strokeStyle: dataset.borderColor
+                    ? dataset.borderColor[index]
+                    : "#fff",
+                  lineWidth: 2,
+                  hidden: false,
+                  index: index,
+                };
+              });
+            }
+            return [];
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            const dataset = context.dataset;
+            const total = dataset.data.reduce((a, b) => a + b, 0);
+            const currentValue = dataset.data[context.dataIndex];
+            const percentage = ((currentValue / total) * 100).toFixed(1);
+            return `${context.label}: ${currentValue} (${percentage}%)`;
+          },
+        },
+      },
+    },
+    elements: {
+      arc: {
+        borderWidth: 2,
+        borderColor: "#fff",
+      },
+    },
+  };
+
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "right",
+        labels: {
+          font: {
+            size: 12,
+          },
+          padding: 20,
+          generateLabels: function (chart) {
+            const data = chart.data;
+            if (data.labels.length && data.datasets.length) {
+              const dataset = data.datasets[0];
+              const total = dataset.data.reduce((a, b) => a + b, 0);
+              return data.labels.map(function (label, index) {
+                const value = dataset.data[index];
+                const percentage = ((value / total) * 100).toFixed(1);
+                return {
+                  text: `${label}: ${percentage}%`,
+                  fillStyle: dataset.backgroundColor[index],
+                  strokeStyle: dataset.borderColor
+                    ? dataset.borderColor[index]
+                    : "#fff",
+                  lineWidth: 2,
+                  hidden: false,
+                  index: index,
+                };
+              });
+            }
+            return [];
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            const dataset = context.dataset;
+            const total = dataset.data.reduce((a, b) => a + b, 0);
+            const currentValue = dataset.data[context.dataIndex];
+            const percentage = ((currentValue / total) * 100).toFixed(1);
+            return `${context.label}: ${currentValue} (${percentage}%)`;
+          },
+        },
+      },
+    },
+    elements: {
+      arc: {
+        borderWidth: 2,
+        borderColor: "#fff",
       },
     },
   };
 
   const lineOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top",
@@ -530,7 +633,20 @@ const FraudIntel = () => {
             <FiShield className="w-5 h-5 mr-2 text-blue-600" />
             Detecção de Dispositivos
           </h3>
-          <Bar data={deviceFingerprintData} options={chartOptions} />
+          <div className="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
+            <p className="text-sm text-blue-800">
+              Identifica dispositivos únicos e suspeitos para detectar múltiplas
+              contas, spoofing e atividades fraudulentas.
+            </p>
+            <p className="text-sm text-blue-700 mt-1">
+              Compara dispositivos únicos identificados vs. dispositivos com
+              comportamentos suspeitos em diferentes períodos, revelando
+              tendências de fraude.
+            </p>
+          </div>
+          <div className="h-80">
+            <Bar data={deviceFingerprintData} options={chartOptions} />
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -538,7 +654,19 @@ const FraudIntel = () => {
             <FiMapPin className="w-5 h-5 mr-2 text-green-600" />
             Tipos de Rede
           </h3>
-          <Doughnut data={networkTypeData} options={doughnutOptions} />
+          <div className="bg-green-50 p-3 rounded-lg mb-4 border border-green-200">
+            <p className="text-sm text-green-800">
+              Categoriza tipos de conexão para identificar uso de VPNs, proxies
+              e data centers que podem mascarar identidade real.
+            </p>
+            <p className="text-sm text-green-700 mt-1">
+              Distribuição percentual dos tipos de rede usados pelos usuários,
+              destacando conexões suspeitas como VPN, Proxy e Tor.
+            </p>
+          </div>
+          <div className="h-80">
+            <Doughnut data={networkTypeData} options={doughnutOptions} />
+          </div>
         </div>
       </div>
 
@@ -549,10 +677,23 @@ const FraudIntel = () => {
             <FiShield className="w-5 h-5 mr-2 text-purple-600" />
             Fingerprinting Avançado
           </h3>
+          <div className="bg-purple-50 p-3 rounded-lg mb-4 border border-purple-200">
+            <p className="text-sm text-purple-800">
+              Mede a eficácia de diferentes técnicas de fingerprinting para
+              criar identificações únicas e confiáveis de dispositivos.
+            </p>
+            <p className="text-sm text-purple-700 mt-1">
+              Taxa de sucesso (%) na identificação única por cada método:
+              Hardware ID, SO/Browser, Canvas/WebGL, Fontes instaladas e
+              Timezone.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Precisão da identificação por tipo de fingerprint (%)
           </p>
-          <Bar data={fingerprintingData} options={chartOptions} />
+          <div className="h-80">
+            <Bar data={fingerprintingData} options={chartOptions} />
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -560,10 +701,23 @@ const FraudIntel = () => {
             <FiZap className="w-5 h-5 mr-2 text-orange-600" />
             Anomalias Comportamentais
           </h3>
+          <div className="bg-orange-50 p-3 rounded-lg mb-4 border border-orange-200">
+            <p className="text-sm text-orange-800">
+              Detecta comportamentos anômalos que indicam tentativas de fraude,
+              automação ou manipulação de identidade de dispositivo.
+            </p>
+            <p className="text-sm text-orange-700 mt-1">
+              Quantidade de diferentes tipos de anomalias detectadas: mudanças
+              de fingerprint, sessões simultâneas, hardware anômalo e apps de
+              automação.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Distribuição de anomalias detectadas
           </p>
-          <Pie data={behavioralAnomaliesData} options={doughnutOptions} />
+          <div className="h-80">
+            <Pie data={behavioralAnomaliesData} options={pieOptions} />
+          </div>
         </div>
       </div>
 
@@ -573,10 +727,22 @@ const FraudIntel = () => {
           <FiMonitor className="w-5 h-5 mr-2 text-red-600" />
           Integridade do Dispositivo - Evolução Temporal
         </h3>
+        <div className="bg-red-50 p-3 rounded-lg mb-4 border border-red-200">
+          <p className="text-sm text-red-800">
+            Monitora dispositivos comprometidos ao longo do tempo para
+            identificar tendências e padrões de ataques organizados.
+          </p>
+          <p className="text-sm text-red-700 mt-1">
+            Evolução mensal das detecções de Jailbreak/Root, Emuladores e
+            Automation, revelando se há crescimento coordenado de ataques.
+          </p>
+        </div>
         <p className="text-sm text-gray-600 mb-4">
           Detecções de dispositivos comprometidos ao longo do tempo
         </p>
-        <Line data={deviceIntegrityData} options={lineOptions} />
+        <div className="h-80">
+          <Line data={deviceIntegrityData} options={lineOptions} />
+        </div>
       </div>
 
       {/* Resumo das funcionalidades */}
@@ -884,10 +1050,22 @@ const FraudIntel = () => {
           <FiActivity className="w-5 h-5 mr-2 text-blue-600" />
           Velocidades ao Longo do Dia
         </h3>
+        <div className="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
+          <p className="text-sm text-blue-800">
+            Identifica padrões temporais anômalos que podem indicar automação ou
+            coordenação entre múltiplas contas fraudulentas.
+          </p>
+          <p className="text-sm text-blue-700 mt-1">
+            Velocidade de cadastros e apostas por horário do dia, revelando
+            picos suspeitos que podem indicar bots ou scripts automatizados.
+          </p>
+        </div>
         <p className="text-sm text-gray-600 mb-4">
           Monitoramento de cadastros e apostas por horário
         </p>
-        <Line data={velocityData} options={lineOptions} />
+        <div className="h-80">
+          <Line data={velocityData} options={lineOptions} />
+        </div>
       </div>
 
       {/* Grid de gráficos por funcionalidade */}
@@ -897,10 +1075,22 @@ const FraudIntel = () => {
             <FiTrendingUp className="w-5 h-5 mr-2 text-green-600" />
             Velocidade de Cadastro
           </h3>
+          <div className="bg-green-50 p-3 rounded-lg mb-4 border border-green-200">
+            <p className="text-sm text-green-800">
+              Detecta criação em massa de contas que pode indicar farms de
+              contas ou ataques coordenados de criação de múltiplas identidades.
+            </p>
+            <p className="text-sm text-green-700 mt-1">
+              Compara cadastros normais vs. suspeitos por período do dia,
+              identificando horários onde há concentração anômala de registros.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Distribuição de cadastros por período do dia
           </p>
-          <Bar data={registrationSpeedData} options={chartOptions} />
+          <div className="h-80">
+            <Bar data={registrationSpeedData} options={chartOptions} />
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -908,10 +1098,23 @@ const FraudIntel = () => {
             <FiZap className="w-5 h-5 mr-2 text-purple-600" />
             Velocidade de Apostas
           </h3>
+          <div className="bg-purple-50 p-3 rounded-lg mb-4 border border-purple-200">
+            <p className="text-sm text-purple-800">
+              Identifica apostas muito rápidas (bots) ou muito lentas (análise
+              manual suspeita) que podem indicar manipulação ou automação.
+            </p>
+            <p className="text-sm text-purple-700 mt-1">
+              Distribuição da frequência de apostas por intervalo de tempo,
+              destacando comportamentos não-humanos como apostas em menos de 1
+              segundo.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Frequência de apostas por intervalo de tempo
           </p>
-          <Doughnut data={bettingSpeedData} options={doughnutOptions} />
+          <div className="h-80">
+            <Doughnut data={bettingSpeedData} options={doughnutOptions} />
+          </div>
         </div>
       </div>
 
@@ -921,10 +1124,22 @@ const FraudIntel = () => {
             <FiMapPin className="w-5 h-5 mr-2 text-red-600" />
             Viagens Impossíveis
           </h3>
+          <div className="bg-red-50 p-3 rounded-lg mb-4 border border-red-200">
+            <p className="text-sm text-red-800">
+              Detecta logins geograficamente impossíveis (ex: Brasil às 10h e
+              Europa às 10h05) que indicam compartilhamento de contas ou VPNs.
+            </p>
+            <p className="text-sm text-red-700 mt-1">
+              Número de detecções de "impossible travel" por dia da semana,
+              revelando padrões temporais de uso fraudulento de contas.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Detecções de "impossible travel" por dia da semana
           </p>
-          <Bar data={impossibleTravelData} options={chartOptions} />
+          <div className="h-80">
+            <Bar data={impossibleTravelData} options={chartOptions} />
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -932,10 +1147,23 @@ const FraudIntel = () => {
             <FiCreditCard className="w-5 h-5 mr-2 text-orange-600" />
             Transações Rápidas
           </h3>
+          <div className="bg-orange-50 p-3 rounded-lg mb-4 border border-orange-200">
+            <p className="text-sm text-orange-800">
+              Identifica padrões de cash-out suspeitos onde usuários depositam,
+              fazem poucas apostas e sacam rapidamente, indicando lavagem de
+              dinheiro.
+            </p>
+            <p className="text-sm text-orange-700 mt-1">
+              Tipos de ciclos de transações rápidas: depósito→aposta→saque em
+              sequência suspeita, revelando possível lavagem de dinheiro.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Padrões de cash-out e retiradas suspeitas
           </p>
-          <Pie data={quickTransactionsData} options={doughnutOptions} />
+          <div className="h-80">
+            <Pie data={quickTransactionsData} options={pieOptions} />
+          </div>
         </div>
       </div>
 
@@ -1064,10 +1292,22 @@ const FraudIntel = () => {
           <FiUsers className="w-5 h-5 mr-2 text-purple-600" />
           Distribuição de Contas por Cluster
         </h3>
+        <div className="bg-purple-50 p-3 rounded-lg mb-4 border border-purple-200">
+          <p className="text-sm text-purple-800">
+            Agrupa contas relacionadas para detectar redes de fraude, farms de
+            contas e operações coordenadas de múltiplas identidades falsas.
+          </p>
+          <p className="text-sm text-purple-700 mt-1">
+            Tamanho dos clusters detectados vs. contas isoladas, revelando a
+            extensão de redes organizadas de fraude na plataforma.
+          </p>
+        </div>
         <p className="text-sm text-gray-600 mb-4">
           Visualização dos agrupamentos de contas detectados
         </p>
-        <Bar data={clusterData} options={chartOptions} />
+        <div className="h-80">
+          <Bar data={clusterData} options={chartOptions} />
+        </div>
       </div>
 
       {/* Grid de gráficos por funcionalidade */}
@@ -1077,10 +1317,22 @@ const FraudIntel = () => {
             <FiDatabase className="w-5 h-5 mr-2 text-blue-600" />
             Conexões por Device/IP
           </h3>
+          <div className="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
+            <p className="text-sm text-blue-800">
+              Identifica dispositivos ou IPs usados por múltiplas contas,
+              indicando farms de contas, compartilhamento ou uso de bots.
+            </p>
+            <p className="text-sm text-blue-700 mt-1">
+              Distribuição de quantas contas estão associadas ao mesmo
+              dispositivo/IP, destacando casos extremos de mais de 10 contas.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Número de contas por dispositivo/IP
           </p>
-          <Doughnut data={deviceConnectionsData} options={doughnutOptions} />
+          <div className="h-80">
+            <Doughnut data={deviceConnectionsData} options={doughnutOptions} />
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -1088,10 +1340,23 @@ const FraudIntel = () => {
             <FiUsers className="w-5 h-5 mr-2 text-green-600" />
             Social Graph
           </h3>
+          <div className="bg-green-50 p-3 rounded-lg mb-4 border border-green-200">
+            <p className="text-sm text-green-800">
+              Mapeia conexões sociais suspeitas entre contas através de
+              referenciadores, afiliados e padrões de amizade para detectar
+              redes organizadas.
+            </p>
+            <p className="text-sm text-green-700 mt-1">
+              Tipos de conexões sociais detectadas entre contas, revelando como
+              fraudadores se organizam através de redes sociais.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Padrões de conexão social detectados
           </p>
-          <Pie data={socialGraphData} options={doughnutOptions} />
+          <div className="h-80">
+            <Pie data={socialGraphData} options={pieOptions} />
+          </div>
         </div>
       </div>
 
@@ -1101,10 +1366,22 @@ const FraudIntel = () => {
             <FiCreditCard className="w-5 h-5 mr-2 text-indigo-600" />
             Métodos de Pagamento Duplicados
           </h3>
+          <div className="bg-indigo-50 p-3 rounded-lg mb-4 border border-indigo-200">
+            <p className="text-sm text-indigo-800">
+              Rastreia métodos de pagamento compartilhados entre contas para
+              detectar farms de contas ou uso de cartões/contas roubados.
+            </p>
+            <p className="text-sm text-indigo-700 mt-1">
+              Evolução temporal do compartilhamento de cartões, contas bancárias
+              e carteiras digitais entre diferentes contas de usuários.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Evolução temporal de métodos duplicados
           </p>
-          <Line data={paymentMethodsData} options={lineOptions} />
+          <div className="h-80">
+            <Line data={paymentMethodsData} options={lineOptions} />
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -1112,10 +1389,22 @@ const FraudIntel = () => {
             <FiLink className="w-5 h-5 mr-2 text-orange-600" />
             Fluxo de Fundos
           </h3>
+          <div className="bg-orange-50 p-3 rounded-lg mb-4 border border-orange-200">
+            <p className="text-sm text-orange-800">
+              Rastreia movimentação de dinheiro entre contas para detectar
+              lavagem de dinheiro, transferências coordenadas e contas mulas.
+            </p>
+            <p className="text-sm text-orange-700 mt-1">
+              Tipos de fluxos financeiros suspeitos: transferências entre
+              contas, uso de contas mulas e saques coordenados entre grupos.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Tipos de transações suspeitas detectadas
           </p>
-          <Doughnut data={fundsFlowData} options={doughnutOptions} />
+          <div className="h-80">
+            <Doughnut data={fundsFlowData} options={doughnutOptions} />
+          </div>
         </div>
       </div>
 
@@ -1125,10 +1414,22 @@ const FraudIntel = () => {
             <FiActivity className="w-5 h-5 mr-2 text-red-600" />
             Apostas Sincronizadas
           </h3>
+          <div className="bg-red-50 p-3 rounded-lg mb-4 border border-red-200">
+            <p className="text-sm text-red-800">
+              Detecta coordenação entre contas que fazem apostas idênticas ou
+              similares simultaneamente, indicando match-fixing ou manipulação.
+            </p>
+            <p className="text-sm text-red-700 mt-1">
+              Comparação entre apostas coordenadas vs. normais por horário,
+              revelando períodos de maior atividade suspeita organizada.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Detecção de coordenação em apostas
           </p>
-          <Line data={synchronizedBetsData} options={lineOptions} />
+          <div className="h-80">
+            <Line data={synchronizedBetsData} options={lineOptions} />
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -1136,10 +1437,24 @@ const FraudIntel = () => {
             <FiEye className="w-5 h-5 mr-2 text-rose-600" />
             Overlap com Exclusão
           </h3>
+          <div className="bg-rose-50 p-3 rounded-lg mb-4 border border-rose-200">
+            <p className="text-sm text-rose-800">
+              Detecta tentativas de reentrada de pessoas autoexcluídas através
+              de novas contas, protegendo jogadores vulneráveis e cumprindo
+              regulamentações.
+            </p>
+            <p className="text-sm text-rose-700 mt-1">
+              Tipos de detecções de reentrada: autoexcluídos diretos,
+              familiares, documentos relacionados e padrões comportamentais
+              similares.
+            </p>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
             Reentradas de autoexcluídos detectadas
           </p>
-          <Bar data={exclusionOverlapData} options={chartOptions} />
+          <div className="h-80">
+            <Bar data={exclusionOverlapData} options={chartOptions} />
+          </div>
         </div>
       </div>
 
