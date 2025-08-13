@@ -1,6 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
 
 const BetSitesTable = ({ results }) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  const handleBacenClick = (row) => {
+    setSelectedRow(row);
+    setModalOpen(true);
+  };
+
+  const handleRFClick = (row) => {
+    // Lógica para enviar para Receita Federal
+    console.log("Enviando para Receita Federal:", row);
+    alert("Dados enviados para a Receita Federal!");
+  };
+
+  const handleSendToBacen = () => {
+    // Lógica para enviar para o Banco Central
+    console.log("Enviando para Banco Central:", selectedRow);
+    alert("Dados enviados para o Banco Central!");
+    setModalOpen(false);
+  };
+
   const getRiskBadgeColor = (risk) => {
     switch (risk) {
       case "Alto":
@@ -49,6 +70,12 @@ const BetSitesTable = ({ results }) => {
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Métodos de Pagamento
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                API
               </th>
               <th
                 scope="col"
@@ -109,6 +136,9 @@ const BetSitesTable = ({ results }) => {
                       </div>
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
+                      Influenciadores: {row.influenciadores}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
                       Última atividade: {row.lastActivity}
                     </div>
                   </div>
@@ -164,6 +194,24 @@ const BetSitesTable = ({ results }) => {
                   </div>
                 </td>
 
+                {/* API */}
+                <td className="px-6 py-4">
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => handleBacenClick(row)}
+                      className="px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      BACEN
+                    </button>
+                    <button
+                      onClick={() => handleRFClick(row)}
+                      className="px-3 py-2 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    >
+                      RF
+                    </button>
+                  </div>
+                </td>
+
                 {/* Avaliação de Risco */}
                 <td className="px-6 py-4">
                   <div className="flex flex-col items-center justify-center">
@@ -194,6 +242,162 @@ const BetSitesTable = ({ results }) => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal BACEN */}
+      {modalOpen && selectedRow && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            {/* Overlay */}
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setModalOpen(false)}
+            ></div>
+
+            {/* Modal */}
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg
+                      className="h-6 w-6 text-blue-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                      Enviar para Banco Central (BACEN)
+                    </h3>
+
+                    {/* Informações da casa de apostas */}
+                    <div className="mt-2 space-y-3">
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Casa de Apostas
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {selectedRow.name}
+                        </p>
+                        <p className="text-xs text-blue-600">
+                          {selectedRow.domain}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Criado em: {selectedRow.creationDate}
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Presença Digital
+                        </h4>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {selectedRow.platforms.map((platform) => (
+                            <span
+                              key={platform}
+                              className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800"
+                            >
+                              {platform}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Seguidores: {selectedRow.followers.toLocaleString()} |
+                          Posts: {selectedRow.posts}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Influenciadores: {selectedRow.influenciadores} |
+                          Última atividade: {selectedRow.lastActivity}
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Informações Legais
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          CNPJ: {selectedRow.cnpj}
+                        </p>
+                        <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 border border-red-200">
+                          {selectedRow.status}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Métodos de Pagamento
+                        </h4>
+                        <div className="mt-1">
+                          <p className="text-xs text-gray-500">Gateways:</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {selectedRow.gateways.map((gateway) => (
+                              <span
+                                key={gateway}
+                                className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+                              >
+                                {gateway}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-xs text-gray-500">Bancos:</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {selectedRow.banks.map((bank) => (
+                              <span
+                                key={bank}
+                                className="px-2 py-1 text-xs rounded-full bg-gray-50 text-gray-700 border border-gray-200"
+                              >
+                                {bank}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Avaliação de Risco
+                        </h4>
+                        <span
+                          className={`px-3 py-1 text-sm rounded-full border font-medium ${getRiskBadgeColor(
+                            selectedRow.risk
+                          )}`}
+                        >
+                          Risco {selectedRow.risk}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={handleSendToBacen}
+                >
+                  Enviar ao Banco Central
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={() => setModalOpen(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -62,6 +62,7 @@ const HomeDataIntel = () => {
       "Dados Pessoais": FiUsers,
       "Violações de Trânsito": FiShield,
       "Dados Financeiros": FiTrendingUp,
+      "Dados Empresariais": PiBuildingOffice,
       Propriedades: PiBuildingOffice,
       Veículos: PiBuildingOffice,
       "Processos Judiciais": FiShield,
@@ -231,6 +232,42 @@ const HomeDataIntel = () => {
             </div>
             <div className="text-sm text-gray-600">Redes Sociais</div>
           </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-orange-600">
+              {(databaseKPIs.breakdown.empresasAtivas / 1000000).toFixed(1)}M
+            </div>
+            <div className="text-sm text-gray-600">Empresas Ativas</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-600">
+              {(databaseKPIs.breakdown.empresasInativas / 1000000).toFixed(1)}M
+            </div>
+            <div className="text-sm text-gray-600">Empresas Inativas</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {(databaseKPIs.breakdown.microEmpresas / 1000000).toFixed(1)}M
+            </div>
+            <div className="text-sm text-gray-600">Microempresas</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {(databaseKPIs.breakdown.pequenasEmpresas / 1000000).toFixed(1)}M
+            </div>
+            <div className="text-sm text-gray-600">Pequenas Empresas</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {(databaseKPIs.breakdown.mediasEmpresas / 1000).toFixed(0)}K
+            </div>
+            <div className="text-sm text-gray-600">Médias Empresas</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-indigo-600">
+              {(databaseKPIs.breakdown.grandesEmpresas / 1000).toFixed(0)}K
+            </div>
+            <div className="text-sm text-gray-600">Grandes Empresas</div>
+          </div>
         </div>
       </div>
 
@@ -246,7 +283,7 @@ const HomeDataIntel = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Digite sua consulta em linguagem natural... Ex: 'Busque violações de trânsito do CPF 123.456.789-00'"
+              placeholder="Digite sua consulta em linguagem natural... Ex: 'Magazine Luiza', 'CNPJ 11.222.333/0001-81', 'Petrobras'"
               className="w-full pl-10 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
             />
             <FiSearch
