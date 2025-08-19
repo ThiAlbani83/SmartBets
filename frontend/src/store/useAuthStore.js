@@ -45,7 +45,8 @@ export const useAuthStore = create((set) => ({
         }
       );
 
-      localStorage.setItem("access_token", res.data.access_token);
+      const accessToken = res.data.access_token;
+      localStorage.setItem("access_token", accessToken);
 
       set({
         user: { email },
@@ -54,7 +55,7 @@ export const useAuthStore = create((set) => ({
         error: null,
       });
 
-      return res.data.access_token;
+      return accessToken;
     } catch (error) {
       set({
         error: error.response?.data?.message || "Error logging in",
@@ -65,16 +66,8 @@ export const useAuthStore = create((set) => ({
   },
 
   logout: () => {
-    // Remove o token do localStorage
     localStorage.removeItem("access_token");
-
-    // Limpa o estado de autenticação
-    set({
-      user: null,
-      isAuthenticated: false,
-      error: null,
-      message: null,
-    });
+    set({ user: null, isAuthenticated: false, error: null, message: null });
   },
 
   checkAuth: () => {
@@ -86,7 +79,48 @@ export const useAuthStore = create((set) => ({
     }
   },
 
+  refreshToken: async () => {
+    try {
+      const currentToken = localStorage.getItem("access_token");
+      if (!currentToken) {
+        throw new Error("Token não encontrado");
+      }
+
+      const res = await axios.post(
+        `${API_URL}/refresh_token`,
+        qs.stringify({ refresh_token: currentToken }),
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      const newToken = res.data.access_token;
+      localStorage.setItem("access_token", newToken);
+      set({ isAuthenticated: true });
+
+      console.log("Token renovado com sucesso");
+    } catch (error) {
+      console.error("Erro ao renovar o token", error);
+      set({ isAuthenticated: false, error: "Erro ao renovar o token" });
+    }
+  },
+
   clearError: () => {
     set({ error: null });
   },
 }));
+
+// Adicione um listener para atualizar o estado de autenticação quando o token for alterado
+window.addEventListener("storage", () => {
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    useAuthStore.getState().checkAuth();
+  } else {
+    useAuthStore.getState().logout();
+  }
+});
+

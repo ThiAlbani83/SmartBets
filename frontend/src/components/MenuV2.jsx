@@ -130,7 +130,10 @@ const MenuV2 = ({ expanded, setExpanded }) => {
               <MdAdminPanelSettings className="text-blue-400" />
               <span className="text-sm">Painel Admin</span>
             </Link>
-            <button className="w-full text-left flex items-center gap-2 p-3 text-gray-300 hover:bg-gray-600 transition-colors duration-200">
+            <button 
+              className="w-full text-left flex items-center gap-2 p-3 text-gray-300 hover:bg-gray-600 transition-colors duration-200"
+              onClick={logout}
+              >
               <FaSignOutAlt className="text-blue-400" />
               <span className="text-sm">Sair</span>
             </button>

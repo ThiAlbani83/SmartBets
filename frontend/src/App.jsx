@@ -11,23 +11,30 @@ import { useNavigate } from "react-router-dom";
 
 
 function App() {
-  const { checkAuth, isAuthenticated } = useAuthStore();
+  const { checkAuth, isAuthenticated, refreshToken } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();  // O hook useNavigate deve ser chamado aqui no corpo do componente
 
-  useEffect(() => {
-    console.log("Verificando autenticação...");
-    checkAuth();  // Verifica a autenticação
+useEffect(() => {
+  checkAuth(); // Verifica a autenticação
 
-    if (isAuthenticated) {
-      console.log("Usuário autenticado");
-    } else {
-      console.log("Usuário não autenticado");
-      if (location.pathname !== "/login") {
-        navigate("/login");  // Correto: use navigate dentro do hook useEffect
-      }
+  if (isAuthenticated) {
+  } else {
+    if (location.pathname !== "/login") {
+      navigate("/login");  // Redireciona para login se não autenticado
     }
-  }, [checkAuth, isAuthenticated, location, navigate]);
+  }
+}, [isAuthenticated, location, navigate, checkAuth]);  // Dependências corretas
+
+useEffect(() => {
+  // Recarregar o estado de autenticação quando o localStorage for alterado
+  const interval = setInterval(() => {
+    checkAuth();  // Verifica autenticação novamente a cada intervalo
+  }, 60000); // 1 minuto
+
+  return () => clearInterval(interval);  // Limpar o intervalo quando o componente for desmontado
+}, [checkAuth]);
+
 
   const getBackgroundClass = () => {
     if (location.pathname.includes("/register/") && window.innerWidth < 768) {
@@ -58,7 +65,9 @@ function App() {
         <Route
           path="/*"
           element={
-            <HomePage />
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
           }
         />
         <Route path="/register/:token" element={<InvitedUserRegistration />} />

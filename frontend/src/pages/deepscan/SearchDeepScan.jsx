@@ -25,9 +25,7 @@ import {
 } from "react-icons/fi";
 import ResultModal from "../../components/deepscan/ResultModal.jsx";
 import { rootUrl } from "./utils/url.js";
-import { key, secret } from "./utils/secret.js";
-import { FaInstagram, FaPlay } from "react-icons/fa";
-
+import { useAuthStore } from "../../store/useAuthStore.js";
 // Registrar os componentes do Chart.js
 ChartJS.register(
     CategoryScale,
@@ -41,10 +39,6 @@ ChartJS.register(
     Filler,
     ArcElement
 );
-
-const client_id = 1;
-const token = localStorage.getItem("access_token");
-
 
 const SearchDeepScan = () => {
     const [formData, setFormData] = useState({
@@ -91,6 +85,10 @@ const SearchDeepScan = () => {
     const [agendamentos, setAgendamentos] = useState([]);
     const [filteredAgendamentos, setFilteredAgendamentos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+
+
+    const client_id = 1;
+    const token = localStorage.getItem("access_token");
 
     // Função para validar se um perfil existe
     const validateProfile = async (profileName, platform, profileIndex) => {
@@ -205,12 +203,7 @@ const SearchDeepScan = () => {
             setShowResultModal(true);
             setLoadingResult(true);
             setResultData(null);
-            // console.log(
-            //     "Tentando visualizar resultado para o scrape com ID:",
-            //     agendamento.id
-            // );
 
-            // Fazendo a requisição GET
             const response = await fetch(`${rootUrl}/data/filter?client_id=${client_id}&scrapeId=${agendamento.id}&page=1&limit=100`, {
                 method: "GET",
                 headers: {

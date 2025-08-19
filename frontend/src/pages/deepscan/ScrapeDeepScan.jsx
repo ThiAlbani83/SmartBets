@@ -33,9 +33,6 @@ ChartJS.register(
     ArcElement
 );
 
-const client_id = 1;
-const token = localStorage.getItem("access_token");
-
 const ScrapeDeepScan = () => {
 
 
@@ -74,6 +71,9 @@ const ScrapeDeepScan = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+
+    const client_id = 1;
+    const token = localStorage.getItem("access_token");
 
 
     function HighlightedText({ text, keywords }) {
