@@ -95,7 +95,7 @@ const MenuV2 = ({ expanded, setExpanded }) => {
       <div className="p-4 border-b border-gray-700">
         <div className={`${!expanded ? "flex justify-center" : ""}`}>
           <h4 className="text-white text-center font-bold text-2xl">
-            Smart<span className="text-blue-400">BETs</span>
+            Bet<span className="text-blue-400">tify</span>
           </h4>
         </div>
       </div>

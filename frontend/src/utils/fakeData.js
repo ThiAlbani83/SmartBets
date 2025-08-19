@@ -1998,11 +1998,11 @@ export const scheduledMonitorings = [
 
 // KPIs das bases de dados
 export const databaseKPIs = {
-  connectedDatabases: 12,
-  totalRecords: 109000000,
+  connectedDatabases: 15,
+  totalRecords: 125000000,
   breakdown: {
     cpf: 89000000,
-    cnpj: 1200000,
+    cnpj: 8500000,
     genderMale: 54000000,
     genderFemale: 35000000,
     ageRanges: {
@@ -2028,6 +2028,12 @@ export const databaseKPIs = {
     sancionados: 2900,
     obitos: 4300000,
     redesSociais: 12000000,
+    empresasAtivas: 7200000,
+    empresasInativas: 1300000,
+    microEmpresas: 6800000,
+    pequenasEmpresas: 1500000,
+    mediasEmpresas: 180000,
+    grandesEmpresas: 20000,
   },
 };
 
@@ -2051,11 +2057,25 @@ export const searchExamples = [
     id: 3,
     title: "Dados Empresariais",
     description: "Informações da empresa CNPJ",
-    example: "12.345.678/0001-90",
+    example: "11.222.333/0001-81",
     category: "business",
   },
   {
     id: 4,
+    title: "Consulta de Empresa",
+    description: "Busque dados de empresas conhecidas",
+    example: "Magazine Luiza",
+    category: "business",
+  },
+  {
+    id: 5,
+    title: "Grandes Corporações",
+    description: "Consulte informações de grandes empresas",
+    example: "Petrobras",
+    category: "business",
+  },
+  {
+    id: 6,
     title: "Propriedades Imobiliárias",
     description: "Imóveis registrados em nome de",
     example: "Maria Oliveira Costa",
@@ -2174,13 +2194,222 @@ export const getIntelligentSearchResults = (searchTerm) => {
     lowerTerm.includes("empresa") ||
     /\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/.test(searchTerm)
   ) {
+    // Simular diferentes empresas baseadas no termo de busca
+    const empresas = [
+      {
+        cnpj: "11.222.333/0001-81",
+        razaoSocial: "MAGAZINE LUIZA S.A.",
+        nomeFantasia: "Magazine Luiza",
+        porte: "GRANDE",
+        capital: "R$ 925.250.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "02/05/1957",
+        cnae: "47.12-1/00 - Comércio varejista de mercadorias em geral",
+        endereco: "Rua Voluntários da Franca, 1465 - Franca/SP",
+        telefone: "(16) 3711-1000",
+        socios: [
+          "Luiza Helena Trajano Inácio Rodrigues - 12,5%",
+          "Frederico Trajano Inácio Rodrigues - 8,2%",
+          "Outros acionistas - 79,3%",
+        ],
+      },
+      {
+        cnpj: "33.000.167/0001-01",
+        razaoSocial: "PETRÓLEO BRASILEIRO S.A. - PETROBRAS",
+        nomeFantasia: "Petrobras",
+        porte: "GRANDE",
+        capital: "R$ 264.600.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "03/10/1953",
+        cnae: "06.00-0/00 - Extração de petróleo e gás natural",
+        endereco: "Avenida República do Chile, 65 - Rio de Janeiro/RJ",
+        telefone: "(21) 3224-1510",
+        socios: ["União Federal - 50,26%", "Outros acionistas - 49,74%"],
+      },
+      {
+        cnpj: "02.558.157/0001-62",
+        razaoSocial: "BANCO DO BRASIL S.A.",
+        nomeFantasia: "Banco do Brasil",
+        porte: "GRANDE",
+        capital: "R$ 36.300.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "12/10/1808",
+        cnae: "64.22-1/00 - Bancos múltiplos",
+        endereco: "SBS Quadra 1, Bloco C - Brasília/DF",
+        telefone: "(61) 3493-9002",
+        socios: ["Tesouro Nacional - 54,3%", "Outros acionistas - 45,7%"],
+      },
+      {
+        cnpj: "60.746.948/0001-12",
+        razaoSocial: "VALE S.A.",
+        nomeFantasia: "Vale",
+        porte: "GRANDE",
+        capital: "R$ 86.800.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "06/06/1942",
+        cnae: "07.00-0/00 - Extração de minerais metálicos",
+        endereco: "Praia de Botafogo, 186 - Rio de Janeiro/RJ",
+        telefone: "(21) 3485-3730",
+        socios: [
+          "Litel Participações - 33,2%",
+          "Bradespar - 17,4%",
+          "Outros acionistas - 49,4%",
+        ],
+      },
+      {
+        cnpj: "04.728.162/0001-73",
+        razaoSocial: "B2W DIGITAL LTDA.",
+        nomeFantasia: "Americanas.com",
+        porte: "GRANDE",
+        capital: "R$ 2.800.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "19/07/2006",
+        cnae: "47.81-4/00 - Comércio varejista de artigos do vestuário",
+        endereco: "Rua Sacadura Cabral, 102 - Rio de Janeiro/RJ",
+        telefone: "(21) 3206-2000",
+        socios: ["Lojas Americanas S.A. - 62,1%", "Outros acionistas - 37,9%"],
+      },
+      {
+        cnpj: "07.526.557/0001-00",
+        razaoSocial: "NATURA COSMÉTICOS S.A.",
+        nomeFantasia: "Natura",
+        porte: "GRANDE",
+        capital: "R$ 2.550.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "24/08/1974",
+        cnae: "20.42-8/00 - Fabricação de produtos de higiene pessoal",
+        endereco: "Rua Professor Atílio Innocenti, 165 - São Paulo/SP",
+        telefone: "(11) 4446-3000",
+        socios: [
+          "Guilherme Peirao Leal - 12,8%",
+          "Pedro Luiz Barreiros Passos - 12,8%",
+          "Outros acionistas - 74,4%",
+        ],
+      },
+      {
+        cnpj: "00.360.305/0001-04",
+        razaoSocial: "BANCO BRADESCO S.A.",
+        nomeFantasia: "Bradesco",
+        porte: "GRANDE",
+        capital: "R$ 21.600.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "10/03/1943",
+        cnae: "64.22-1/00 - Bancos múltiplos",
+        endereco: "Cidade de Deus, s/n - Osasco/SP",
+        telefone: "(11) 2194-0922",
+        socios: [
+          "Cidade de Deus Participações - 35,2%",
+          "Outros acionistas - 64,8%",
+        ],
+      },
+      {
+        cnpj: "61.532.644/0001-15",
+        razaoSocial: "ITAÚ UNIBANCO HOLDING S.A.",
+        nomeFantasia: "Itaú Unibanco",
+        porte: "GRANDE",
+        capital: "R$ 62.800.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "04/02/2008",
+        cnae: "64.11-2/00 - Banco central",
+        endereco: "Praça Alfredo Egydio de Souza Aranha, 100 - São Paulo/SP",
+        telefone: "(11) 5019-1111",
+        socios: ["Itaúsa S.A. - 36,7%", "Outros acionistas - 63,3%"],
+      },
+      {
+        cnpj: "14.200.166/0001-56",
+        razaoSocial: "JBS S.A.",
+        nomeFantasia: "JBS",
+        porte: "GRANDE",
+        capital: "R$ 8.800.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "31/03/1953",
+        cnae: "10.12-1/00 - Abate de suínos, aves e outros pequenos animais",
+        endereco: "Avenida Marginal Direita do Tietê, 500 - São Paulo/SP",
+        telefone: "(11) 3144-4000",
+        socios: ["J&F Participações - 42,3%", "Outros acionistas - 57,7%"],
+      },
+      {
+        cnpj: "59.285.411/0001-13",
+        razaoSocial: "EMPRESA BRASILEIRA DE CORREIOS E TELÉGRAFOS",
+        nomeFantasia: "Correios",
+        porte: "GRANDE",
+        capital: "R$ 2.500.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "20/03/1969",
+        cnae: "53.10-5/00 - Atividades do Correio Nacional",
+        endereco: "SBN Quadra 1, Bloco A - Brasília/DF",
+        telefone: "(61) 3003-0100",
+        socios: ["União Federal - 100%"],
+      },
+      {
+        cnpj: "17.329.076/0001-81",
+        razaoSocial: "COMPANHIA ENERGÉTICA DE MINAS GERAIS - CEMIG",
+        nomeFantasia: "CEMIG",
+        porte: "GRANDE",
+        capital: "R$ 7.200.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "22/05/1952",
+        cnae: "35.11-5/00 - Geração de energia elétrica",
+        endereco: "Avenida Barbacena, 1200 - Belo Horizonte/MG",
+        telefone: "(31) 3506-5024",
+        socios: ["Estado de Minas Gerais - 51%", "Outros acionistas - 49%"],
+      },
+      {
+        cnpj: "73.178.600/0001-04",
+        razaoSocial: "WEG S.A.",
+        nomeFantasia: "WEG",
+        porte: "GRANDE",
+        capital: "R$ 9.500.000.000,00",
+        situacao: "ATIVA",
+        dataAbertura: "16/09/1961",
+        cnae: "27.10-4/00 - Fabricação de motores elétricos",
+        endereco: "Avenida Prefeito Waldemar Grubba, 3300 - Jaraguá do Sul/SC",
+        telefone: "(47) 3276-4000",
+        socios: ["WEG Participações - 33,5%", "Outros acionistas - 66,5%"],
+      },
+    ];
+
+    // Buscar empresa específica baseada no CNPJ ou nome
+    let empresa = null;
+
+    // Primeiro, tentar encontrar pelo CNPJ exato
+    const cnpjRegex = /(\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2})/;
+    const cnpjMatch = searchTerm.match(cnpjRegex);
+
+    if (cnpjMatch) {
+      // Normalizar CNPJ removendo formatação
+      const cnpjPesquisado = cnpjMatch[1].replace(/[^\d]/g, "");
+      empresa = empresas.find(
+        (emp) => emp.cnpj.replace(/[^\d]/g, "") === cnpjPesquisado
+      );
+    }
+
+    // Se não encontrou pelo CNPJ, buscar pelo nome da empresa
+    if (!empresa) {
+      const searchLower = searchTerm.toLowerCase();
+      empresa = empresas.find(
+        (emp) =>
+          emp.nomeFantasia.toLowerCase().includes(searchLower) ||
+          emp.razaoSocial.toLowerCase().includes(searchLower) ||
+          searchLower.includes(emp.nomeFantasia.toLowerCase()) ||
+          searchLower.includes(
+            emp.razaoSocial.toLowerCase().split(" ")[0].toLowerCase()
+          )
+      );
+    }
+
+    // Se ainda não encontrou, usar a primeira empresa como fallback
+    if (!empresa) {
+      empresa = empresas[0];
+    }
+
     return [
       {
         id: 9,
         category: "Dados Empresariais",
         source: "Receita Federal",
-        field: "Razão Social",
-        value: "TECH SOLUTIONS LTDA",
+        field: "CNPJ",
+        value: empresa.cnpj,
         confidence: 99,
         lastUpdate: "2024-01-20T14:00:00Z",
         verified: true,
@@ -2189,8 +2418,8 @@ export const getIntelligentSearchResults = (searchTerm) => {
         id: 10,
         category: "Dados Empresariais",
         source: "Receita Federal",
-        field: "Situação Cadastral",
-        value: "ATIVA desde 15/03/2018",
+        field: "Razão Social",
+        value: empresa.razaoSocial,
         confidence: 99,
         lastUpdate: "2024-01-20T14:00:00Z",
         verified: true,
@@ -2198,19 +2427,122 @@ export const getIntelligentSearchResults = (searchTerm) => {
       {
         id: 11,
         category: "Dados Empresariais",
+        source: "Receita Federal",
+        field: "Nome Fantasia",
+        value: empresa.nomeFantasia,
+        confidence: 99,
+        lastUpdate: "2024-01-20T14:00:00Z",
+        verified: true,
+      },
+      {
+        id: 12,
+        category: "Dados Empresariais",
+        source: "Receita Federal",
+        field: "Situação Cadastral",
+        value: `${empresa.situacao} desde ${empresa.dataAbertura}`,
+        confidence: 99,
+        lastUpdate: "2024-01-20T14:00:00Z",
+        verified: true,
+      },
+      {
+        id: 13,
+        category: "Dados Empresariais",
+        source: "Receita Federal",
+        field: "Porte da Empresa",
+        value: empresa.porte,
+        confidence: 99,
+        lastUpdate: "2024-01-20T14:00:00Z",
+        verified: true,
+      },
+      {
+        id: 14,
+        category: "Dados Empresariais",
+        source: "Receita Federal",
+        field: "Capital Social",
+        value: empresa.capital,
+        confidence: 95,
+        lastUpdate: "2024-01-20T14:00:00Z",
+        verified: true,
+      },
+      {
+        id: 15,
+        category: "Dados Empresariais",
+        source: "Receita Federal",
+        field: "CNAE Principal",
+        value: empresa.cnae,
+        confidence: 99,
+        lastUpdate: "2024-01-20T14:00:00Z",
+        verified: true,
+      },
+      {
+        id: 16,
+        category: "Dados Empresariais",
+        source: "Receita Federal",
+        field: "Endereço",
+        value: empresa.endereco,
+        confidence: 92,
+        lastUpdate: "2023-11-10T16:30:00Z",
+        verified: true,
+      },
+      {
+        id: 17,
+        category: "Dados Empresariais",
         source: "Junta Comercial",
-        field: "Sócios",
-        value: "João Silva Santos (80%) - Maria Oliveira (20%)",
+        field: "Sócios Principais",
+        value: empresa.socios.join(", "),
         confidence: 95,
         lastUpdate: "2023-11-10T16:30:00Z",
         verified: true,
       },
       {
-        id: 12,
+        id: 18,
+        category: "Dados Empresariais",
+        source: "Receita Federal",
+        field: "Telefone",
+        value: empresa.telefone,
+        confidence: 87,
+        lastUpdate: "2023-08-15T11:30:00Z",
+        verified: true,
+      },
+      {
+        id: 19,
+        category: "Dados Financeiros",
+        source: "SERASA",
+        field: "Score Empresarial",
+        value: "950 pontos - Excelente",
+        confidence: 88,
+        lastUpdate: "2024-01-15T10:30:00Z",
+        verified: false,
+      },
+      {
+        id: 20,
+        category: "Dados Financeiros",
+        source: "Banco Central",
+        field: "Situação no SCR",
+        value: "Sem restrições cadastrais",
+        confidence: 92,
+        lastUpdate: "2024-01-10T14:20:00Z",
+        verified: true,
+      },
+      {
+        id: 21,
+        category: "Dados Empresariais",
+        source: "Junta Comercial",
+        field: "Atividade Econômica",
+        value: empresa.cnae.split(" - ")[1],
+        confidence: 98,
+        lastUpdate: "2024-01-20T14:00:00Z",
+        verified: true,
+      },
+      {
+        id: 22,
         category: "Dados Financeiros",
         source: "SERASA",
         field: "Faturamento Estimado",
-        value: "R$ 2.500.000,00 anuais",
+        value:
+          empresa.porte === "GRANDE"
+            ? "Acima de R$ 300.000.000,00 anuais"
+            : "Entre R$ 4.800.000,00 e R$ 300.000.000,00 anuais",
         confidence: 78,
         lastUpdate: "2023-12-01T12:00:00Z",
         verified: false,
